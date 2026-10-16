@@ -5,8 +5,10 @@ Ce projet a pour but de concevoir un logiciel de gestion d'entreprise
 ## Conventions de développement
 
 ### Répertoire
- 
-- **Frontend**: contiendras tous le code source vue.js de l'interface
+
+- **Frontend**: contiendras tous le code source vue.js de l'interface:
+  - `component/`: toutes les composants réutilisable, par exemple composant pour afficher un message d'erreur
+
 - **Backend**: répertoire du code source java + base
 
 ### Technologies

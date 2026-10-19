@@ -113,7 +113,7 @@ onUnmounted(() => {
 - chaque validation attribuera un code au statut de la demande pour la validation des autres rôle
 - les pages vu par le client et par les rôles seront attribué à deux routes différentes(ex: /si/client pour le client et pour l'application de gestion /si/app)
 
-### Conception table
+<!-- ### Conception table
 
 - **role**:
   - id
@@ -123,6 +123,7 @@ onUnmounted(() => {
   - id
   - id_role
   - nom
+  - username
   - mdp
 
 - **etat_validation**:
@@ -133,8 +134,8 @@ onUnmounted(() => {
 - **departement**:
   - id
   - nom
+  - effectif max
   - effectif total
-  - (effect max)
   - id_utilisateur(manager qui gère le département)
 
 - **poste**
@@ -184,4 +185,4 @@ onUnmounted(() => {
 - **Dépense_departement**
   - id
   - montant
-  - id_departement
+  - id_departement -->

@@ -47,6 +47,8 @@ DROP TABLE IF EXISTS candidature;
 DROP TABLE IF EXISTS cv;
 DROP TABLE IF EXISTS candidat;
 
+DROP TABLE IF EXISTS decision_recrutement;
+
 DROP TABLE IF EXISTS notification;
 
 DROP TABLE IF EXISTS depense_departement;
@@ -487,6 +489,85 @@ CREATE TABLE validation_besoin (
         )
 );
 
+CREATE TABLE recrutement (
+    id SERIAL PRIMARY KEY,
+    id_besoin INTEGER NOT NULL REFERENCES besoin(id),
+    reference VARCHAR(50) NOT NULL UNIQUE,
+    titre VARCHAR(150) NOT NULL,
+    description TEXT,
+    date_ouverture DATE NOT NULL DEFAULT CURRENT_DATE,
+    date_cloture DATE,
+    statut VARCHAR(20) NOT NULL DEFAULT 'BROUILLON'
+        CHECK (statut IN (
+            'BROUILLON',
+            'OUVERT',
+            'SUSPENDU',
+            'TERMINE',
+            'ANNULE'
+        )),
+    id_utilisateur_responsable INTEGER
+        REFERENCES utilisateur(id),
+    date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CHECK (
+        date_cloture IS NULL
+        OR date_cloture >= date_ouverture
+    )
+);
+
+CREATE TABLE offre_emploi (
+    id SERIAL PRIMARY KEY,
+    id_recrutement INTEGER NOT NULL
+        REFERENCES recrutement(id),
+    titre VARCHAR(150) NOT NULL,
+    description_poste TEXT NOT NULL,
+    missions TEXT NOT NULL,
+    competences_requises TEXT,
+    niveau_etude VARCHAR(100),
+    experience_min_annees INTEGER DEFAULT 0
+        CHECK (experience_min_annees >= 0),
+    salaire_min NUMERIC(12,2)
+        CHECK (salaire_min IS NULL OR salaire_min >= 0),
+    salaire_max NUMERIC(12,2),
+    date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    statut VARCHAR(20) NOT NULL DEFAULT 'BROUILLON'
+        CHECK (statut IN (
+            'BROUILLON',
+            'VALIDEE',
+            'ARCHIVEE'
+        )),
+
+    CHECK (
+        salaire_min IS NULL
+        OR salaire_max IS NULL
+        OR salaire_max >= salaire_min
+    ),
+
+    UNIQUE (id_recrutement)
+);
+
+CREATE TABLE publication_offre (
+    id SERIAL PRIMARY KEY,
+    id_offre INTEGER NOT NULL
+        REFERENCES offre_emploi(id),
+    plateforme VARCHAR(100) NOT NULL,
+    url_publication TEXT,
+    date_publication DATE NOT NULL DEFAULT CURRENT_DATE,
+    date_expiration DATE,
+    statut VARCHAR(20) NOT NULL DEFAULT 'PUBLIEE'
+        CHECK (statut IN (
+            'BROUILLON',
+            'PUBLIEE',
+            'EXPIREE',
+            'RETIRÉE'
+        )),
+
+    CHECK (
+        date_expiration IS NULL
+        OR date_expiration >= date_publication
+    )
+);
+
 
 -- ============================================================
 -- 12. TABLE CANDIDAT
@@ -564,7 +645,9 @@ CREATE TABLE cv (
 
     CONSTRAINT fk_cv_candidat
         FOREIGN KEY (id_candidat)
-        REFERENCES candidat(id)
+        REFERENCES candidat(id),
+
+    CONSTRAINT uq_cv_id_candidat UNIQUE (id, id_candidat)
 );
 
 
@@ -596,7 +679,7 @@ CREATE TABLE cv (
 CREATE TABLE candidature (
     id SERIAL PRIMARY KEY,
     id_candidat INTEGER NOT NULL,
-    id_besoin INTEGER NOT NULL,
+    id_recrutement INTEGER NOT NULL,
     id_cv INTEGER NOT NULL,
     date_candidature TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     statut VARCHAR(30) NOT NULL DEFAULT 'EN_ATTENTE',
@@ -617,17 +700,18 @@ CREATE TABLE candidature (
         FOREIGN KEY (id_candidat)
         REFERENCES candidat(id),
 
-    CONSTRAINT fk_candidature_besoin
-        FOREIGN KEY (id_besoin)
-        REFERENCES besoin(id),
+    CONSTRAINT fk_candidature_recrutement
+        FOREIGN KEY (id_recrutement)
+        REFERENCES recrutement(id),
 
-    CONSTRAINT fk_candidature_cv
-        FOREIGN KEY (id_cv)
-        REFERENCES cv(id),
+    CONSTRAINT fk_candidature_cv_candidat
+    FOREIGN KEY (id_cv, id_candidat)
+    REFERENCES cv(id, id_candidat),
 
-    CONSTRAINT uq_candidature_candidat_besoin
-        UNIQUE (id_candidat, id_besoin)
+    CONSTRAINT uq_candidature_candidat_recrutement
+    UNIQUE (id_candidat, id_recrutement)
 );
+
 
 
 -- ============================================================
@@ -654,6 +738,30 @@ CREATE TABLE candidature (
 -- Le backend doit vérifier que le poste appartient au même
 -- département que celui de l'employé.
 -- ============================================================
+
+CREATE TABLE decision_recrutement (
+    id SERIAL PRIMARY KEY,
+    id_candidature INTEGER NOT NULL UNIQUE
+        REFERENCES candidature(id),
+    id_utilisateur_decideur INTEGER
+        REFERENCES utilisateur(id),
+    decision VARCHAR(20) NOT NULL
+        CHECK (decision IN (
+            'EN_ATTENTE',
+            'RETENU',
+            'REJETE',
+            'LISTE_ATTENTE'
+        )),
+    motif TEXT,
+    date_decision TIMESTAMP,
+    date_creation TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CHECK (
+        (decision = 'EN_ATTENTE' AND date_decision IS NULL)
+        OR
+        (decision <> 'EN_ATTENTE' AND date_decision IS NOT NULL)
+    )
+);
 
 CREATE TABLE employe (
     id SERIAL PRIMARY KEY,
@@ -1007,8 +1115,8 @@ CREATE INDEX idx_validation_besoin
 CREATE INDEX idx_validation_decision_etape
     ON validation_besoin(id_etat_validation, id_decision);
 
-CREATE INDEX idx_candidature_besoin
-    ON candidature(id_besoin);
+CREATE INDEX idx_candidature_recrutement
+    ON candidature(id_recrutement);
 
 CREATE INDEX idx_candidature_candidat
     ON candidature(id_candidat);

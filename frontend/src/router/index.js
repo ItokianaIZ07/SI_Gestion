@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import ChoiceUpload from '../views/ChoiceUpload.vue'
+import ChoiceUploadView from '../views/ChoiceUploadView.vue'
+import FormulaireUploadCVView from '../views/FormulaireUploadCVView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,7 +16,13 @@ const router = createRouter({
     {
       path: '/upload-selection',
       name: 'upload',
-      component: ChoiceUpload
+      component: ChoiceUploadView
+    },
+
+    {
+      path: '/upload-cv',
+      name: 'uploadCVManuel',
+      component: FormulaireUploadCVView
     },
   ],
 })

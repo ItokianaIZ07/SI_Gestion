@@ -1,26 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Uploader un CV – Nom de la plateforme</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="formulaire.css">
-</head>
-<body>
+<script setup>
+import NavBar from '../components/NavBar.vue';
+</script>
+<template>
+  <NavBar />
 
-  <header class="navbar">
-    <a class="navbar__nom" href="index.html">Nom de la plateforme</a>
-
-    <nav class="navbar__liens" aria-label="Navigation principale">
-      <a href="index.html">Accueil</a>
-      <a href="formulaire.html" aria-current="page">Uploader un CV</a>
-      <a href="#">Editer un CV</a>
-      <a href="#">À propos</a>
-    </nav>
-
-    <a class="navbar__bouton" href="#">Connexion</a>
-  </header>
+   
 
   <main class="principal principal--formulaire">
     <div class="intro">
@@ -85,6 +69,4 @@
     </section>
   </main>
 
-  <script src="formulaire.js"></script>
-</body>
-</html>
+</template>

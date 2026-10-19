@@ -1,0 +1,222 @@
+/* Palette Coolors : https://coolors.co/015f09-80af84-ffffff-f6f5f5-bfbfbf-cd3d3d-ffc1c1-008106-ccffcf */
+:root {
+  /* Base : le blanc et ses nuances */
+  --fond-card: #ffffff;
+  --fond: #f6f5f5;
+  --couleur-texte: #bfbfbf;   /* bordures et séparateurs */
+
+  /* Gris foncés pour le texte (le blanc de la palette ne peut pas porter du texte) */
+  --texte: #2b2b2b;
+  --texte-doux: #6b6b6b;
+
+  /* Couleurs d'accent : uniquement pour de petits détails discrets */
+  --principale: #015f09;
+  --secondaire: #80af84;
+  --texte-danger: #cd3d3d;
+  --fond-texte-danger: #ffc1c1;
+  --texte-success: #008106;
+  --fond-texte-success: #ccffcf;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+a { color: inherit; text-decoration: none; }
+
+a:focus-visible {
+  outline: 2px solid var(--secondaire);
+  outline-offset: 3px;
+}
+
+/* ---------- Navbar ---------- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 40px;
+  min-height: 72px;
+  background: var(--fond-card);
+  color: var(--texte);
+  border-bottom: 1px solid var(--couleur-texte);
+}
+
+.navbar__nom {
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.navbar__liens {
+  display: flex;
+  gap: 36px;
+}
+
+.navbar__liens a {
+  padding: 6px 0;
+  color: var(--texte-doux);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.navbar__liens a:hover,
+.navbar__liens a[aria-current="page"] {
+  color: var(--texte);
+  border-color: var(--secondaire);   /* petit détail vert */
+}
+
+.navbar__bouton {
+  padding: 9px 20px;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.navbar__bouton:hover {
+  background: var(--fond);
+  border-color: var(--texte-doux);
+}
+
+/* ---------- Zone principale (remplit tout l'écran restant) ---------- */
+.principal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 48px 40px;
+}
+
+.intro {
+  max-width: 640px;
+  text-align: center;
+}
+
+.intro h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.15;
+}
+
+.intro p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--texte-doux);
+}
+
+/* ---------- Les deux choix ---------- */
+.choix {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  gap: 40px;
+  justify-content: space-between;
+}
+
+.carte {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 300px;
+  padding: 40px 32px;
+  text-align: center;
+  background: var(--fond-card);
+  border: 1.5px solid var(--couleur-texte);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.carte:hover { border-color: var(--secondaire); }
+
+.carte__icone {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--fond);
+  color: var(--texte-doux);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* détail à peine visible : une teinte verte très claire au survol */
+.carte:hover .carte__icone {
+  background: var(--fond-texte-success);
+  color: var(--texte-success);
+}
+
+.carte__titre {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.carte__texte {
+  max-width: 28ch;
+  color: var(--texte-doux);
+}
+
+.carte__action {
+  margin-top: 10px;
+  padding: 11px 26px;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.carte:hover .carte__action {
+  background: var(--fond-card);
+  border-color: var(--texte-doux);
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 800px) {
+  .navbar {
+    flex-wrap: wrap;
+    padding: 12px 20px;
+  }
+
+  .navbar__liens {
+    order: 3;
+    width: 100%;
+    gap: 20px;
+    overflow-x: auto;
+    font-size: 0.95rem;
+  }
+
+  .navbar__liens a { white-space: nowrap; }
+
+  .principal { padding: 32px 20px; gap: 32px; }
+
+  .choix { flex-direction: column; gap: 20px; }
+
+  .carte { min-height: 0; padding: 28px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carte, .carte__icone, .carte__action,
+  .navbar__liens a, .navbar__bouton { transition: none; }
+}

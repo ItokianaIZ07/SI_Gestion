@@ -135,7 +135,7 @@ onUnmounted(() => {
   - nom
   - effectif total
   - (effect max)
-  - id_utilisateur
+  - id_utilisateur(manager qui gère le département)
 
 - **poste**
   - id
@@ -160,8 +160,14 @@ onUnmounted(() => {
   - date_demande
   - id_poste
   - motif
-  - id_etat
   - experience_requis
+
+- **rel_besoin_etat**
+  - id
+  - id_besoin
+  - id_etat
+  - date
+  - remarque(facultatif)
 
 - **CV**
   - id

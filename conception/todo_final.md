@@ -9,7 +9,6 @@
 - mise en place session ou token(à discuter)
 - développement du service pour la transformation des fichiers.pdf en binaire pour la base de donnée
 - Création de la logique de déconversion du binaire en blob via javascript(ty no réutilisena ho anze mila hoe mampiasa anle binaire pdf avy any anaty page): associena @url ray ohatra /api/pdf
-- le resaka notification(atao farany | misy manampy elah eto)
 
 **Harena**:
 
@@ -24,6 +23,8 @@
 - Développer la logique de la transformation de la div preview du cv (le page ataon'ny Brandon iny) en pdf: via javascript comme html2pdf.js à télecharger  
 
 **Itokiana**:
+
+- le resaka notification(atao farany | mety misy manampy)
 
 `Module RH`
 
@@ -59,3 +60,4 @@
 - manomana jeu de donnée ny tsirairay @le fonctionnalité ataony
 - ref misy zavatra kitihana anaty base de donnée dia mamorona fichier vaovao.sql en respectant le nommage suivant: **prenom_date_numero.sql**, de ao anatin'ilay fichier asiana commentaire ny antony namoronana anazy.
 - d ze classe créena koa asiana commentaire kely ny prénom anle olona namorona anazy @zay mora ny mitady ny olona hanontaniana ref misy zavatra
+- misy table ao hahafahana mamantatra ny état anle demande hoe aiza ho aiza(refus, en attente, etc...)

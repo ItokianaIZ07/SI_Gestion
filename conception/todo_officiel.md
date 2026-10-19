@@ -20,8 +20,6 @@
 * [ ] Créer l'endpoint de récupération/déconversion des binaires en flux de données pour le rendu dans le composant Vue.js (`/api/pdf/...`).
 
 
-
-
 * [ ] **Système de Notification Serveur**
 * [ ] Implémenter la logique métier pour générer automatiquement une entrée dans la table `notification` lors de l'insertion d'un nouveau besoin par un manager.
 

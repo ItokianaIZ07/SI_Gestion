@@ -33,6 +33,7 @@ body {
   color: var(--texte);
   font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
   line-height: 1.5;
+  padding-top: 72px;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -43,13 +44,21 @@ a:focus-visible {
 }
 
 /* ---------- Navbar ---------- */
+
 .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 0 40px;
   min-height: 72px;
+
   background: var(--fond-card);
   color: var(--texte);
   border-bottom: 1px solid var(--couleur-texte);
@@ -219,4 +228,51 @@ a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .carte, .carte__icone, .carte__action,
   .navbar__liens a, .navbar__bouton { transition: none; }
+}
+
+
+
+/* ---------- Bouton Retour ---------- */
+.bouton-retour {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 40px 0;
+  padding: 9px 20px;
+
+  font: inherit;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--fond-card);
+
+  border: 1.5px solid var(--couleur-texte);
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: background-color 0.2s,
+              border-color 0.2s,
+              color 0.2s;
+}
+
+.bouton-retour:hover {
+  background: var(--fond);
+  border-color: var(--secondaire);
+  color: var(--texte-success);
+}
+
+.bouton-retour:focus-visible {
+  outline: 2px solid var(--secondaire);
+  outline-offset: 3px;
+}
+
+@media (max-width: 800px) {
+  .bouton-retour {
+    margin: 20px 20px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bouton-retour {
+    transition: none;
+  }
 }

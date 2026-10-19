@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ChoiceUploadView from '../views/ChoiceUploadView.vue'
 import FormulaireUploadCVView from '../views/FormulaireUploadCVView.vue'
+import EditCVView from '../views/EditCVView.vue'
 
 
 const router = createRouter({
@@ -23,6 +24,12 @@ const router = createRouter({
       path: '/upload-cv',
       name: 'uploadCVManuel',
       component: FormulaireUploadCVView
+    },
+
+    {
+      path: '/editor-cv',
+      name: 'editeurEnLigne',
+      component: EditCVView
     },
   ],
 })

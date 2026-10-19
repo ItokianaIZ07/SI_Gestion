@@ -1,5 +1,6 @@
 <template>
-    <a class="carte" id="editer" href="#">
+    <RouterLink class="carte" id="editer" to="/editor-cv">
+    
         <span class="carte__icone" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 20h9"/>
@@ -9,5 +10,5 @@
         <span class="carte__titre">Editer un CV en ligne</span>
         <span class="carte__texte">Créez ou modifiez votre CV directement dans l'éditeur.</span>
         <span class="carte__action">Ouvrir l'éditeur</span>
-    </a>
+    </RouterLink>
 </template>

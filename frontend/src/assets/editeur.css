@@ -1,0 +1,443 @@
+/* Page "Création CV" — s'appuie sur les variables de style.css
+   Le vert reste un simple détail discret (traits fins, puces, survol). */
+
+/* ---------- Boutons ---------- */
+.bouton {
+  padding: 10px 26px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.bouton--leger {
+  padding: 8px 16px;
+  background: var(--fond);
+}
+
+.bouton:hover {
+  background: var(--fond);
+  border-color: var(--secondaire);
+}
+
+.bouton--leger:hover { background: var(--fond-card); }
+
+.bouton:focus-visible,
+.bloc summary:focus-visible {
+  outline: 2px solid var(--secondaire);
+  outline-offset: 3px;
+}
+
+/* ---------- Barre d'actions ---------- */
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 40px 0;
+  padding: 12px 20px;
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 12px;
+}
+
+.barre__titre {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+/* ---------- Mise en page ---------- */
+.editeur {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 16px 40px 40px;
+}
+
+/* ---------- Formulaire ---------- */
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  padding: 1px;
+}
+
+.bloc {
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 12px;
+}
+
+.bloc summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bloc summary::-webkit-details-marker { display: none; }
+
+.bloc summary::after {
+  content: "+";
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--texte-doux);
+}
+
+.bloc[open] summary::after { content: "–"; }
+.bloc[open] summary { border-bottom: 1px solid var(--fond); }
+
+.bloc__contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px 18px;
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+.champ input,
+.champ textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 12px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  resize: vertical;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.champ input:focus,
+.champ textarea:focus {
+  outline: none;
+  background: var(--fond-card);
+  border-color: var(--secondaire);
+}
+
+.champ input[type="file"] { padding: 7px 10px; }
+
+.ligne {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--couleur-texte);
+  border-radius: 10px;
+}
+
+.groupe legend {
+  padding: 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+}
+
+.bloc__contenu > .bouton { align-self: flex-start; }
+
+/* ---------- Aperçu ---------- */
+.apercu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.apercu__outils {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.apercu__label {
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+/* ================= FEUILLE DE CV =================
+   .feuille est un conteneur : toutes les tailles du CV sont en "em"
+   et la police de base vaut un pourcentage de sa largeur (cqw).
+   → le CV garde exactement les mêmes proportions que ce soit sur
+     téléphone, écran large ou en PDF (A4).
+   → la hauteur n'est jamais fixée : elle grandit avec le contenu. */
+.feuille {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.cv {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 210 / 297;      /* minimum = une page A4, puis ça s'étire */
+  padding: 2.8em 2.6em;
+  font-size: 1.5cqw;
+  line-height: 1.45;
+  color: var(--texte);
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+  overflow-wrap: anywhere;
+}
+
+/* En-tête */
+.cv__entete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 2em;
+  align-items: center;
+  padding-bottom: 1.6em;
+  border-bottom: 1px solid var(--couleur-texte);
+}
+
+.cv__photo {
+  display: grid;
+  place-items: center;
+  width: 7.2em;
+  height: 7.2em;
+  color: var(--texte-doux);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 50%;
+}
+
+.cv__photo svg { width: 3.4em; height: 3.4em; }
+
+.cv__identite h2 {
+  margin: 0 0 0.3em;
+  font-size: 1.5em;
+  line-height: 1.2;
+}
+
+.cv__identite p,
+.cv__poste p {
+  margin: 0;
+  color: var(--texte-doux);
+}
+
+.cv__poste { text-align: right; }
+
+.cv__poste h3 {
+  margin: 0 0 0.5em;
+  font-size: 1.25em;
+  font-style: italic;
+  line-height: 1.25;
+}
+
+.cv__poste p { font-style: italic; }
+
+/* Corps */
+.cv__corps {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  gap: 2em;
+  align-items: start;
+  padding-top: 1.8em;
+}
+
+.cv__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8em;
+  padding: 1.3em;
+  background: var(--fond);
+  border-radius: 0.5em;
+}
+
+.cv__principal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8em;
+}
+
+/* Titres de section : fin trait gris + petit détail vert */
+.cv__titre {
+  position: relative;
+  margin: 0 0 0.9em;
+  padding-bottom: 0.5em;
+  font-size: 0.95em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--couleur-texte);
+}
+
+.cv__titre::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 2.6em;
+  height: 3px;
+  background: var(--secondaire);
+  border-radius: 2px;
+}
+
+.cv__groupe { margin-bottom: 0.9em; }
+.cv__groupe:last-child { margin-bottom: 0; }
+.cv__groupe strong { display: block; }
+.cv__groupe p { margin: 0.15em 0 0; color: var(--texte-doux); }
+
+.cv ul {
+  margin: 0.3em 0 0;
+  padding-left: 1.3em;
+  color: var(--texte-doux);
+}
+
+.cv li { margin-bottom: 0.2em; }
+.cv li::marker { color: var(--secondaire); }
+
+.cv__citation { margin: 0; }
+
+.cv__citation p {
+  margin: 0 0 0.5em;
+  font-style: italic;
+  color: var(--texte-doux);
+}
+
+.cv__citation cite {
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Expériences / formations */
+.cv__item { margin-bottom: 1.2em; }
+.cv__item:last-child { margin-bottom: 0; }
+
+.cv__ligne-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1em;
+}
+
+.cv__ligne-titre p { margin: 0; min-width: 0; }
+
+.cv__dates {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cv__dates small {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--texte-doux);
+}
+
+.cv__detail {
+  margin: 0.2em 0 0;
+  color: var(--texte-doux);
+}
+
+/* ---------- Responsive du formulaire / de la page ---------- */
+@media (max-width: 1100px) {
+  .editeur { grid-template-columns: minmax(0, 1fr); }
+
+  .formulaire {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 800px) {
+  .barre { margin: 16px 20px 0; }
+  .editeur { padding: 16px 20px 32px; gap: 20px; }
+}
+
+@media (max-width: 420px) {
+  .barre { padding: 10px 14px; }
+  .bloc summary { padding: 12px 14px; }
+  .bloc__contenu { padding: 14px; }
+  .ligne { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bouton, .champ input, .champ textarea { transition: none; }
+}
+
+/* ---------- PDF / impression : A4, plusieurs pages si besoin ---------- */
+@page {
+  size: A4;
+  margin: 12mm 0;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html, body { height: auto; background: #fff; }
+  body { display: block; min-height: 0; padding-top: 0; }
+
+  .navbar,
+  .bouton-retour,
+  .barre,
+  .formulaire,
+  .apercu__outils { display: none; }
+
+  .editeur,
+  .apercu { display: block; padding: 0; }
+
+  .feuille { width: 210mm; max-width: none; margin: 0; }
+
+  .cv {
+    aspect-ratio: auto;          /* la hauteur suit le contenu */
+    border: none;
+    box-shadow: none;
+    padding-block: 0;
+  }
+
+  .cv__item,
+  .cv__groupe,
+  .cv__citation,
+  .cv__ligne-titre { break-inside: avoid; }
+
+  .cv__titre { break-after: avoid; }
+
+  .cv__lateral {
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+}

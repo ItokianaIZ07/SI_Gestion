@@ -45,4 +45,5 @@ import ApercuPDF from './ApercuPDF.vue';
         <button type="submit" class="bouton">Envoyer</button>
       </div>
     </form>
+    <ApercuPDF/>
 </template>

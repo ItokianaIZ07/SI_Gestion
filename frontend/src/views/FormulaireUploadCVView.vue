@@ -1,21 +1,16 @@
 <script setup>
-import { useRouter } from 'vue-router';
+
 import NavBar from '../components/NavBar.vue';
 import FormulaireCV from '../components/FormulaireCV.vue';
+import BoutonRetour from '../components/BoutonRetour.vue';
 
-const router = useRouter()
 
-function retourner(){
-    router.back()
-}
 
 </script>
 <template>
   <NavBar />
 
-   <button type="button" class="bouton-retour" @click="retourner">
-    ← Retour
-  </button>
+   <BoutonRetour/>
 
   <main class="principal principal--formulaire">
     <div class="intro">

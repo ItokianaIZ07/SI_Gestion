@@ -1,6 +1,6 @@
 package com.si.rh.model;
 
-import com.sigrh.model.enums.*;
+import com.si.rh.model.enums.*;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;

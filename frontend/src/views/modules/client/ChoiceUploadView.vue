@@ -1,7 +1,7 @@
 <script setup>
-import NavBar from '../components/NavBar.vue';
-import UploadCV from '../components/UploadCV.vue';
-import EditCV from '../components/EditCV.vue';
+import NavBar from '@/components/NavBar.vue';
+import UploadCV from '@/components/UploadCV.vue';
+import EditCV from '@/components/EditCV.vue';
 </script>
 
 
@@ -19,8 +19,6 @@ import EditCV from '../components/EditCV.vue';
     <div class="choix">
       <UploadCV />
       <EditCV />
-
-
     </div>
   </main>
 

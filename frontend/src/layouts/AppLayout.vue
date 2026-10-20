@@ -2,7 +2,7 @@
 import "../assets/theme.css"
 import { getSidebarLinks } from "@/config/sidebar";
 
-const role = "direction"; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
+const role = "rh"; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
 const sidebar = getSidebarLinks(role);
 </script>
 
@@ -105,6 +105,7 @@ nav a.router-link-active {
 
 main {
     margin-left: 250px;
+    margin-top: -72px;
     min-width: 0;
     min-height: 100vh;
     box-sizing: border-box;

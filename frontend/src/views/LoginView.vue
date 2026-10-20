@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { authStore } from "@/stores/authStore"; 
 import "../assets/theme.css";
 
 const username = ref("");
@@ -7,6 +8,7 @@ const password = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
 const showPassword = ref(false);
+const store = authStore();
 
 async function handleLogin() {
   errorMessage.value = "";
@@ -21,19 +23,13 @@ async function handleLogin() {
     password: password.value,
   });
 
-  const response = await fetch("/api/login", {
-    method: "POST",
-    body: JSON.stringify({
-      username: username.value,
-      password: password.value,
-    }),
-  });
+  const response = await store.login(username.value, password.value);
 
-  if(!response.ok){
-    errorMessage.value = await response.json().error;
+  if(!response.success){
+    errorMessage.value = response.message;
     return;
   }
-
+  console.log("Connexion avec succès");
 }
 </script>
 

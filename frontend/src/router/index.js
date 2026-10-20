@@ -8,6 +8,7 @@ import LoginView from '@/views/LoginView.vue'
 import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
 import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
+import { useAuthStore } from '@/stores/authStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -47,6 +48,13 @@ const router = createRouter({
     {
       path: "/si/app",
       component: AppLayout,
+      beforeEnter: (to, from) => {
+        const authStore = useAuthStore()
+
+        if (authStore.role !== 'rh') {
+          return { name: 'login' }
+        }
+      },
       children: [
         {
           path: "",

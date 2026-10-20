@@ -8,7 +8,7 @@ class User{
     }
 }
 
-export const authStore = defineStore('role', () =>{
+export const useAuthStore = defineStore('role', () =>{
     const chargee = ref(false);
     const estAuthentifie = ref(false);
     const user = ref(null);
@@ -65,5 +65,5 @@ export const authStore = defineStore('role', () =>{
         authentifie(data.role, username);
     }
 
-    return { login, logout };
+    return { login, logout, user, estAuthentifie };
 }); 

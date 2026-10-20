@@ -1,4 +1,4 @@
-package com.sigrh.model;
+package com.si.rh.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.Generated;

@@ -1,6 +1,6 @@
-package com.sigrh.repository;
+package com.si.rh.repository;
 
-import com.sigrh.model.EtatValidation;
+import com.si.rh.model.EtatValidation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;

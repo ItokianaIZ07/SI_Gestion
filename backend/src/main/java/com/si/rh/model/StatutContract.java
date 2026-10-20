@@ -1,4 +1,4 @@
-package com.sigrh.model;
+package com.si.rh.model;
 
 import com.sigrh.model.enums.*;
 import jakarta.persistence.*;

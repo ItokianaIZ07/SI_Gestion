@@ -1,4 +1,4 @@
-package com.sigrh.model.enums;
+package com.si.rh.model.enums;
 
 public enum StatutPublication {
     BROUILLON, PUBLIEE, EXPIREE, RETIREE;

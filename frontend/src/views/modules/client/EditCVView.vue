@@ -1,6 +1,6 @@
 <script setup>
-import BoutonRetour from '../components/BoutonRetour.vue';
-import NavBar from '../components/NavBar.vue';
+import BoutonRetour from '@/components/BoutonRetour.vue';
+import NavBar from '@/components/NavBar.vue';
 </script>
 <template>
 

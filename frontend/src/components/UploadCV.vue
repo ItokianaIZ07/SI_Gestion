@@ -1,5 +1,5 @@
 <template>
-    <RouterLink class="carte" id="uploader" to="/upload-cv">
+    <RouterLink class="carte" id="uploader" to="/si/client/upload-cv">
 
         <span class="carte__icone" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.8"

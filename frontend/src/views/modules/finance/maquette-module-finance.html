@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SI-Gestion — Module Finance (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#F4F8F5;color:#12301F;display:flex;min-height:100vh}
+aside{width:240px;flex:none;background:#12301F;color:#fff;padding:24px 16px;display:flex;flex-direction:column;gap:6px}
+.logo{font-weight:700;font-size:18px;margin:0 8px 4px}
+.role{font-size:13px;color:#B9D3C4;margin:0 8px 20px}
+.nav{background:none;border:0;color:#DDEBE3;text-align:left;font:600 15px Inter,Arial,sans-serif;padding:12px;border-radius:8px;cursor:pointer}
+.nav:hover{background:#1D4A31}
+.nav[aria-current="page"]{background:#1F7A4D;color:#fff}
+main{flex:1;min-width:0;padding:32px 40px}
+h1{margin:0 0 4px;font-size:28px}
+.sub{margin:0 0 24px;color:#4B5563}
+.page{display:none}
+.page.active{display:block}
+.card{background:#fff;border:1px solid #D5E0D9;border-radius:12px;padding:20px 24px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:#4B5563;padding:10px 12px;border-bottom:1px solid #D5E0D9;white-space:nowrap}
+td{padding:14px 12px;border-bottom:1px solid #E7EEE9;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.num{text-align:right;white-space:nowrap}
+.btn{min-height:40px;padding:0 16px;border-radius:8px;font:600 14px Inter,Arial,sans-serif;cursor:pointer;border:1px solid transparent}
+.btn-pri{background:#1F7A4D;color:#fff;border-color:#1F7A4D}
+.btn-pri:hover:not(:disabled){background:#165C3A}
+.btn-sec{background:#fff;color:#1F7A4D;border-color:#1F7A4D}
+.btn-sec:hover:not(:disabled){background:#E8F4EC}
+.btn-dan{background:#fff;color:#B3261E;border-color:#B3261E}
+.btn-dan:hover:not(:disabled){background:#FDE8E6}
+.btn:disabled{background:#E5E9E6;color:#5A6B60;border-color:#E5E9E6;cursor:not-allowed}
+.acts{display:flex;gap:8px}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.ok{background:#E3F3EA;color:#14633B}
+.ko{background:#FDE8E6;color:#9B1C13}
+.wait{background:#FFF3D6;color:#7A4B00}
+.none{background:#ECEFED;color:#4B5563}
+.steps{display:flex;gap:6px;flex-wrap:wrap}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.champ{min-height:40px;padding:0 12px;border:1px solid #9DB3A5;border-radius:8px;background:#fff;color:#12301F;font:400 14px Inter,Arial,sans-serif}
+.champ:focus{outline:2px solid #1F7A4D;outline-offset:1px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi small{display:block;color:#4B5563;font-size:13px;margin-bottom:6px}
+.kpi strong{font-size:24px}
+.bar{height:8px;border-radius:99px;background:#E1EAE4;min-width:120px}
+.bar i{display:block;height:100%;border-radius:99px;background:#1F7A4D}
+.bar i.hot{background:#B3261E}
+.form{display:none;margin-bottom:16px}
+.form.open{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:#4B5563}
+.hint{font-size:13px;color:#4B5563;margin:0 0 12px}
+dialog{border:0;border-radius:12px;padding:24px;width:min(440px,90vw)}
+dialog::backdrop{background:rgba(18,48,31,.5)}
+dialog textarea{width:100%;min-height:90px;padding:10px;border:1px solid #9DB3A5;border-radius:8px;font:400 14px Inter,Arial,sans-serif;margin:8px 0 16px}
+@media(max-width:800px){body{flex-direction:column}aside{width:auto;flex-direction:row;flex-wrap:wrap;align-items:center}.role{display:none}main{padding:20px 16px}}
+</style>
+</head>
+<body>
+<aside>
+<p class="logo">SI-Gestion</p>
+<p class="role">Module Finance</p>
+<button class="nav" data-page="demandes" aria-current="page">Demandes</button>
+<button class="nav" data-page="grille">Grille salariale</button>
+<button class="nav" data-page="budget">Budget annuel</button>
+</aside>
+<main>
+
+<section class="page active" id="demandes">
+<h1>Demandes de recrutement</h1>
+<p class="sub">Montant défini par les RH, analyse du budget et validation Finance.</p>
+<div class="card scroll">
+<table>
+<thead><tr><th>Poste</th><th>Département</th><th class="num">Effectif</th><th class="num">Salaire estimé</th><th class="num">Mois</th><th class="num">Coût total</th><th class="num">Budget restant</th><th>Budget</th><th>Validations</th><th>Actions</th></tr></thead>
+<tbody>
+<tr><td><strong>Développeur Java Spring Boot</strong></td><td>Informatique</td><td class="num">2</td><td class="num">1 800 000 Ar</td><td class="num">12</td><td class="num"><strong>43 200 000 Ar</strong></td><td class="num">120 000 000 Ar</td><td><span class="badge ok">✓ Couvert</span></td>
+<td><div class="steps"><span class="badge ok">RH ✓</span><span class="badge wait">Finance ⏳</span><span class="badge none">Direction –</span></div></td>
+<td><div class="acts"><button class="btn btn-pri">Valider</button><button class="btn btn-dan" onclick="refus('Développeur Java Spring Boot')">Refuser</button></div></td></tr>
+<tr><td><strong>Comptable</strong></td><td>Finance</td><td class="num">1</td><td class="num">1 200 000 Ar</td><td class="num">12</td><td class="num"><strong>14 400 000 Ar</strong></td><td class="num">10 000 000 Ar</td><td><span class="badge ko">✕ Dépasse le budget</span></td>
+<td><div class="steps"><span class="badge ok">RH ✓</span><span class="badge wait">Finance ⏳</span><span class="badge none">Direction –</span></div></td>
+<td><div class="acts"><button class="btn btn-pri" disabled title="Budget insuffisant">Valider</button><button class="btn btn-dan" onclick="refus('Comptable')">Refuser</button></div></td></tr>
+<tr><td><strong>Chargé de recrutement</strong></td><td>Ressources humaines</td><td class="num">1</td><td class="num">1 500 000 Ar</td><td class="num">12</td><td class="num"><strong>18 000 000 Ar</strong></td><td class="num">32 000 000 Ar</td><td><span class="badge ok">✓ Couvert</span></td>
+<td><div class="steps"><span class="badge wait">RH ⏳</span><span class="badge none">Finance –</span><span class="badge none">Direction –</span></div></td>
+<td><div class="acts"><button class="btn btn-pri" disabled title="En attente de la validation RH">Valider</button><button class="btn btn-dan" disabled title="En attente de la validation RH">Refuser</button></div></td></tr>
+<tr><td><strong>Responsable marketing digital</strong></td><td>Marketing</td><td class="num">1</td><td class="num">2 200 000 Ar</td><td class="num">12</td><td class="num"><strong>26 400 000 Ar</strong></td><td class="num">33 000 000 Ar</td><td><span class="badge ok">✓ Couvert</span></td>
+<td><div class="steps"><span class="badge ok">RH ✓</span><span class="badge ok">Finance ✓</span><span class="badge wait">Direction ⏳</span></div></td>
+<td><div class="acts"><button class="btn btn-pri" disabled title="Déjà traité par Finance">Valider</button><button class="btn btn-dan" disabled title="Déjà traité par Finance">Refuser</button></div></td></tr>
+<tr><td><strong>Technicien support informatique</strong></td><td>Support</td><td class="num">1</td><td class="num">1 000 000 Ar</td><td class="num">12</td><td class="num"><strong>12 000 000 Ar</strong></td><td class="num">25 000 000 Ar</td><td><span class="badge ok">✓ Couvert</span></td>
+<td><div class="steps"><span class="badge ko">RH ✕</span><span class="badge none">Finance –</span><span class="badge none">Direction –</span></div></td>
+<td><div class="acts"><button class="btn btn-pri" disabled title="Refusé par les RH">Valider</button><button class="btn btn-dan" disabled title="Refusé par les RH">Refuser</button></div></td></tr>
+</tbody></table>
+</div>
+</section>
+
+<section class="page" id="grille">
+<h1>Grille salariale</h1>
+<p class="sub">Fourchette de salaire mensuel par poste et sa période de validité.</p>
+<div class="toolbar"><span></span><button class="btn btn-pri" id="toggleForm">+ Nouvelle grille</button></div>
+<div class="card form" id="formGrille">
+<div class="grid">
+<label>Poste<select class="champ"><option>Développeur Java Spring Boot</option><option>Comptable</option><option>Chargé de recrutement</option><option>Responsable marketing digital</option><option>Technicien support informatique</option></select></label>
+<label>Salaire minimum (Ar)<input class="champ" type="number" placeholder="1 000 000"></label>
+<label>Salaire maximum (Ar)<input class="champ" type="number" placeholder="2 000 000"></label>
+<label>Début de validité<input class="champ" type="date"></label>
+<label>Fin de validité (optionnel)<input class="champ" type="date"></label>
+</div>
+<p class="hint">Le maximum doit être supérieur ou égal au minimum. Les périodes d’un même poste ne peuvent pas se chevaucher.</p>
+<div class="acts"><button class="btn btn-pri">Enregistrer</button><button class="btn btn-sec" id="cancelForm">Annuler</button></div>
+</div>
+<div class="card scroll">
+<table>
+<thead><tr><th>Poste</th><th>Département</th><th class="num">Minimum</th><th class="num">Maximum</th><th>Début</th><th>Fin</th><th>Statut</th><th></th></tr></thead>
+<tbody>
+<tr><td><strong>Développeur Java Spring Boot</strong></td><td>Informatique</td><td class="num">1 500 000 Ar</td><td class="num">2 500 000 Ar</td><td>01/01/2026</td><td>—</td><td><span class="badge ok">En cours</span></td><td><button class="btn btn-sec">Modifier</button></td></tr>
+<tr><td><strong>Comptable</strong></td><td>Finance</td><td class="num">1 000 000 Ar</td><td class="num">1 600 000 Ar</td><td>01/01/2026</td><td>—</td><td><span class="badge ok">En cours</span></td><td><button class="btn btn-sec">Modifier</button></td></tr>
+<tr><td><strong>Chargé de recrutement</strong></td><td>Ressources humaines</td><td class="num">1 200 000 Ar</td><td class="num">1 800 000 Ar</td><td>01/01/2026</td><td>—</td><td><span class="badge ok">En cours</span></td><td><button class="btn btn-sec">Modifier</button></td></tr>
+<tr><td><strong>Responsable marketing digital</strong></td><td>Marketing</td><td class="num">1 800 000 Ar</td><td class="num">2 800 000 Ar</td><td>01/01/2026</td><td>—</td><td><span class="badge ok">En cours</span></td><td><button class="btn btn-sec">Modifier</button></td></tr>
+<tr><td><strong>Technicien support informatique</strong></td><td>Support</td><td class="num">800 000 Ar</td><td class="num">1 300 000 Ar</td><td>01/01/2026</td><td>—</td><td><span class="badge ok">En cours</span></td><td><button class="btn btn-sec">Modifier</button></td></tr>
+</tbody></table>
+</div>
+</section>
+
+<section class="page" id="budget">
+<div class="toolbar"><div><h1>Budget annuel</h1><p class="sub" style="margin:0">Budget = masse salariale (contrats actifs × 12) + dépenses internes.</p></div>
+<label>Année<select class="champ"><option>2026</option><option>2025</option></select></label></div>
+<div class="cards">
+<div class="card kpi"><small>Budget total</small><strong>525 000 000 Ar</strong></div>
+<div class="card kpi"><small>Masse salariale annuelle</small><strong>230 000 000 Ar</strong></div>
+<div class="card kpi"><small>Dépenses internes</small><strong>75 000 000 Ar</strong></div>
+<div class="card kpi"><small>Budget restant</small><strong style="color:#1F7A4D">220 000 000 Ar</strong></div>
+</div>
+<div class="card scroll">
+<table>
+<thead><tr><th>Département</th><th class="num">Budget</th><th class="num">Masse salariale</th><th class="num">Dépenses</th><th class="num">Restant</th><th>Utilisation</th></tr></thead>
+<tbody>
+<tr><td><strong>Informatique</strong></td><td class="num">250 000 000 Ar</td><td class="num">96 000 000 Ar</td><td class="num">34 000 000 Ar</td><td class="num">120 000 000 Ar</td><td><div class="bar" role="img" aria-label="52 %"><i style="width:52%"></i></div>52 %</td></tr>
+<tr><td><strong>Finance</strong></td><td class="num">60 000 000 Ar</td><td class="num">38 000 000 Ar</td><td class="num">12 000 000 Ar</td><td class="num">10 000 000 Ar</td><td><div class="bar" role="img" aria-label="83 %"><i class="hot" style="width:83%"></i></div>83 %</td></tr>
+<tr><td><strong>Ressources humaines</strong></td><td class="num">70 000 000 Ar</td><td class="num">30 000 000 Ar</td><td class="num">8 000 000 Ar</td><td class="num">32 000 000 Ar</td><td><div class="bar" role="img" aria-label="54 %"><i style="width:54%"></i></div>54 %</td></tr>
+<tr><td><strong>Marketing</strong></td><td class="num">90 000 000 Ar</td><td class="num">42 000 000 Ar</td><td class="num">15 000 000 Ar</td><td class="num">33 000 000 Ar</td><td><div class="bar" role="img" aria-label="63 %"><i style="width:63%"></i></div>63 %</td></tr>
+<tr><td><strong>Support</strong></td><td class="num">55 000 000 Ar</td><td class="num">24 000 000 Ar</td><td class="num">6 000 000 Ar</td><td class="num">25 000 000 Ar</td><td><div class="bar" role="img" aria-label="55 %"><i style="width:55%"></i></div>55 %</td></tr>
+<tr><td><strong>Total</strong></td><td class="num"><strong>525 000 000 Ar</strong></td><td class="num"><strong>230 000 000 Ar</strong></td><td class="num"><strong>75 000 000 Ar</strong></td><td class="num"><strong>220 000 000 Ar</strong></td><td><div class="bar" role="img" aria-label="58 %"><i style="width:58%"></i></div>58 %</td></tr>
+</tbody></table>
+</div>
+</section>
+
+</main>
+
+<dialog id="refusDlg">
+<h2 style="margin:0 0 4px;font-size:20px">Refuser la demande</h2>
+<p id="refusPoste" style="margin:0;color:#4B5563"></p>
+<label style="margin-top:12px">Remarque (obligatoire)<textarea placeholder="Motif du refus..."></textarea></label>
+<div class="acts" style="justify-content:flex-end"><button class="btn btn-sec" onclick="refusDlg.close()">Annuler</button><button class="btn btn-dan" onclick="refusDlg.close()">Confirmer le refus</button></div>
+</dialog>
+
+<script>
+const navs=document.querySelectorAll('.nav'),pages=document.querySelectorAll('.page');
+navs.forEach(b=>b.addEventListener('click',()=>{
+  navs.forEach(n=>n.removeAttribute('aria-current'));b.setAttribute('aria-current','page');
+  pages.forEach(p=>p.classList.toggle('active',p.id===b.dataset.page));
+}));
+const form=document.getElementById('formGrille');
+document.getElementById('toggleForm').onclick=()=>form.classList.toggle('open');
+document.getElementById('cancelForm').onclick=()=>form.classList.remove('open');
+function refus(p){document.getElementById('refusPoste').textContent=p;document.getElementById('refusDlg').showModal();}
+</script>
+</body>
+</html>

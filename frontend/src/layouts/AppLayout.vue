@@ -1,19 +1,16 @@
 <script setup>
 import "../assets/theme.css"
+import { getSidebarLinks } from "@/config/sidebar";
 
+const role = "direction"; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
+const sidebar = getSidebarLinks(role);
 </script>
 
 <template>
   <div class="app-layout">
     <aside>
       <nav>
-        <RouterLink to="/si/app">Dashboard</RouterLink>
-        <RouterLink to="/si/app/rh/demandes">
-          Demandes RH
-        </RouterLink>
-        <RouterLink to="/si/app/finance">
-          Finance
-        </RouterLink>
+        <RouterLink v-for="link in sidebar" :to="link.to" :key="link.to"> {{ link.label }}</RouterLink>
       </nav>
     </aside>
 

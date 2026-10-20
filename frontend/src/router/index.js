@@ -9,6 +9,7 @@ import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
 import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
 import { useAuthStore } from '@/stores/authStore'
+import CVView from '@/views/modules/gestion/rh/CVView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,6 +66,10 @@ const router = createRouter({
           name: 'DemandeManifestation',
           component: ManifestationView
         },
+        {
+          path: "rh/cv",
+          component: CVView
+        }
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
       ],

@@ -10,6 +10,7 @@ const sidebar = getSidebarLinks(role);
   <div class="app-layout">
     <aside>
       <nav>
+        <RouterLink to="/si/app">Dahsboard</RouterLink>
         <RouterLink v-for="link in sidebar" :to="link.to" :key="link.to"> {{ link.label }}</RouterLink>
       </nav>
     </aside>

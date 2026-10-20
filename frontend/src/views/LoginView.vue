@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { authStore } from "@/stores/authStore"; 
+import { useAuthStore } from "@/stores/authStore"; 
 import "../assets/theme.css";
 
 const username = ref("");
@@ -8,7 +8,7 @@ const password = ref("");
 const loading = ref(false);
 const errorMessage = ref("");
 const showPassword = ref(false);
-const store = authStore();
+const store = useAuthStore();
 
 async function handleLogin() {
   errorMessage.value = "";

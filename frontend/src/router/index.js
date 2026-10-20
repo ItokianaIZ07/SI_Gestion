@@ -4,7 +4,7 @@ import ClientLayout from '@/layouts/ClientLayout.vue'
 import FormulaireUploadCVView from '@/views/modules/client/FormulaireUploadCVView.vue'
 import EditCVView from '@/views/modules/client/EditCVView.vue'
 
-import HomeView from '@/views/HomeView.vue'
+import LoginView from '@/views/LoginView.vue'
 import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
 import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
@@ -14,8 +14,8 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      name: "home",
-      component: HomeView,
+      name: "login",
+      component: LoginView,
     },
 
     {

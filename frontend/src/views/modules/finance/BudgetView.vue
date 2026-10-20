@@ -1,8 +1,8 @@
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import '../finance.css'
-import { financeApi } from '../api/financeApi'
-import { ariary, messageErreur } from '../utils/format'
+import '@/assets/finance.css'
+import { financeApi } from '@/api/financeApi'
+import { ariary, messageErreur } from '@/utils/format'
 
 const annee = ref(new Date().getFullYear())
 const annees = [annee.value, annee.value - 1, annee.value - 2]

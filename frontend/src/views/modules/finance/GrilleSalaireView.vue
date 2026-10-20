@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import '../finance.css'
-import { financeApi } from '../api/financeApi'
-import { ariary, dateFr, messageErreur } from '../utils/format'
-import GrilleForm from '../components/GrilleForm.vue'
+import '@/assets/finance.css'
+import { financeApi } from '@/api/financeApi'
+import { ariary, dateFr, messageErreur } from '@/utils/format'
+import GrilleForm from '@/components/finance/GrilleForm.vue'
 
 const grilles = ref([])
 const postes = ref([])
@@ -64,7 +64,7 @@ onMounted(charger)
             <td class="fin-num">{{ ariary(g.valeurMin) }}</td>
             <td class="fin-num">{{ ariary(g.valeurMax) }}</td>
             <td>{{ dateFr(g.dateDebutValidite) }}</td>
-            <td>{{ dateFr(g.dateFinValidite) }}</td>
+            <td>{{ dateFr(g.dnanceateFinValidite) }}</td>
             <td><button class="fin-btn fin-btn-sec" type="button" @click="modifier(g)">Modifier</button></td>
           </tr>
           <tr v-if="!grilles.length"><td colspan="7">Aucune grille définie.</td></tr>

@@ -1,11 +1,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import '@/views/modules/finance/finance.css'
+import '@/assets/finance.css'
 import { financeApi } from '@/api/financeApi'
 import { ariary, messageErreur } from '@/utils/format'
-import ValidationSteps from '@/views/modules/finance/components/ValidationSteps.vue'
-import RefusModal from '@/views/modules/finance/components/RefusModal.vue'
+import ValidationSteps from '@/components/finance/ValidationSteps.vue'
+import RefusModal from '@/components/finance/RefusModal.vue'
 
 const demandes = ref([])
 const chargement = ref(false)

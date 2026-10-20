@@ -1,0 +1,444 @@
+/* Page "Création CV" - toutes les classes sont préfixées "ed-" pour ne jamais entrer en conflit
+   avec formulaire.css, style.css ou les autres pages. Utilise les variables de style.css
+   Le vert reste un simple détail discret (traits fins, puces, survol). */
+
+/* ---------- Boutons ---------- */
+.ed-bouton {
+  padding: 10px 26px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--texte);
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.ed-bouton--leger {
+  padding: 8px 16px;
+  background: var(--fond);
+}
+
+.ed-bouton:hover {
+  background: var(--fond);
+  border-color: var(--secondaire);
+}
+
+.ed-bouton--leger:hover { background: var(--fond-card); }
+
+.ed-bouton:focus-visible,
+.ed-bloc summary:focus-visible {
+  outline: 2px solid var(--secondaire);
+  outline-offset: 3px;
+}
+
+/* ---------- Barre d'actions ---------- */
+.ed-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 40px 0;
+  padding: 12px 20px;
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 12px;
+}
+
+.ed-barre__titre {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+/* ---------- Mise en page ---------- */
+.ed-editeur {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  padding: 16px 40px 40px;
+}
+
+/* ---------- Formulaire ---------- */
+.ed-formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 88px;
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+  padding: 1px;
+}
+
+.ed-bloc {
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 12px;
+}
+
+.ed-bloc summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ed-bloc summary::-webkit-details-marker { display: none; }
+
+.ed-bloc summary::after {
+  content: "+";
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--texte-doux);
+}
+
+.ed-bloc[open] summary::after { content: "–"; }
+.ed-bloc[open] summary { border-bottom: 1px solid var(--fond); }
+
+.ed-bloc__contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px 18px;
+}
+
+.ed-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+.ed-champ input,
+.ed-champ textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 12px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+  resize: vertical;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.ed-champ input:focus,
+.ed-champ textarea:focus {
+  outline: none;
+  background: var(--fond-card);
+  border-color: var(--secondaire);
+}
+
+.ed-champ input[type="file"] { padding: 7px 10px; }
+
+.ed-ligne {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.ed-groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--couleur-texte);
+  border-radius: 10px;
+}
+
+.ed-groupe legend {
+  padding: 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--texte-doux);
+}
+
+.ed-bloc__contenu > .ed-bouton { align-self: flex-start; }
+
+/* ---------- Aperçu ---------- */
+.ed-apercu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ed-apercu__outils {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ed-apercu__label {
+  font-weight: 600;
+  color: var(--texte-doux);
+}
+
+/* ================= FEUILLE DE CV =================
+   .ed-feuille est un conteneur : toutes les tailles du CV sont en "em"
+   et la police de base vaut un pourcentage de sa largeur (cqw).
+   → le CV garde exactement les mêmes proportions que ce soit sur
+     téléphone, écran large ou en PDF (A4).
+   → la hauteur n'est jamais fixée : elle grandit avec le contenu. */
+.ed-feuille {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.ed-cv {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  aspect-ratio: 210 / 297;      /* minimum = une page A4, puis ça s'étire */
+  padding: 2.8em 2.6em;
+  font-size: 1.5cqw;
+  line-height: 1.45;
+  color: var(--texte);
+  background: var(--fond-card);
+  border: 1px solid var(--couleur-texte);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.07);
+  overflow-wrap: anywhere;
+}
+
+/* En-tête */
+.ed-cv__entete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 2em;
+  align-items: center;
+  padding-bottom: 1.6em;
+  border-bottom: 1px solid var(--couleur-texte);
+}
+
+.ed-cv__photo {
+  display: grid;
+  place-items: center;
+  width: 7.2em;
+  height: 7.2em;
+  color: var(--texte-doux);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 50%;
+}
+
+.ed-cv__photo svg { width: 3.4em; height: 3.4em; }
+
+.ed-cv__identite h2 {
+  margin: 0 0 0.3em;
+  font-size: 1.5em;
+  line-height: 1.2;
+}
+
+.ed-cv__identite p,
+.ed-cv__poste p {
+  margin: 0;
+  color: var(--texte-doux);
+}
+
+.ed-cv__poste { text-align: right; }
+
+.ed-cv__poste h3 {
+  margin: 0 0 0.5em;
+  font-size: 1.25em;
+  font-style: italic;
+  line-height: 1.25;
+}
+
+.ed-cv__poste p { font-style: italic; }
+
+/* Corps */
+.ed-cv__corps {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 32%) minmax(0, 1fr);
+  gap: 2em;
+  align-items: start;
+  padding-top: 1.8em;
+}
+
+.ed-cv__lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8em;
+  padding: 1.3em;
+  background: var(--fond);
+  border-radius: 0.5em;
+}
+
+.ed-cv__principal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8em;
+}
+
+/* Titres de section : fin trait gris + petit détail vert */
+.ed-cv__titre {
+  position: relative;
+  margin: 0 0 0.9em;
+  padding-bottom: 0.5em;
+  font-size: 0.95em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--couleur-texte);
+}
+
+.ed-cv__titre::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 2.6em;
+  height: 3px;
+  background: var(--secondaire);
+  border-radius: 2px;
+}
+
+.ed-cv__groupe { margin-bottom: 0.9em; }
+.ed-cv__groupe:last-child { margin-bottom: 0; }
+.ed-cv__groupe strong { display: block; }
+.ed-cv__groupe p { margin: 0.15em 0 0; color: var(--texte-doux); }
+
+.ed-cv ul {
+  margin: 0.3em 0 0;
+  padding-left: 1.3em;
+  color: var(--texte-doux);
+}
+
+.ed-cv li { margin-bottom: 0.2em; }
+.ed-cv li::marker { color: var(--secondaire); }
+
+.ed-cv__citation { margin: 0; }
+
+.ed-cv__citation p {
+  margin: 0 0 0.5em;
+  font-style: italic;
+  color: var(--texte-doux);
+}
+
+.ed-cv__citation cite {
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Expériences / formations */
+.ed-cv__item { margin-bottom: 1.2em; }
+.ed-cv__item:last-child { margin-bottom: 0; }
+
+.ed-cv__ligne-titre {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1em;
+}
+
+.ed-cv__ligne-titre p { margin: 0; min-width: 0; }
+
+.ed-cv__dates {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ed-cv__dates small {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--texte-doux);
+}
+
+.ed-cv__detail {
+  margin: 0.2em 0 0;
+  color: var(--texte-doux);
+}
+
+/* ---------- Responsive du formulaire / de la page ---------- */
+@media (max-width: 1100px) {
+  .ed-editeur { grid-template-columns: minmax(0, 1fr); }
+
+  .ed-formulaire {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 800px) {
+  .ed-barre { margin: 16px 20px 0; }
+  .ed-editeur { padding: 16px 20px 32px; gap: 20px; }
+}
+
+@media (max-width: 420px) {
+  .ed-barre { padding: 10px 14px; }
+  .ed-bloc summary { padding: 12px 14px; }
+  .ed-bloc__contenu { padding: 14px; }
+  .ed-ligne { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ed-bouton, .ed-champ input, .ed-champ textarea { transition: none; }
+}
+
+/* ---------- PDF / impression : A4, plusieurs pages si besoin ---------- */
+@page {
+  size: A4;
+  margin: 12mm 0;
+}
+
+@media print {
+  .page-editeur * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page-editeur { height: auto; background: #fff; }
+  .page-editeur { display: block; min-height: 0; padding-top: 0; }
+
+  .navbar,
+  .bouton-retour,
+  .ed-barre,
+  .ed-formulaire,
+  .ed-apercu__outils { display: none; }
+
+  .ed-editeur,
+  .ed-apercu { display: block; padding: 0; }
+
+  .ed-feuille { width: 210mm; max-width: none; margin: 0; }
+
+  .ed-cv {
+    aspect-ratio: auto;          /* la hauteur suit le contenu */
+    border: none;
+    box-shadow: none;
+    padding-block: 0;
+  }
+
+  .ed-cv__item,
+  .ed-cv__groupe,
+  .ed-cv__citation,
+  .ed-cv__ligne-titre { break-inside: avoid; }
+
+  .ed-cv__titre { break-after: avoid; }
+
+  .ed-cv__lateral {
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
+}

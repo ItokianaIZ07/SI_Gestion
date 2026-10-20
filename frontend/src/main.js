@@ -1,3 +1,7 @@
+import './assets/style.css'
+import './assets/formulaire.css'
+import './assets/editeur.css'
+
 // import './assets/main.css'
 
 import { createApp } from 'vue'

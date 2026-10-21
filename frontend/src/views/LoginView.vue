@@ -2,34 +2,40 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/authStore"; 
 import "../assets/theme.css";
+import { useRouter } from "vue-router";
 
-const username = ref("");
-const password = ref("");
+const email = ref("direction@exemple.mg");
+const password = ref("Test1234!");
 const loading = ref(false);
 const errorMessage = ref("");
 const showPassword = ref(false);
 const store = useAuthStore();
+const router = useRouter();
 
 async function handleLogin() {
   errorMessage.value = "";
+  loading.value = true;
 
-  if (!username.value.trim() || !password.value) {
+  if (!email.value.trim() || !password.value) {
     errorMessage.value = "Veuillez remplir tous les champs.";
     return;
   }
 
   console.log({
-    username: username.value,
+    email: email.value,
     password: password.value,
   });
 
-  const response = await store.login(username.value, password.value);
+  const response = await store.login(email.value, password.value);
+  loading.value = false;
 
   if(!response.success){
     errorMessage.value = response.message;
     return;
+  }else{
+    console.log("Connexion avec succès");
+    router.replace("/si/app");
   }
-  console.log("Connexion avec succès");
 }
 </script>
 
@@ -47,14 +53,14 @@ async function handleLogin() {
 
       <form @submit.prevent="handleLogin">
         <div class="form-group">
-          <label for="username">Nom d'utilisateur</label>
+          <label for="email">Email</label>
 
           <input
-            id="username"
-            v-model="username"
+            id="email"
+            v-model="email"
             type="text"
-            placeholder="Entrez votre nom d'utilisateur"
-            autocomplete="username"
+            placeholder="Entrez votre email"
+            autocomplete="email"
             required
           />
         </div>

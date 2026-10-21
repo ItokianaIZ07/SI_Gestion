@@ -93,6 +93,8 @@ public class AuthController {
                             "Email ou mot de passe incorrect",
                             null
                     ));
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur d'authentification",e);
         }
     }
 }

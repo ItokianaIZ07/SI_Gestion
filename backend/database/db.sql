@@ -1,2 +1,4 @@
 CREATE DATABASE rh_system;
 GRANT ALL PRIVILEGES ON DATABASE rh_system TO POSTGRES;
+
+\c rh_system;

@@ -1,16 +1,19 @@
 <script setup>
+import { useAuthStore } from "@/stores/authStore";
 import "../assets/theme.css"
 import { getSidebarLinks } from "@/config/sidebar";
 
-const role = "rh"; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
+const authStore = useAuthStore(); 
+
+const role = authStore.user.role; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
 const sidebar = getSidebarLinks(role);
+sidebar.unshift({label: "Dashboard", to: "/si/app"});
 </script>
 
 <template>
   <div class="app-layout">
     <aside>
       <nav>
-        <RouterLink to="/si/app">Dahsboard</RouterLink>
         <RouterLink v-for="link in sidebar" :to="link.to" :key="link.to"> {{ link.label }}</RouterLink>
       </nav>
     </aside>

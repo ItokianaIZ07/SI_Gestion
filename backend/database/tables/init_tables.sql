@@ -528,3 +528,5 @@ CREATE INDEX idx_depense_besoin ON depense_departement(id_besoin);
 CREATE INDEX idx_depense_contrat ON depense_departement(id_contrat);
 CREATE INDEX idx_notification_utilisateur_date ON notification(id_utilisateur, date_creation DESC);
 CREATE INDEX idx_notification_non_lue ON notification(id_utilisateur) WHERE date_lecture IS NULL;
+
+COMMIT;

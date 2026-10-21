@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('role', () =>{
             }),
         });
         if(!response.ok){
-            const errorMessage =  await response.json().error;
+            const errorMessage =  await response.json().message;
             return {success: false,  message: errorMessage};
         }
         const data = await response.json();

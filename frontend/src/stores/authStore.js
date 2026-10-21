@@ -29,10 +29,20 @@ export const useAuthStore = defineStore('role', () =>{
         return user.value.role;
     }
 
-    const logout = () =>{
+    const logout = async () =>{
         user.value = null;
         chargee.value = false;
         estAuthentifie.value = false;
+
+        const response = await fetch("/api/auth/logout", {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            throw new Error('La déconnexion a échoué'); 
+        }
+
+        return {success: true}
     }
 
     const syncRole = (newRole) =>{

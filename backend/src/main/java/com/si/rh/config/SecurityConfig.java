@@ -83,6 +83,7 @@ public class SecurityConfig {
                                 new CsrfTokenRequestAttributeHandler()
                         )
                         .ignoringRequestMatchers("/api/auth/login")
+                        .ignoringRequestMatchers("/api/auth/logout")
                 )
 
                 // 401 au lieu de 403 quand l'utilisateur n'est pas connecté.

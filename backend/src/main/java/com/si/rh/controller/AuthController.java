@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
 
 import org.springframework.security.web.csrf.CsrfToken;
@@ -96,5 +97,27 @@ public class AuthController {
         } catch (Exception e) {
             throw new RuntimeException("Erreur d'authentification",e);
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication authentication) {
+
+        SecurityContextLogoutHandler logoutHandler =
+                new SecurityContextLogoutHandler();
+
+        logoutHandler.setSecurityContextRepository(contextRepository);
+
+        logoutHandler.logout(request, response, authentication);
+
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        true,
+                        "Déconnexion réussie",
+                        null
+                )
+        );
     }
 }

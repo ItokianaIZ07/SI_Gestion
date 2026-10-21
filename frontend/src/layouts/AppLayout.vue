@@ -2,12 +2,21 @@
 import { useAuthStore } from "@/stores/authStore";
 import "../assets/theme.css";
 import { getSidebarLinks } from "@/config/sidebar";
+import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 const role = authStore.user.role; // ty rôle alaina avy any @ serveur atokana anaty config mints à partir ny store
 const sidebar = getSidebarLinks(role);
 // sidebar.unshift({label: "Dashboard", to: "/si/app"});
+
+const logout = async () => {
+  const response = await authStore.logout();
+  if(response.success){
+    router.replace('/');
+  }
+}
 </script>
 
 <template>
@@ -18,6 +27,7 @@ const sidebar = getSidebarLinks(role);
         <RouterLink v-for="link in sidebar" :to="link.to" :key="link.to">
           {{ link.label }}</RouterLink
         >
+        <button class="btn-logout" @click="logout()">Se Deconnecter</button>
       </nav>
     </aside>
 
@@ -118,6 +128,24 @@ main {
 
   padding: 32px;
   background-color: var(--color-background);
+}
+
+.btn-logout {
+  cursor: pointer;
+  height: 8vh;
+  border-radius: 4px;
+  outline: none;
+  border: 1px solid #d4d4d4;
+  color: var(--color-primary);
+  transition: all ease-in 150ms;
+}
+
+.btn-logout:hover{
+  box-shadow: 0 1px 1px 1px rgba(128, 128, 128, 0.55);
+}
+
+.btn-logout:active{
+  box-shadow: none;
 }
 
 /* ==============================

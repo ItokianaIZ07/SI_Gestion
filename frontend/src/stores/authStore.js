@@ -2,8 +2,8 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 class User{
-    constructor(username, role){
-        this.username = username;
+    constructor(email, role){
+        this.email = email;
         this.role = role;
     }
 }
@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('role', () =>{
             return;
         }
         user.value.role = newRole.toUpperCase();
-        chargee = true;
+        chargee.value = true;
     }
 
     const getRole = () =>{
@@ -31,8 +31,8 @@ export const useAuthStore = defineStore('role', () =>{
 
     const logout = () =>{
         user.value = null;
-        chargee = false;
-        estAuthentifie = false;
+        chargee.value = false;
+        estAuthentifie.value = false;
     }
 
     const syncRole = (newRole) =>{
@@ -40,30 +40,36 @@ export const useAuthStore = defineStore('role', () =>{
         return getRole();
     }
 
-    const authentifie = (role, username) =>{
-        syncRole(role);
-        user.value = new User(username, role);
+    const authentifie = (role, email) =>{
+        user.value = new User(email, role);
+        addRole(role);
         estAuthentifie.value = true;
     }
 
-    const login = async (username, password) => {
+    const login = async (email, password) => {
         if(estAuthentifie.value){
-            return;
+            return {success: true};
         }
-        const response = await fetch("/api/login", {
+
+        const response = await fetch("/api/auth/login", {
             method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
             body: JSON.stringify({
-                username: username,
-                password: password,
+                email: email,
+                motDePasse: password,
             }),
         });
         if(!response.ok){
-            const errorMessage =  await response.json().error;
+            const errorMessage =  await response.json().message;
             return {success: false,  message: errorMessage};
         }
         const data = await response.json();
-        authentifie(data.role, username);
+        authentifie(data.role, email);
+
+        return {success: true, message: "Authentification réussie!"}
     }
 
     return { login, logout, user, estAuthentifie };
-}); 
+},{persist: true}); 

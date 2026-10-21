@@ -52,7 +52,7 @@ const router = createRouter({
       beforeEnter: (to, from) => {
         const authStore = useAuthStore()
 
-        if (authStore.role !== 'rh') {
+        if (!authStore.estAuthentifie) {
           return { name: 'login' }
         }
       },

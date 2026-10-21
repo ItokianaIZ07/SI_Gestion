@@ -7,6 +7,7 @@ import EditCVView from '@/views/modules/client/EditCVView.vue'
 import HomeView from '@/views/HomeView.vue'
 import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
+import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +51,11 @@ const router = createRouter({
         {
           path: "",
           component: DashboardView,
+        },
+        {
+          path: 'manager/demandes/creation',
+          name: 'DemandeManifestation',
+          component: ManifestationView
         },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.

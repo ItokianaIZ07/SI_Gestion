@@ -1,37 +1,74 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import ChoiceUploadView from '../views/ChoiceUploadView.vue'
-import FormulaireUploadCVView from '../views/FormulaireUploadCVView.vue'
-import EditCVView from '../views/EditCVView.vue'
+import ChoiceUploadView from '@/views/modules/client/ChoiceUploadView.vue'
+import ClientLayout from '@/layouts/ClientLayout.vue'
+import FormulaireUploadCVView from '@/views/modules/client/FormulaireUploadCVView.vue'
+import EditCVView from '@/views/modules/client/EditCVView.vue'
 
+import LoginView from '@/views/LoginView.vue'
+import AppLayout from "@/layouts/AppLayout.vue";
+import DashboardView from "@/views/modules/gestion/DashboardView.vue";
+import { useAuthStore } from '@/stores/authStore'
+import CVView from '@/views/modules/gestion/rh/CVView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
-      name: 'home',
-      component: HomeView,
+      path: "/",
+      name: "login",
+      component: LoginView,
     },
 
     {
-      path: '/upload-selection',
-      name: 'upload',
-      component: ChoiceUploadView
+      path: "/si/client",
+      component: ClientLayout,
+      children: [
+        {
+          path: "",
+          component: null
+        },
+        {
+          path: "upload-selection",
+          name: 'upload',
+          component: ChoiceUploadView
+        },
+        {
+          path: 'upload-cv',
+          name: 'uploadCVManuel',
+          component: FormulaireUploadCVView
+        },
+        {
+          path: 'editor-cv',
+          name: 'editeurEnLigne',
+          component: EditCVView
+        },
+      ]
     },
 
     {
-      path: '/upload-cv',
-      name: 'uploadCVManuel',
-      component: FormulaireUploadCVView
-    },
+      path: "/si/app",
+      component: AppLayout,
+      beforeEnter: (to, from) => {
+        const authStore = useAuthStore()
 
-    {
-      path: '/editor-cv',
-      name: 'editeurEnLigne',
-      component: EditCVView
+        if (!authStore.estAuthentifie) {
+          return { name: 'login' }
+        }
+      },
+      children: [
+        {
+          path: "",
+          component: DashboardView,
+        },
+        {
+          path: "rh/cv",
+          component: CVView
+        }
+        // Ajouter ici les routes RH, Finance,
+        // Manager et Direction.
+      ],
     },
   ],
-})
+});
 
-export default router
+export default router;

@@ -1,10 +1,8 @@
 <script setup>
 
-import NavBar from '../components/NavBar.vue';
-import FormulaireCV from '../components/FormulaireCV.vue';
-import BoutonRetour from '../components/BoutonRetour.vue';
-
-
+import NavBar from '@/components/NavBar.vue';
+import FormulaireCV from '@/components/FormulaireCV.vue';
+import BoutonRetour from '@/components/BoutonRetour.vue';
 
 </script>
 <template>

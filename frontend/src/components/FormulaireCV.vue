@@ -1,5 +1,18 @@
 <script setup>
+import { ref } from 'vue';
 import ApercuPDF from './ApercuPDF.vue';
+
+const filePDF = ref('');
+
+const handleUpload = (event) =>{
+  const file = event.target.files[0]; // Récupère le fichier importé
+    
+    if (file) {
+        const blobUrl = URL.createObjectURL(file); 
+        filePDF.value = blobUrl; 
+    }
+}
+
 </script>
 <template>
     <form class="formulaire" action="#" method="post" enctype="multipart/form-data">
@@ -31,7 +44,7 @@ import ApercuPDF from './ApercuPDF.vue';
 
       <div class="champ champ--large">
         <label for="cv">CV (PDF)</label>
-        <input type="file" id="cv" name="cv" accept="application/pdf,.pdf" required>
+        <input @change="handleUpload($event)" type="file" id="cv" name="cv" accept="application/pdf,.pdf" required>
         <p class="champ__erreur" id="cv-erreur" role="alert" hidden></p>
       </div>
 
@@ -45,5 +58,5 @@ import ApercuPDF from './ApercuPDF.vue';
         <button type="submit" class="bouton">Envoyer</button>
       </div>
     </form>
-    <ApercuPDF/>
+    <ApercuPDF :file="filePDF" />
 </template>

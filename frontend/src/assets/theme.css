@@ -1,0 +1,20 @@
+:root {
+    /* Couleurs principales */
+    --color-primary: #015f09;
+    --color-secondary: #80af84;
+
+    /* Couleurs de fond */
+    --color-card: #ffffff;
+    --color-background: #f6f5f5;
+
+    /* Couleur du texte */
+    --color-text: #bfbfbf;
+
+    /* États d'erreur */
+    --color-danger: #cd3d3d;
+    --color-danger-background: #ffc1c1;
+
+    /* États de succès */
+    --color-success: #008106;
+    --color-success-background: #ccffcf;
+}

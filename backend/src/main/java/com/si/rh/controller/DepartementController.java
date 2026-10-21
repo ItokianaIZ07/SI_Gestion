@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.si.rh.service.DepartementService;
-
+import com.si.rh.model.Departement;
 @RestController
 @RequestMapping("/api/departements")
 public class DepartementController {
@@ -19,12 +19,7 @@ public class DepartementController {
     }
 
     @GetMapping
-    public List<DepartementDto> getAll() {
-        return departementService.getAll().stream()
-                .map(departement -> new DepartementDto(departement.getId(), departement.getNom()))
-                .toList();
-    }
-
-    public record DepartementDto(Integer id, String nom) {
+    public List<Departement> getAll() {
+        return departementService.getAll();
     }
 }

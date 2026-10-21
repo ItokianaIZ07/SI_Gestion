@@ -64,7 +64,7 @@ onMounted(charger)
             <td class="fin-num">{{ ariary(g.valeurMin) }}</td>
             <td class="fin-num">{{ ariary(g.valeurMax) }}</td>
             <td>{{ dateFr(g.dateDebutValidite) }}</td>
-            <td>{{ dateFr(g.dnanceateFinValidite) }}</td>
+            <td>{{ dateFr(g.dateFinValidite) }}</td>
             <td><button class="fin-btn fin-btn-sec" type="button" @click="modifier(g)">Modifier</button></td>
           </tr>
           <tr v-if="!grilles.length"><td colspan="7">Aucune grille définie.</td></tr>

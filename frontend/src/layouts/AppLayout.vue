@@ -96,7 +96,7 @@ nav a:hover {
 
 /* Route active */
 
-nav a.router-link-active {
+nav a.router-link-exact-active {
     background-color: #e8f3e9;
     color: var(--color-primary);
     font-weight: 600;

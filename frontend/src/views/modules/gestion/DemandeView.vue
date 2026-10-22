@@ -2,11 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { getBesoins } from "@/services/api";
 import {
-  prioriteLabel,
-  formatDate,
-  statutLabel,
   normaliserBesoin,
-  formatSalaire
 } from "@/utils/demandeUtils";
 import DemandeComponent from "@/components/demande/DemandeComponent.vue";
 import DemandeSelectComponent from "@/components/demande/DemandeSelectComponent.vue";

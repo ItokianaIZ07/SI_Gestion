@@ -7,4 +7,5 @@ import java.util.Optional;
 
 @Repository
 public interface DecisionRecrutementRepository extends JpaRepository<DecisionRecrutement, Integer> {
+    Optional<DecisionRecrutement> findByCandidatureId(Integer idCandidature);
 }

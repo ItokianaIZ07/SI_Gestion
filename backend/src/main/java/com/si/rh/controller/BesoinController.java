@@ -1,5 +1,12 @@
 package com.si.rh.controller;
 
+import com.si.rh.dto.BesoinRequest;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import com.si.rh.model.Besoin;
 import com.si.rh.service.BesoinService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +29,12 @@ public class BesoinController {
         this.besoinService = besoinService;
     }
 
+
+    @PostMapping
+    public ResponseEntity<Integer> creer(@Valid @RequestBody BesoinRequest request) {
+        Besoin besoin = besoinService.creer(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(besoin.getId());
+    }
     @GetMapping("")
     public List<Besoin> getListBesoin(){
         return besoinService.getAll();

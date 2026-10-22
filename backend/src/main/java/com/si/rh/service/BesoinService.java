@@ -15,8 +15,6 @@ import com.si.rh.repository.TypeBesoinRepository;
 import com.si.rh.repository.TypeContratRepository;
 import com.si.rh.repository.UtilisateurRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -49,7 +47,7 @@ public class BesoinService {
         this.typeContratRepository = typeContratRepository;
     }
 
-    public List<Besoin> getAll() {
+    public List<Besoin> getAll(){
         return besoinRepository.findAll();
     }
 

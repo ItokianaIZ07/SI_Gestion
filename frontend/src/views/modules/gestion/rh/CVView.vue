@@ -1,4 +1,6 @@
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 import { onMounted, ref } from 'vue';
 import ApercuPDF from '@/components/ApercuPDF.vue';
 import { candidatsApi, cvsApi } from "@/services/ressources";
@@ -55,6 +57,8 @@ async function charger() {
 }
 
 onMounted(charger);
+
+const pg = usePagination(candidats, 12);
 </script>
 
 <template>
@@ -73,9 +77,11 @@ onMounted(charger);
             </header>
 
             <div class="cv-list-content">
-                <CVItem v-for="candidat in candidats" :key="candidat.id" :candidat="candidat"
+                <CVItem v-for="candidat in pg.items" :key="candidat.id" :candidat="candidat"
                     :selectCandidat="selectCandidat" :class="{ active: selectedCandidat?.id === candidat.id }" />
             </div>
+
+            <Pagination v-bind="pg.barre" compact @update:page="pg.aller" />
         </section>
 
         <!-- Panneau droit : aperçu du CV -->
@@ -130,9 +136,9 @@ onMounted(charger);
     align-items: stretch;
     width: 100%;
     min-height: 650px;
-    padding: 20px;
+    padding: 0;
     box-sizing: border-box;
-    background-color: #f8f9f8;
+    background-color: transparent;
 }
 
 /* Panneaux principaux */
@@ -142,9 +148,9 @@ onMounted(charger);
     display: flex;
     flex-direction: column;
     background-color: #ffffff;
-    border: 1px solid #e8ebe8;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(25, 45, 25, 0.025);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .cv-list {

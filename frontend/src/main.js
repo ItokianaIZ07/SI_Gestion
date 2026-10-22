@@ -1,3 +1,4 @@
+import './assets/theme.css'
 import './assets/style.css'
 import './assets/formulaire.css'
 import './assets/editeur.css'

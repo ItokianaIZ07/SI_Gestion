@@ -186,7 +186,52 @@ const router = createRouter({
         {
           path: "rh/contrats",
           component: ContratView,
-        }
+        },
+        {
+          path: "rh/recrutements",
+          name: "rhRecrutements",
+          component: () => import("@/views/modules/gestion/rh/RecrutementsView.vue"),
+        },
+        {
+          path: "rh/recrutements/creation",
+          name: "rhRecrutementCreation",
+          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
+        },
+        {
+          path: "rh/recrutements/:id/modifier",
+          name: "rhRecrutementModification",
+          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
+        },
+        {
+          path: "rh/offres",
+          name: "rhOffres",
+          component: () => import("@/views/modules/gestion/rh/OffresView.vue"),
+        },
+        {
+          path: "rh/offres/creation",
+          name: "rhOffreCreation",
+          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
+        },
+        {
+          path: "rh/offres/:id/modifier",
+          name: "rhOffreModification",
+          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
+        },
+        {
+          path: "rh/publications",
+          name: "rhPublications",
+          component: () => import("@/views/modules/gestion/rh/PublicationsView.vue"),
+        },
+        {
+          path: "rh/publications/creation",
+          name: "rhPublicationCreation",
+          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
+        },
+        {
+          path: "rh/publications/:id/modifier",
+          name: "rhPublicationModification",
+          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
+        },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
       ],

@@ -14,7 +14,6 @@ const router = useRouter();
 
 async function handleLogin() {
   errorMessage.value = "";
-  loading.value = true;
 
   if (!email.value.trim() || !password.value) {
     errorMessage.value = "Veuillez remplir tous les champs.";
@@ -22,22 +21,28 @@ async function handleLogin() {
   }
 
   loading.value = true;
+
   try {
-    const response = await store.login(email.value, password.value);
+    const response = await store.login(
+      email.value.trim(),
+      password.value
+    );
+
     if (!response.success) {
       errorMessage.value = response.message;
       return;
     }
 
     await router.replace("/si/app");
-    console.log("Connexion avec succès");
-  } catch {
-    errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
+    console.log("Connexion réussie");
+  } catch (error) {
+    console.error("Erreur de connexion :", error);
+    errorMessage.value =
+      "Impossible de contacter le serveur. Réessayez.";
   } finally {
     loading.value = false;
     console.log({
       email: email.value,
-      password: password.value,
     });
   }
 }
@@ -45,6 +50,46 @@ async function handleLogin() {
 
 <template>
   <div class="login-page">
+    <!-- Panneau visuel -->
+    <aside class="login-visuel" aria-hidden="false">
+      <div class="login-visuel__marque">
+        <span class="login-visuel__logo">RH</span>
+        <span>Gestion RH</span>
+      </div>
+
+      <div class="login-visuel__contenu">
+        <h2>Pilotez vos recrutements,<br />de la demande à l'embauche.</h2>
+        <p>Besoins, offres, candidatures, entretiens et contrats : un seul espace, clair et sécurisé.</p>
+
+        <ul class="login-visuel__liste">
+          <li><span class="coche">✓</span> Suivi complet de chaque recrutement</li>
+          <li><span class="coche">✓</span> Candidatures et CV centralisés</li>
+          <li><span class="coche">✓</span> Contrats et signatures en ligne</li>
+        </ul>
+      </div>
+
+      <svg class="login-visuel__illu" viewBox="0 0 420 250" fill="none" aria-hidden="true">
+        <rect x="40" y="20" width="340" height="200" rx="18" fill="#fff" fill-opacity=".97" />
+        <rect x="40" y="20" width="340" height="40" rx="18" fill="#eef6ee" />
+        <rect x="40" y="46" width="340" height="14" fill="#eef6ee" />
+        <circle cx="62" cy="40" r="5" fill="#cfe3d1" /><circle cx="80" cy="40" r="5" fill="#cfe3d1" /><circle cx="98" cy="40" r="5" fill="#cfe3d1" />
+        <rect x="60" y="80" width="90" height="64" rx="10" fill="#eef6ee" />
+        <rect x="72" y="92" width="34" height="8" rx="4" fill="#80af84" />
+        <rect x="72" y="110" width="50" height="14" rx="5" fill="#015f09" />
+        <rect x="165" y="80" width="90" height="64" rx="10" fill="#eef6ee" />
+        <rect x="177" y="92" width="34" height="8" rx="4" fill="#80af84" />
+        <rect x="177" y="110" width="40" height="14" rx="5" fill="#015f09" />
+        <rect x="270" y="80" width="90" height="64" rx="10" fill="#eef6ee" />
+        <rect x="282" y="92" width="34" height="8" rx="4" fill="#80af84" />
+        <rect x="282" y="110" width="56" height="14" rx="5" fill="#015f09" />
+        <path d="M60 196l36-26 34 14 44-36 40 18 50-34 56 20" stroke="#80af84" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+        <circle cx="344" cy="170" r="6" fill="#015f09" />
+        <circle cx="352" cy="210" r="30" fill="#80af84" /><path d="M340 210l9 9 16-18" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </aside>
+
+    <!-- Panneau formulaire -->
+    <div class="login-panneau">
     <div class="login-card">
       <div class="login-header">
         <div class="login-logo">
@@ -142,40 +187,109 @@ async function handleLogin() {
 
       <p class="login-footer">Système de gestion des ressources humaines</p>
     </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Page */
+/* Page : deux panneaux */
 
 .login-page {
   min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  background: var(--color-card);
+}
+
+/* Panneau visuel (vert) */
+
+.login-visuel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  padding: clamp(32px, 4vw, 56px);
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(520px 360px at 105% -5%, rgba(255, 255, 255, 0.14), transparent 70%),
+    radial-gradient(420px 300px at -10% 105%, rgba(128, 175, 132, 0.35), transparent 70%),
+    linear-gradient(145deg, #013d06 0%, #015f09 55%, #0b7c16 100%);
+}
+
+.login-visuel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(180deg, transparent, #000 30%, transparent);
+}
+
+.login-visuel > * { position: relative; z-index: 1; }
+
+.login-visuel__marque { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.1rem; }
+
+.login-visuel__logo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.login-visuel__contenu h2 { margin: 0 0 14px; color: #fff; font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.2; }
+.login-visuel__contenu p { margin: 0; max-width: 46ch; color: rgba(255, 255, 255, 0.82); font-size: 1rem; }
+
+.login-visuel__liste { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 12px; }
+.login-visuel__liste li { display: flex; align-items: center; gap: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.92); }
+
+.coche {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.login-visuel__illu { width: min(420px, 100%); height: auto; align-self: center; filter: drop-shadow(0 18px 30px rgba(0, 30, 4, 0.35)); }
+
+/* Panneau formulaire (blanc) */
+
+.login-panneau {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  box-sizing: border-box;
-  background-color: var(--color-background);
+  padding: 32px 24px;
+  background:
+    radial-gradient(600px 260px at 50% -8%, var(--color-primary-soft), transparent 70%),
+    var(--color-card);
 }
-
-/* Carte */
 
 .login-card {
   width: 100%;
-  max-width: 420px;
-  box-sizing: border-box;
-  padding: 36px;
-  background-color: var(--color-card);
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgb(0 0 0 / 5%);
+  max-width: 400px;
+  padding: 8px 0;
+  animation: entree-login 0.5s ease both;
 }
+
+@keyframes entree-login { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 /* En-tête */
 
 .login-header {
-  text-align: center;
-  margin-bottom: 32px;
+  text-align: left;
+  margin-bottom: 28px;
 }
 
 .login-logo {
@@ -184,8 +298,9 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 18px;
+  margin: 0 0 20px;
   border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(1, 95, 9, 0.28);
   background-color: var(--color-primary);
   color: var(--color-card);
   font-size: 20px;
@@ -194,7 +309,7 @@ async function handleLogin() {
 
 .login-header h1 {
   margin: 0 0 8px;
-  color: #222222;
+  color: var(--color-ink);
   font-size: 26px;
   font-weight: 700;
 }
@@ -230,7 +345,7 @@ form {
   width: 100%;
   box-sizing: border-box;
   padding: 12px 14px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   outline: none;
   background-color: var(--color-card);
@@ -247,7 +362,7 @@ form {
 
 .form-group input:focus {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgb(1 95 9 / 10%);
+  box-shadow: var(--shadow-focus);
 }
 
 /* Erreur */
@@ -279,7 +394,7 @@ form {
 }
 
 .login-button:hover:not(:disabled) {
-  background-color: #014b07;
+  background-color: var(--color-primary-hover);
 }
 
 .login-button:disabled {
@@ -292,7 +407,7 @@ form {
 .login-footer {
   margin: 28px 0 0;
   padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--color-border);
   color: #6b7280;
   font-size: 12px;
   line-height: 1.5;
@@ -347,9 +462,16 @@ form {
 
 /* Responsive */
 
+@media (max-width: 900px) {
+  .login-page { grid-template-columns: 1fr; }
+  .login-visuel { display: none; }
+  .login-panneau { min-height: 100vh; }
+}
+
+
 @media (max-width: 480px) {
   .login-card {
-    padding: 26px 20px;
+    padding: 0;
   }
 
   .login-header h1 {

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { chargerAnnonces } from "@/services/annonces";
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
+import HeroBanner from "@/components/ui/HeroBanner.vue";
 import OffreCard from '../../../components/client/OffreCard.vue'
 
 const annonces = ref([]);
@@ -27,19 +30,17 @@ const resultats = computed(() => {
   );
 });
 
+
+const pg = usePagination(resultats, 6);
 </script>
 
 <template>
   <div class="principal principal--formulaire">
-    <div class="intro">
-      <h1>Offres d'emploi</h1>
-      <p>Trouvez le poste qui vous correspond et postulez en déposant votre CV.</p>
-    </div>
-
-    <div class="offres__outils">
+    <HeroBanner class="offres__hero" eyebrow="Carrières" titre="Trouvez le poste qui vous correspond"
+      texte="Parcourez les offres ouvertes et postulez en déposant votre CV.">
       <input v-model="recherche" class="offres__recherche" type="search"
         placeholder="Rechercher un poste, une compétence…" aria-label="Rechercher une offre" />
-    </div>
+    </HeroBanner>
 
     <p v-if="chargement" class="offres__info">Chargement des offres…</p>
     <p v-else-if="erreur" class="champ__erreur offres__info" role="alert">{{ erreur }}</p>
@@ -49,10 +50,12 @@ const resultats = computed(() => {
     </p>
 
     <ul v-else class="offres__grille">
-      <li v-for="{ offre, publication } in resultats" :key="offre.id">
+      <li v-for="{ offre, publication } in pg.items" :key="offre.id">
         <OffreCard :offre="offre", :publication="publication"/>
       </li>
     </ul>
+
+    <Pagination v-if="!chargement && !erreur" class="offres__pagination" v-bind="pg.barre" @update:page="pg.aller" />
 
     <p class="offres__spontanee">
       Aucune offre ne vous correspond ?
@@ -62,13 +65,12 @@ const resultats = computed(() => {
 </template>
 
 <style scoped>
-.offres__outils {
-  width: 100%;
-  max-width: 960px;
-}
+.offres__hero { max-width: 960px; }
 
 .offres__recherche {
   width: 100%;
+  max-width: 460px;
+  box-shadow: 0 4px 14px rgba(0, 40, 6, .18);
   padding: 12px 16px;
   font: inherit;
   color: var(--texte);
@@ -98,6 +100,8 @@ const resultats = computed(() => {
   grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
   gap: 24px;
 }
+
+.offres__pagination { width: 100%; max-width: 960px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
 
 .offres__spontanee {
   margin: 0;

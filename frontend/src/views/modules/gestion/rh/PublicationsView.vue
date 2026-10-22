@@ -1,4 +1,6 @@
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 // Publications des offres sur les plateformes (dont le site candidat).
 // Seules les publications PUBLIEE non expirées sont visibles côté candidat.
 import { ref, computed, onMounted } from "vue";
@@ -77,6 +79,9 @@ async function supprimer(p) {
 }
 
 onMounted(charger);
+
+/* Pagination du tableau */
+const pg = usePagination(lignes, 10);
 </script>
 
 <template>
@@ -117,7 +122,7 @@ onMounted(charger);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in lignes" :key="p.id">
+            <tr v-for="p in pg.items" :key="p.id">
               <td class="g-principal">{{ offreParId.get(p.offreId)?.titre ?? `Offre #${p.offreId}` }}</td>
               <td>
                 {{ p.plateforme }}
@@ -138,6 +143,7 @@ onMounted(charger);
           </tbody>
         </table>
       </div>
+      <Pagination v-bind="pg.barre" @update:page="pg.aller" />
     </section>
   </div>
 </template>

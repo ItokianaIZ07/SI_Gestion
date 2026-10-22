@@ -1,4 +1,6 @@
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 import { ref, computed, onMounted } from "vue";
 import { recrutementsApi, offresApi } from "@/services/ressources";
 import { STATUTS_RECRUTEMENT, formatDate } from "@/config/libelles";
@@ -56,6 +58,9 @@ async function supprimer(r) {
 }
 
 onMounted(charger);
+
+/* Pagination du tableau */
+const pg = usePagination(lignes, 10);
 </script>
 
 <template>
@@ -98,7 +103,7 @@ onMounted(charger);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in lignes" :key="r.id">
+            <tr v-for="r in pg.items" :key="r.id">
               <td class="g-principal">{{ r.reference }}</td>
               <td>{{ r.titre }}</td>
               <td>{{ formatDate(r.dateOuverture) }}</td>
@@ -120,6 +125,7 @@ onMounted(charger);
           </tbody>
         </table>
       </div>
+      <Pagination v-bind="pg.barre" @update:page="pg.aller" />
     </section>
   </div>
 </template>

@@ -44,7 +44,7 @@
   padding: 12px 20px;
   background: var(--fond-card);
   border: 1px solid var(--couleur-texte);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .ed-barre__titre {
@@ -77,7 +77,7 @@
 .ed-bloc {
   background: var(--fond-card);
   border: 1px solid var(--couleur-texte);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
 }
 
 .ed-bloc summary {

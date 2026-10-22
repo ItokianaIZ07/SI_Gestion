@@ -9,32 +9,32 @@ const crud = (base) => ({
 });
 
 export const besoinsApi = {
-  liste: () => api.get("/api/rh/besoins"),
-  parId: (id) => api.get(`/api/rh/besoins/${id}`),
+  liste: () => api.get("/rh/besoins"),
+  parId: (id) => api.get(`/rh/besoins/${id}`),
 };
 
-export const recrutementsApi = crud("/api/recrutements");
-export const offresApi = crud("/api/offres-emploi");
-export const publicationsApi = crud("/api/publications-offres");
+export const recrutementsApi = crud("/recrutements");
+export const offresApi = crud("/offres-emploi");
+export const publicationsApi = crud("/publications-offres");
 export const cvsApi = {
-  ...crud("/api/cvs"),
+  ...crud("/cvs"),
   parCandidat: (candidatId) =>
-    api.get(`/api/cvs/candidat/${candidatId}`),
+    api.get(`/cvs/candidat/${candidatId}`),
   fichier: (id) =>
-    api.getBlob(`/api/cvs/${id}/fichier`),
+    api.getBlob(`/cvs/${id}/fichier`),
 };
-export const candidatsApi = crud("/api/candidats");
-export const candidaturesApi = crud("/api/candidatures");
+export const candidatsApi = crud("/candidats");
+export const candidaturesApi = crud("/candidatures");
 
 export const clientApi = {
-  publications: () => api.get("/api/client/publications-offres"),
-  offres: () => api.get("/api/client/offres-emploi"),
+  publications: () => api.get("/client/publications-offres"),
+  offres: () => api.get("/client/offres-emploi"),
   deposerCv(metadata, fichier) {
     const fd = new FormData();
     fd.append("metadata", new Blob(
       [JSON.stringify(metadata)],
       { type: "application/json" }));
     fd.append("fichier", fichier);
-    return api.upload("/api/client/depots-cv", fd);
+    return api.upload("/client/depots-cv", fd);
   },
 };

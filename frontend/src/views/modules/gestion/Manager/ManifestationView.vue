@@ -73,7 +73,7 @@ onMounted(chargerDonnees)
 </script>
 
 <template>
-  <main class="principal" style="margin-right: 20%;">
+  <div class="principal">
     <div class="intro">
       <h1>Manifester un besoin</h1>
       <p>Décrivez le besoin en personnel de votre département. Il sera transmis aux ressources humaines pour traitement.</p>
@@ -89,5 +89,5 @@ onMounted(chargerDonnees)
       :employes="employesFiltres"
       :types-contrat="typeContrat"
     />
-  </main>
+  </div>
 </template>

@@ -10,7 +10,7 @@ export async function getCandidaturesAvecEntretiens() {
 //Cree ou met à jour un entretien
 export async function enregistrerEntretien(payload) {
   if (payload.id) {
-    const { data } = await api.put(`/rh/entretiens/${payload.id}`, payload);
+    const { data } = await api.put(`/api/rh/entretiens/${payload.id}`, payload);
     return data;
   }
   const { data } = await api.post("/rh/entretiens", payload);

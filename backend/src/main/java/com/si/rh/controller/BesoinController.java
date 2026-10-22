@@ -10,12 +10,10 @@ import org.springframework.security.core.Authentication;
 import com.si.rh.dto.ApiResponse;
 import com.si.rh.dto.besoin.BesoinDTO;
 import com.si.rh.dto.BesoinRequest;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import com.si.rh.model.Besoin;
 import com.si.rh.service.BesoinService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -39,6 +37,7 @@ public class BesoinController {
     public ResponseEntity<String> decide(
             @Valid @RequestBody DemandeDecisionDTO demandeDecision,
             Authentication authentication) {
+        System.out.println(authentication.getName());
         validationBesoinService.prendreDecision(
                 demandeDecision.idBesoin(),
                 demandeDecision.decisionCode(),

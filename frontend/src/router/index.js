@@ -11,6 +11,9 @@ import { useAuthStore } from '@/stores/authStore'
 import CVView from '@/views/modules/gestion/rh/CVView.vue'
 import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
+import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
+import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -68,6 +71,14 @@ const router = createRouter({
         {
           path: "rh/demandes",
           component: DemandeView
+        },
+        {
+          path: "rh/entretiens",
+          component: EntretienView,
+        },
+        {
+          path: "rh/contrats",
+          component: ContratView,
         }
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.

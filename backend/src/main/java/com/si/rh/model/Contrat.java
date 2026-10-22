@@ -32,7 +32,7 @@ public class Contrat {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_statut_contrat", nullable = false)
-    private StatutContract statutContrat;
+    private StatutContract StatutContract;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_contrat_precedent")
@@ -76,12 +76,12 @@ public class Contrat {
     public Contrat() {
     }
 
-    public Contrat(Integer id, String reference, Employe employe, TypeContrat typeContrat, StatutContract statutContrat, Contrat contratPrecedent, Utilisateur createur, LocalDate dateDebut, LocalDate dateFin, Integer periodeEssaiJours, LocalDate dateSignature, BigDecimal salaire, String nomFichier, String mimeType, byte[] contenu, OffsetDateTime dateCreation) {
+    public Contrat(Integer id, String reference, Employe employe, TypeContrat typeContrat, StatutContract StatutContract, Contrat contratPrecedent, Utilisateur createur, LocalDate dateDebut, LocalDate dateFin, Integer periodeEssaiJours, LocalDate dateSignature, BigDecimal salaire, String nomFichier, String mimeType, byte[] contenu, OffsetDateTime dateCreation) {
         this.id = id;
         this.reference = reference;
         this.employe = employe;
         this.typeContrat = typeContrat;
-        this.statutContrat = statutContrat;
+        this.StatutContract = StatutContract;
         this.contratPrecedent = contratPrecedent;
         this.createur = createur;
         this.dateDebut = dateDebut;
@@ -129,12 +129,12 @@ public class Contrat {
         this.typeContrat = typeContrat;
     }
 
-    public StatutContract getStatutContrat() {
-        return statutContrat;
+    public StatutContract getStatutContract() {
+        return StatutContract;
     }
 
-    public void setStatutContrat(StatutContract statutContrat) {
-        this.statutContrat = statutContrat;
+    public void setStatutContract(StatutContract StatutContract) {
+        this.StatutContract = StatutContract;
     }
 
     public Contrat getContratPrecedent() {

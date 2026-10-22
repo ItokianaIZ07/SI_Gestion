@@ -44,16 +44,26 @@ const candidatureSelectionnee = computed(() =>
 
 function selectionner(c) {
   selectionId.value = c.id;
-  entretienEdite.value = c.entretien
-    ? { ...c.entretien }
-    : {
-        id: null,
-        idCandidature: c.id,
-        typeEntretien: "RH",
-        dateEntretien: "",
-        lieu: "",
-        idUtilisateurIntervieweur: null,
-      };
+
+  if (c.entretien) {
+    // Tronque les microsecondes : 2026-10-30T16:08:16.734499 → 2026-10-30T16:08:16
+    let date = c.entretien.dateEntretien || '';
+    if (date.length > 19) date = date.slice(0, 19);  // YYYY-MM-DDTHH:mm:ss
+
+    entretienEdite.value = {
+      ...c.entretien,
+      dateEntretien: date,
+    };
+  } else {
+    entretienEdite.value = {
+      id: null,
+      idCandidature: c.id,
+      typeEntretien: "RH",
+      dateEntretien: "",
+      lieu: "",
+      idUtilisateurIntervieweur: null,
+    };
+  }
 }
 
 async function enregistrer() {
@@ -61,7 +71,13 @@ async function enregistrer() {
     alert("Veuillez saisir une date d'entretien.");
     return;
   }
-  const resultat = await sauvegarder(entretienEdite.value);
+
+  // Normalise la date : "YYYY-MM-DDTHH:mm" → "YYYY-MM-DDTHH:mm:00"
+  let date = entretienEdite.value.dateEntretien;
+  if (date.length === 16) date += ":00";  // ajoute :00 si les secondes manquent
+
+  const payload = { ...entretienEdite.value, dateEntretien: date };
+  const resultat = await sauvegarder(payload);
   if (!resultat.success) alert(resultat.message);
 }
 
@@ -180,7 +196,7 @@ onMounted(charger);
               </div>
               <div class="detail-field">
                 <span>Date et heure</span>
-                <input type="datetime-local" v-model="entretienEdite.dateEntretien" />
+                <input type="datetime-local" v-model="entretienEdite.dateEntretien" step="1"/>
               </div>
               <div class="detail-field">
                 <span>Lieu</span>

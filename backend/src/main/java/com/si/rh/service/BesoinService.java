@@ -51,10 +51,6 @@ public class BesoinService {
 
     public List<Besoin> getAll() {
         return besoinRepository.findAll();
-
-
-    public List<Besoin> getAll(){
-        return besoinRepository.findAll();
     }
 
     public Besoin getById(int id){

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -67,11 +69,11 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("Une erreur interne est survenue."));
     }
     
-  @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> notFound(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(Map.of("message", e.getMessage()));
-    }
+//  @ExceptionHandler(IllegalArgumentException.class)
+//    public ResponseEntity<Map<String, String>> notFound(IllegalArgumentException e) {
+//        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//            .body(Map.of("message", e.getMessage()));
+//    }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, String>> conflict(IllegalStateException e) {

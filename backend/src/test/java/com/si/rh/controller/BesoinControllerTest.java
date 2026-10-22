@@ -1,5 +1,6 @@
 package com.si.rh.controller;
 
+import com.si.rh.service.BesoinService;
 import com.si.rh.service.ValidationBesoinService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +27,14 @@ class BesoinControllerTest {
     @Mock
     private ValidationBesoinService validationBesoinService;
 
+    @Mock
+    private BesoinService besoinService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new BesoinController(validationBesoinService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new BesoinController(validationBesoinService, besoinService)).build();
     }
 
     @Test

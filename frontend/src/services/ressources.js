@@ -9,8 +9,8 @@ const crud = (base) => ({
 });
 
 export const besoinsApi = {
-  liste: () => api.get("/api/besoins"),
-  parId: (id) => api.get(`/api/besoins/${id}`),
+  liste: () => api.get("/api/rh/besoins"),
+  parId: (id) => api.get(`/api/rh/besoins/${id}`),
 };
 
 export const recrutementsApi = crud("/api/recrutements");

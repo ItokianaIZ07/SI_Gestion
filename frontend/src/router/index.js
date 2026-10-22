@@ -93,7 +93,7 @@ const router = createRouter({
         
         {
           path: 'manager/demandes/creation',
-          name: 'DemandeManifestation',
+          // name: 'DemandeManifestation',
           component: ManifestationView
         },
         {

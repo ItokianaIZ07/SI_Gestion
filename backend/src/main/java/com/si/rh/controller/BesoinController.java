@@ -20,13 +20,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/besoins")
+@RequestMapping("/api/rh/besoins")
 public class BesoinController {
     private final ValidationBesoinService validationBesoinService;
     private final BesoinService service;
 
     public BesoinController(ValidationBesoinService validationBesoinService, BesoinService service) {
         this.validationBesoinService = validationBesoinService;
+        this.service = service;
     }
 
     @GetMapping
@@ -48,7 +49,7 @@ public class BesoinController {
 
     @PostMapping
     public ResponseEntity<Integer> creer(@Valid @RequestBody BesoinRequest request) {
-        Besoin besoin = besoinService.creer(request);
+        Besoin besoin = service.creer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(besoin.getId());
     }
 //     @GetMapping("")

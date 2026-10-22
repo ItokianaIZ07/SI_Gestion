@@ -16,6 +16,11 @@ const erreur = ref("");
 const message = ref("");
 const selectionId = ref(null);
 const signatureEnCours = ref(null);
+const feedbackAnim = ref("");
+const actionEnCours = ref(null);
+
+const rechercheContrat = ref("");
+const filtreStatutContrat = ref("TOUS");
 
 const formulaire = ref({
   idCandidature: null,
@@ -28,6 +33,42 @@ const formulaire = ref({
 const candidatSelectionne = computed(() =>
   aEmbaucher.value.find((c) => c.id === selectionId.value) ?? null
 );
+
+const contratsFiltres = computed(() => {
+  const terme = rechercheContrat.value.trim().toLowerCase();
+  return contrats.value.filter((c) => {
+    const contenu = [c.reference, c.employeNom, c.employePrenom, c.typeContrat]
+      .filter(Boolean).join(" ").toLowerCase();
+    const matchRech = !terme || contenu.includes(terme);
+    const matchStatut = filtreStatutContrat.value === "TOUS"
+      || c.statut === filtreStatutContrat.value;
+    return matchRech && matchStatut;
+  });
+});
+
+function afficherFeedback(texte, type = "success") {
+  feedbackAnim.value = type;
+  message.value = texte;
+  setTimeout(() => {
+    feedbackAnim.value = "";
+  }, 4000);
+}
+
+function libelleStatut(code) {
+  const labels = {
+    BROUILLON: "Brouillon",
+    EN_ATTENTE_SIGNATURE: "En attente signature",
+    ACTIF: "Actif",
+    TERMINE: "Terminé",
+    RESILIE: "Résilié",
+  };
+  return labels[code] ?? code;
+}
+
+function formatDate(d) {
+  if (!d) return "—";
+  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(new Date(d));
+}
 
 async function charger() {
   chargement.value = true;
@@ -58,13 +99,17 @@ async function embaucher() {
   if (!formulaire.value.idCandidature) return;
   erreur.value = "";
   message.value = "";
+  actionEnCours.value = "embauche";
+
   try {
     await embaucherCandidat(formulaire.value);
-    message.value = "Embauche effectuée : employé + contrat + onboarding créés.";
+    afficherFeedback("Embauche effectuée : employé + contrat + onboarding créés ✓");
     selectionId.value = null;
     await charger();
   } catch (e) {
     erreur.value = e.response?.data?.message ?? "Échec de l'embauche.";
+  } finally {
+    actionEnCours.value = null;
   }
 }
 
@@ -76,38 +121,23 @@ async function signer(contrat, partie) {
   try {
     const updated = await signerContrat(contrat.id, partie);
 
-    // Mise à jour locale du contrat concerné (pas de rechargement global)
     const index = contrats.value.findIndex((c) => c.id === contrat.id);
     if (index !== -1 && updated) {
       contrats.value.splice(index, 1, updated);
     }
 
     if (updated && updated.statut === "ACTIF") {
-      message.value = `✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`;
+      afficherFeedback(
+        `✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`
+      );
     } else {
-      message.value = `Signature ${partie} enregistrée. En attente de l'autre partie.`;
+      afficherFeedback(`Signature ${partie} enregistrée. En attente de l'autre partie.`);
     }
   } catch (e) {
     erreur.value = e.response?.data?.message ?? "Échec de la signature.";
   } finally {
     signatureEnCours.value = null;
   }
-}
-
-function formatDate(d) {
-  if (!d) return "—";
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(new Date(d));
-}
-
-function libelleStatut(code) {
-  const labels = {
-    BROUILLON: "Brouillon",
-    EN_ATTENTE_SIGNATURE: "En attente signature",
-    ACTIF: "Actif",
-    TERMINE: "Terminé",
-    RESILIE: "Résilié",
-  };
-  return labels[code] ?? code;
 }
 
 onMounted(charger);
@@ -126,17 +156,19 @@ onMounted(charger);
       </button>
     </header>
 
-    <div v-if="erreur" class="feedback error-feedback">
-      <span>{{ erreur }}</span>
-      <button @click="charger">Réessayer</button>
-    </div>
-    <div v-if="message" class="feedback success-feedback">
-      <span>{{ message }}</span>
-    </div>
+    <transition name="feedback">
+      <div
+        v-if="erreur || message"
+        class="feedback"
+        :class="erreur ? 'error-feedback' : 'success-feedback'"
+      >
+        <span>{{ erreur || message }}</span>
+        <button v-if="erreur" @click="charger">Réessayer</button>
+      </div>
+    </transition>
 
     <section class="workspace">
       <div class="request-panel">
-        <!-- Liste À EMBAUCHER -->
         <header class="panel-heading">
           <div>
             <h2>À embaucher</h2>
@@ -144,154 +176,186 @@ onMounted(charger);
           </div>
         </header>
 
-        <div class="request-list">
-          <button
-            v-for="c in aEmbaucher"
-            :key="c.id"
-            type="button"
-            class="request-item"
-            :class="{ active: selectionId === c.id }"
-            @click="selectionner(c)"
-          >
-            <div class="request-item-top">
-              <span class="request-id">#{{ c.id }}</span>
-            </div>
-            <h3>{{ c.candidatPrenom }} {{ c.candidatNom }}</h3>
-            <p class="department">{{ c.poste }} — {{ c.departement }}</p>
-          </button>
+        <div class="request-list" style="max-height: 260px">
+          <transition-group name="list" tag="div">
+            <button
+              v-for="c in aEmbaucher"
+              :key="c.id"
+              type="button"
+              class="request-item"
+              :class="{ active: selectionId === c.id }"
+              @click="selectionner(c)"
+            >
+              <div class="request-item-top">
+                <span class="request-id">#{{ c.id }}</span>
+              </div>
+              <h3>{{ c.candidatPrenom }} {{ c.candidatNom }}</h3>
+              <p class="department">{{ c.poste }} — {{ c.departement }}</p>
+            </button>
+          </transition-group>
 
           <div v-if="!chargement && aEmbaucher.length === 0" class="empty-list">
             <h3>Aucun candidat à embaucher</h3>
           </div>
         </div>
 
-        <!-- Liste CONTRATS -->
         <header class="panel-heading" style="margin-top: 16px">
           <div>
             <h2>Contrats</h2>
-            <p>{{ contrats.length }} contrat(s)</p>
+            <p>{{ contratsFiltres.length }} / {{ contrats.length }} contrat(s)</p>
           </div>
         </header>
 
+        <div class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input
+            v-model="rechercheContrat"
+            type="search"
+            placeholder="Référence, employé, type..."
+          />
+        </div>
+
+        <div class="filter-selects" style="grid-template-columns: 1fr">
+          <label>
+            <span>Statut</span>
+            <select v-model="filtreStatutContrat">
+              <option value="TOUS">Tous les statuts</option>
+              <option value="BROUILLON">Brouillon</option>
+              <option value="EN_ATTENTE_SIGNATURE">En attente signature</option>
+              <option value="ACTIF">Actif</option>
+              <option value="TERMINE">Terminé</option>
+              <option value="RESILIE">Résilié</option>
+            </select>
+          </label>
+        </div>
+
         <div class="request-list">
-          <div
-            v-for="ct in contrats"
-            :key="ct.id"
-            class="request-item"
-            :class="{ actif: ct.statut === 'ACTIF' }"
-          >
-            <div class="request-item-top">
-              <span class="request-id">{{ ct.reference }}</span>
-              <span class="priority" :class="String(ct.statut).toLowerCase()">
-                {{ libelleStatut(ct.statut) }}
-              </span>
-            </div>
-
-            <h3>{{ ct.employeNom }} {{ ct.employePrenom }}</h3>
-            <p class="department">{{ ct.typeContrat }} — {{ formatDate(ct.dateDebut) }}</p>
-
-            <!-- Indicateur de signatures -->
-            <div class="signatures-info">
-              <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 1 }">
-                {{ ct.nbSignatures >= 1 ? "✓" : "○" }} RH
-              </span>
-              <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 2 }">
-                {{ ct.nbSignatures >= 2 ? "✓" : "○" }} Candidat
-              </span>
-              <span class="signature-compteur">{{ ct.nbSignatures }}/2</span>
-            </div>
-
-            <!-- Boutons de signature -->
+          <transition-group name="list" tag="div">
             <div
-              v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
-              class="decision-actions"
-              style="margin-top: 8px"
+              v-for="ct in contratsFiltres"
+              :key="ct.id"
+              class="request-item"
+              :class="{ actif: ct.statut === 'ACTIF' }"
             >
-              <button
-                v-if="ct.nbSignatures < 1"
-                class="approve-button"
-                :disabled="signatureEnCours === ct.id + '-RH'"
-                @click.stop="signer(ct, 'RH')"
-              >
-                {{ signatureEnCours === ct.id + "-RH" ? "..." : "Signer RH" }}
-              </button>
-              <button
-                v-if="ct.nbSignatures >= 1 && ct.nbSignatures < 2"
-                class="reject-button"
-                :disabled="signatureEnCours === ct.id + '-CANDIDAT'"
-                @click.stop="signer(ct, 'CANDIDAT')"
-              >
-                {{ signatureEnCours === ct.id + "-CANDIDAT" ? "..." : "Signer candidat" }}
-              </button>
-            </div>
+              <div class="request-item-top">
+                <span class="request-id">{{ ct.reference }}</span>
+                <span class="priority" :class="String(ct.statut).toLowerCase()">
+                  {{ libelleStatut(ct.statut) }}
+                </span>
+              </div>
 
-            <!-- Message quand contrat ACTIF -->
-            <div v-if="ct.statut === 'ACTIF'" class="contrat-actif-notice">
-              ✓ Contrat signé par les deux parties
-              <span v-if="ct.dateSignature">le {{ formatDate(ct.dateSignature) }}</span>
-            </div>
-          </div>
+              <h3>{{ ct.employeNom }} {{ ct.employePrenom }}</h3>
+              <p class="department">{{ ct.typeContrat }} — {{ formatDate(ct.dateDebut) }}</p>
 
-          <div v-if="!chargement && contrats.length === 0" class="empty-list">
-            <h3>Aucun contrat en cours</h3>
+              <div class="signatures-info">
+                <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 1 }">
+                  {{ ct.nbSignatures >= 1 ? "✓" : "○" }} RH
+                </span>
+                <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 2 }">
+                  {{ ct.nbSignatures >= 2 ? "✓" : "○" }} Candidat
+                </span>
+                <span class="signature-compteur">{{ ct.nbSignatures }}/2</span>
+              </div>
+
+              <div
+                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
+                class="decision-actions"
+                style="margin-top: 8px"
+              >
+                <button
+                  v-if="ct.nbSignatures < 1"
+                  class="approve-button"
+                  :disabled="signatureEnCours === ct.id + '-RH'"
+                  @click.stop="signer(ct, 'RH')"
+                >
+                  {{ signatureEnCours === ct.id + "-RH" ? "..." : "Signer RH" }}
+                </button>
+                <button
+                  v-if="ct.nbSignatures >= 1 && ct.nbSignatures < 2"
+                  class="reject-button"
+                  :disabled="signatureEnCours === ct.id + '-CANDIDAT'"
+                  @click.stop="signer(ct, 'CANDIDAT')"
+                >
+                  {{ signatureEnCours === ct.id + "-CANDIDAT" ? "..." : "Signer candidat" }}
+                </button>
+              </div>
+
+              <div v-if="ct.statut === 'ACTIF'" class="contrat-actif-notice">
+                ✓ Contrat signé par les deux parties
+                <span v-if="ct.dateSignature">le {{ formatDate(ct.dateSignature) }}</span>
+              </div>
+            </div>
+          </transition-group>
+
+          <div v-if="!chargement && contratsFiltres.length === 0" class="empty-list">
+            <h3>Aucun contrat</h3>
+            <p>Modifiez vos filtres ou la recherche.</p>
           </div>
         </div>
       </div>
 
-      <!-- Panneau de détail embauche -->
       <section class="detail-panel">
-        <template v-if="candidatSelectionne">
-          <header class="detail-header">
-            <div>
-              <span class="eyebrow">EMBAUCHE #{{ candidatSelectionne.id }}</span>
-              <h2>{{ candidatSelectionne.candidatPrenom }} {{ candidatSelectionne.candidatNom }}</h2>
-              <p>{{ candidatSelectionne.poste }} — {{ candidatSelectionne.departement }}</p>
-            </div>
-          </header>
+        <transition name="fade" mode="out-in">
+          <div
+            v-if="candidatSelectionne"
+            :key="'detail-' + candidatSelectionne.id"
+          >
+            <header class="detail-header">
+              <div>
+                <span class="eyebrow">EMBAUCHE #{{ candidatSelectionne.id }}</span>
+                <h2>{{ candidatSelectionne.candidatPrenom }} {{ candidatSelectionne.candidatNom }}</h2>
+                <p>{{ candidatSelectionne.poste }} — {{ candidatSelectionne.departement }}</p>
+              </div>
+            </header>
 
-          <div class="detail-body">
-            <h3 class="section-title">Paramètres du contrat</h3>
-            <div class="detail-grid">
-              <div class="detail-field">
-                <span>Type de contrat</span>
-                <select v-model="formulaire.typeContrat">
-                  <option value="CDI">CDI</option>
-                  <option value="CDD">CDD</option>
-                  <option value="STAGE">Stage</option>
-                </select>
+            <div class="detail-body">
+              <h3 class="section-title">Paramètres du contrat</h3>
+              <div class="detail-grid">
+                <div class="detail-field">
+                  <span>Type de contrat</span>
+                  <select v-model="formulaire.typeContrat">
+                    <option value="CDI">CDI</option>
+                    <option value="CDD">CDD</option>
+                    <option value="STAGE">Stage</option>
+                  </select>
+                </div>
+                <div class="detail-field">
+                  <span>Date de début</span>
+                  <input type="date" v-model="formulaire.dateDebut" />
+                </div>
+                <div class="detail-field">
+                  <span>Salaire (MGA)</span>
+                  <input type="number" v-model.number="formulaire.salaire" min="0" step="1000" />
+                </div>
+                <div class="detail-field">
+                  <span>Période d'essai (jours)</span>
+                  <input type="number" v-model.number="formulaire.periodeEssaiJours" min="0" />
+                </div>
               </div>
-              <div class="detail-field">
-                <span>Date de début</span>
-                <input type="date" v-model="formulaire.dateDebut" />
-              </div>
-              <div class="detail-field">
-                <span>Salaire (MGA)</span>
-                <input type="number" v-model.number="formulaire.salaire" min="0" step="1000" />
-              </div>
-              <div class="detail-field">
-                <span>Période d'essai (jours)</span>
-                <input type="number" v-model.number="formulaire.periodeEssaiJours" min="0" />
-              </div>
-            </div>
 
-            <div class="decision-actions">
-              <button class="approve-button" @click="embaucher">
-                Créer l'employé + le contrat
-              </button>
-            </div>
+              <div class="decision-actions">
+                <button
+                  class="approve-button"
+                  :disabled="actionEnCours === 'embauche'"
+                  @click="embaucher"
+                >
+                  {{ actionEnCours === "embauche" ? "..." : "Créer l'employé + le contrat" }}
+                </button>
+              </div>
 
-            <div class="read-only-notice">
-              Cette action crée en une transaction : l'employé, le contrat (statut
-              EN_ATTENTE_SIGNATURE), l'historique, l'onboarding et ses tâches.
+              <div class="read-only-notice">
+                Cette action crée en une transaction : l'employé, le contrat (statut
+                EN_ATTENTE_SIGNATURE), l'historique, l'onboarding et ses tâches.
+              </div>
             </div>
           </div>
-        </template>
 
-        <div v-else class="empty-detail">
-          <div class="empty-document">☷</div>
-          <h2>Sélectionnez un candidat</h2>
-          <p>Choisissez un candidat RETENU pour créer son contrat.</p>
-        </div>
+          <div v-else class="empty-detail" key="empty">
+            <div class="empty-document">☷</div>
+            <h2>Sélectionnez un candidat</h2>
+            <p>Choisissez un candidat RETENU pour créer son contrat.</p>
+          </div>
+        </transition>
       </section>
     </section>
   </main>
@@ -304,7 +368,6 @@ onMounted(charger);
   --line: #e9ece8;
   --surface: #ffffff;
   --green-soft: #eef6ed;
-
   width: 100%;
   min-height: calc(100vh - 64px);
   padding: 0;
@@ -314,7 +377,6 @@ onMounted(charger);
   color: var(--ink);
 }
 
-/* En-tête */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -346,7 +408,6 @@ onMounted(charger);
   font-size: 13px;
 }
 
-/* Zone principale */
 .workspace {
   display: grid;
   grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.8fr);
@@ -378,7 +439,72 @@ onMounted(charger);
   font-weight: 700;
 }
 
-/* Liste */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 14px 14px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafbf9;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(1, 95, 9, 0.08);
+}
+
+.search-box > span {
+  color: #818781;
+  font-size: 22px;
+}
+
+.search-box input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.filter-selects {
+  display: grid;
+  gap: 10px;
+  padding: 0 14px 14px;
+  border-bottom: 1px solid #f0f1ef;
+}
+
+.filter-selects label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.filter-selects select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  transition: border-color 0.2s;
+}
+
+.filter-selects select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .request-list {
   display: flex;
   flex-direction: column;
@@ -395,7 +521,7 @@ onMounted(charger);
   border-radius: 9px;
   background: white;
   text-align: left;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 button.request-item {
@@ -405,6 +531,7 @@ button.request-item {
 .request-item:hover {
   background: #fafbf9;
   border-color: #e8ebe6;
+  transform: translateX(2px);
 }
 
 .request-item.active {
@@ -444,7 +571,6 @@ button.request-item {
   margin: 0 0 13px;
 }
 
-/* Badges statut */
 .priority {
   display: inline-block;
   padding: 5px 8px;
@@ -476,7 +602,6 @@ button.request-item {
   color: #697169;
 }
 
-/* Indicateur de signatures */
 .signatures-info {
   display: flex;
   align-items: center;
@@ -496,6 +621,7 @@ button.request-item {
   color: #888;
   font-size: 11px;
   font-weight: 600;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
 }
 
 .signature-pill.signee {
@@ -519,9 +645,20 @@ button.request-item {
   color: #24752b;
   font-size: 12px;
   font-weight: 600;
+  animation: slideIn 0.35s ease;
 }
 
-/* Détail */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -565,13 +702,6 @@ button.request-item {
   font-size: 11px;
 }
 
-.detail-field strong {
-  color: #363c36;
-  font-size: 12px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
 .detail-field input,
 .detail-field select,
 .detail-field textarea {
@@ -584,6 +714,7 @@ button.request-item {
   color: var(--ink);
   font: inherit;
   font-size: 12px;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .detail-field input:focus,
@@ -594,7 +725,6 @@ button.request-item {
   background: #fff;
 }
 
-/* Boutons */
 .decision-actions {
   display: flex;
   gap: 12px;
@@ -611,6 +741,11 @@ button.request-item {
   font: inherit;
   font-size: 12px;
   font-weight: 700;
+  transition: transform 0.1s, background 0.2s, opacity 0.2s;
+}
+
+.decision-actions button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .reject-button {
@@ -619,7 +754,7 @@ button.request-item {
   color: #b74736;
 }
 
-.reject-button:hover {
+.reject-button:hover:not(:disabled) {
   background: #ffebe8;
 }
 
@@ -629,7 +764,7 @@ button.request-item {
   color: white;
 }
 
-.approve-button:hover {
+.approve-button:hover:not(:disabled) {
   background: #014b07;
 }
 
@@ -647,7 +782,6 @@ button.request-item {
   min-width: 0;
 }
 
-/* Feedback */
 .feedback {
   display: flex;
   justify-content: space-between;
@@ -679,7 +813,6 @@ button.request-item {
   text-decoration: underline;
 }
 
-/* États vides */
 .empty-list,
 .empty-detail {
   display: flex;
@@ -726,7 +859,43 @@ button.request-item {
   line-height: 1.7;
 }
 
-/* Responsive */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.feedback-enter-active,
+.feedback-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.feedback-enter-from,
+.feedback-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
+}
+
 @media (max-width: 1000px) {
   .workspace {
     grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr);
@@ -737,12 +906,10 @@ button.request-item {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .detail-body,
   .detail-header {
     padding: 17px;
   }
-
   .page-header h1 {
     font-size: 22px;
   }
@@ -752,7 +919,6 @@ button.request-item {
   .detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .decision-actions {
     flex-direction: column;
   }

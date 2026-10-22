@@ -21,7 +21,6 @@ export async function embaucherCandidat(payload) {
 
 //Marque un contrat comme signe (une des deux parties)
 export async function signerContrat(idContrat, partie) {
-  // partie = "RH" ou "CANDIDAT"
   const { data } = await api.post(`/rh/contrats/${idContrat}/signer`, { partie });
   return data;
 }

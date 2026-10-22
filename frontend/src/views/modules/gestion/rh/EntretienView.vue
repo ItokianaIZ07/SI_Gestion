@@ -3,7 +3,6 @@
 import { ref, computed, onMounted } from "vue";
 import { useEntretiens } from "@/composable/useEntretiens";
 
-
 const {
   candidatures,
   intervieweurs,
@@ -17,24 +16,38 @@ const {
 } = useEntretiens();
 
 const recherche = ref("");
+const filtreStatut = ref("TOUS");
+const filtreType = ref("TOUS");
 const selectionId = ref(null);
 const entretienEdite = ref(null);
+const actionEnCours = ref(null);
+const feedbackAnim = ref("");
+
+const filtresStatut = [
+  { label: "Tous les statuts", value: "TOUS" },
+  { label: "Retenu", value: "RETENU" },
+  { label: "Présélectionné", value: "PRESELECTIONNE" },
+];
+
+const filtresType = [
+  { label: "Tous les types", value: "TOUS" },
+  { label: "Téléphone", value: "TELEPHONE" },
+  { label: "RH", value: "RH" },
+  { label: "Technique", value: "TECHNIQUE" },
+  { label: "Test technique", value: "TEST_TECHNIQUE" },
+  { label: "Direction", value: "DIRECTION" },
+];
 
 const candidaturesFiltrees = computed(() => {
   const terme = recherche.value.trim().toLowerCase();
-  if (!terme) return candidatures.value;
   return candidatures.value.filter((c) => {
-    const contenu = [
-      c.candidatNom,
-      c.candidatPrenom,
-      c.poste,
-      c.departement,
-      c.statut,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    return contenu.includes(terme);
+    const contenu = [c.candidatNom, c.candidatPrenom, c.poste, c.departement]
+      .filter(Boolean).join(" ").toLowerCase();
+    const matchRecherche = !terme || contenu.includes(terme);
+    const matchStatut = filtreStatut.value === "TOUS" || c.statut === filtreStatut.value;
+    const matchType = filtreType.value === "TOUS"
+      || (c.entretien && c.entretien.typeEntretien === filtreType.value);
+    return matchRecherche && matchStatut && matchType;
   });
 });
 
@@ -44,16 +57,10 @@ const candidatureSelectionnee = computed(() =>
 
 function selectionner(c) {
   selectionId.value = c.id;
-
   if (c.entretien) {
-    // Tronque les microsecondes : 2026-10-30T16:08:16.734499 → 2026-10-30T16:08:16
-    let date = c.entretien.dateEntretien || '';
-    if (date.length > 19) date = date.slice(0, 19);  // YYYY-MM-DDTHH:mm:ss
-
-    entretienEdite.value = {
-      ...c.entretien,
-      dateEntretien: date,
-    };
+    let date = c.entretien.dateEntretien || "";
+    if (date.length > 19) date = date.slice(0, 19);
+    entretienEdite.value = { ...c.entretien, dateEntretien: date };
   } else {
     entretienEdite.value = {
       id: null,
@@ -66,39 +73,81 @@ function selectionner(c) {
   }
 }
 
+function afficherFeedback(texte, type = "success") {
+  feedbackAnim.value = type;
+  message.value = texte;
+  setTimeout(() => {
+    feedbackAnim.value = "";
+  }, 4000);
+}
+
 async function enregistrer() {
   if (!entretienEdite.value?.dateEntretien) {
     alert("Veuillez saisir une date d'entretien.");
     return;
   }
 
-  // Normalise la date : "YYYY-MM-DDTHH:mm" → "YYYY-MM-DDTHH:mm:00"
+  actionEnCours.value = "save";
   let date = entretienEdite.value.dateEntretien;
-  if (date.length === 16) date += ":00";  // ajoute :00 si les secondes manquent
+  if (date.length === 16) date += ":00";
 
   const payload = { ...entretienEdite.value, dateEntretien: date };
   const resultat = await sauvegarder(payload);
-  if (!resultat.success) alert(resultat.message);
+  actionEnCours.value = null;
+
+  if (resultat.success) {
+    afficherFeedback(entretienEdite.value.id ? "Entretien mis à jour ✓" : "Entretien enregistré ✓");
+    await charger();
+    const c = candidatures.value.find((x) => x.id === selectionId.value);
+    if (c) selectionner(c);
+  } else {
+    afficherFeedback(resultat.message, "error");
+  }
 }
 
 async function convoquerEntretien() {
-  if (!entretienEdite.value?.id) return alert("Enregistrez d'abord l'entretien.");
+  if (!entretienEdite.value?.id) {
+    afficherFeedback("Enregistrez d'abord l'entretien.", "error");
+    return;
+  }
+  actionEnCours.value = "convocation";
   const resultat = await convoquer(entretienEdite.value.id);
-  alert(resultat.success ? "Convocation envoyée." : resultat.message);
+  actionEnCours.value = null;
+
+  if (resultat.success) {
+    afficherFeedback("Convocation envoyée ✓");
+  } else {
+    afficherFeedback(resultat.message, "error");
+  }
 }
 
 async function envoyerResultat(decision) {
   if (!candidatureSelectionnee.value) return;
+  actionEnCours.value = decision;
   const resultat = await notifierResultat(candidatureSelectionnee.value.id, decision);
-  alert(resultat.success ? "Résultat envoyé." : resultat.message);
+  actionEnCours.value = null;
+
+  if (resultat.success) {
+    afficherFeedback(
+      decision === "RETENU" ? "Candidat notifié « Retenu » ✓" : "Candidat notifié « Rejeté » ✓"
+    );
+    await charger();
+    const c = candidatures.value.find((x) => x.id === selectionId.value);
+    if (c) selectionner(c);
+  } else {
+    afficherFeedback(resultat.message, "error");
+  }
 }
 
 function formatDate(d) {
   if (!d) return "—";
   return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
+    dateStyle: "short", timeStyle: "short",
   }).format(new Date(d));
+}
+
+function libelleStatut(statut) {
+  return statut === "RETENU" ? "Retenu" : "Présélectionné";
 }
 
 onMounted(charger);
@@ -117,21 +166,23 @@ onMounted(charger);
       </button>
     </header>
 
-    <div v-if="erreur" class="feedback error-feedback">
-      <span>{{ erreur }}</span>
-      <button @click="charger">Réessayer</button>
-    </div>
-    <div v-if="message" class="feedback success-feedback">
-      <span>{{ message }}</span>
-    </div>
+    <transition name="feedback">
+      <div
+        v-if="erreur || message"
+        class="feedback"
+        :class="erreur ? 'error-feedback' : 'success-feedback'"
+      >
+        <span>{{ erreur || message }}</span>
+        <button v-if="erreur" @click="charger">Réessayer</button>
+      </div>
+    </transition>
 
     <section class="workspace">
-      <!-- Liste gauche -->
       <div class="request-panel">
         <header class="panel-heading">
           <div>
-            <h2>Candidatures retenues / présélectionnées</h2>
-            <p>{{ candidaturesFiltrees.length }} candidat(s)</p>
+            <h2>Candidatures</h2>
+            <p>{{ candidaturesFiltrees.length }} résultat(s)</p>
           </div>
         </header>
 
@@ -140,115 +191,154 @@ onMounted(charger);
           <input v-model="recherche" type="search" placeholder="Nom, poste, département..." />
         </div>
 
+        <div class="filter-selects">
+          <label>
+            <span>Statut</span>
+            <select v-model="filtreStatut">
+              <option v-for="f in filtresStatut" :key="f.value" :value="f.value">{{ f.label }}</option>
+            </select>
+          </label>
+          <label>
+            <span>Type d'entretien</span>
+            <select v-model="filtreType">
+              <option v-for="f in filtresType" :key="f.value" :value="f.value">{{ f.label }}</option>
+            </select>
+          </label>
+        </div>
+
         <div class="request-list">
-          <button
-            v-for="c in candidaturesFiltrees"
-            :key="c.id"
-            type="button"
-            class="request-item"
-            :class="{ active: selectionId === c.id }"
-            @click="selectionner(c)"
-          >
-            <div class="request-item-top">
-              <span class="request-id">#{{ c.id }}</span>
-              <span class="priority" :class="String(c.statut).toLowerCase()">
-                {{ c.statut === "RETENU" ? "Retenu" : "Présélectionné" }}
-              </span>
-            </div>
-            <h3>{{ c.candidatPrenom }} {{ c.candidatNom }}</h3>
-            <p class="department">{{ c.poste }} — {{ c.departement }}</p>
-            <div class="request-item-bottom">
-              <span>{{ c.entretien ? "Entretien planifié" : "Aucun entretien" }}</span>
-              <span v-if="c.entretien">{{ formatDate(c.entretien.dateEntretien) }}</span>
-            </div>
-          </button>
+          <transition-group name="list" tag="div">
+            <button
+              v-for="c in candidaturesFiltrees"
+              :key="c.id"
+              type="button"
+              class="request-item"
+              :class="{ active: selectionId === c.id }"
+              @click="selectionner(c)"
+            >
+              <div class="request-item-top">
+                <span class="request-id">#{{ c.id }}</span>
+                <span class="priority" :class="String(c.statut).toLowerCase()">
+                  {{ libelleStatut(c.statut) }}
+                </span>
+              </div>
+              <h3>{{ c.candidatPrenom }} {{ c.candidatNom }}</h3>
+              <p class="department">{{ c.poste }} — {{ c.departement }}</p>
+              <div class="request-item-bottom">
+                <span>{{ c.entretien ? "Entretien planifié" : "Aucun entretien" }}</span>
+                <span v-if="c.entretien">{{ formatDate(c.entretien.dateEntretien) }}</span>
+              </div>
+            </button>
+          </transition-group>
 
           <div v-if="!chargement && candidaturesFiltrees.length === 0" class="empty-list">
             <h3>Aucune candidature</h3>
-            <p>Les candidatures apparaîtront ici dès qu'elles seront retenues.</p>
+            <p>Modifiez vos filtres ou la recherche.</p>
           </div>
         </div>
       </div>
 
-      <!-- Détail droite -->
       <section class="detail-panel">
-        <template v-if="candidatureSelectionnee && entretienEdite">
-          <header class="detail-header">
-            <div>
-              <span class="eyebrow">CANDIDAT #{{ candidatureSelectionnee.id }}</span>
-              <h2>{{ candidatureSelectionnee.candidatPrenom }} {{ candidatureSelectionnee.candidatNom }}</h2>
-              <p>{{ candidatureSelectionnee.poste }} — {{ candidatureSelectionnee.departement }}</p>
-            </div>
-          </header>
-
-          <div class="detail-body">
-            <h3 class="section-title">Planifier l'entretien</h3>
-            <div class="detail-grid">
-              <div class="detail-field">
-                <span>Type</span>
-                <select v-model="entretienEdite.typeEntretien">
-                  <option value="TELEPHONE">Téléphone</option>
-                  <option value="RH">RH</option>
-                  <option value="TECHNIQUE">Technique</option>
-                  <option value="TEST_TECHNIQUE">Test technique</option>
-                  <option value="DIRECTION">Direction</option>
-                </select>
+        <transition name="fade" mode="out-in">
+          <div
+            v-if="candidatureSelectionnee && entretienEdite"
+            :key="'detail-' + candidatureSelectionnee.id"
+          >
+            <header class="detail-header">
+              <div>
+                <span class="eyebrow">CANDIDAT #{{ candidatureSelectionnee.id }}</span>
+                <h2>{{ candidatureSelectionnee.candidatPrenom }} {{ candidatureSelectionnee.candidatNom }}</h2>
+                <p>{{ candidatureSelectionnee.poste }} — {{ candidatureSelectionnee.departement }}</p>
               </div>
-              <div class="detail-field">
-                <span>Date et heure</span>
-                <input type="datetime-local" v-model="entretienEdite.dateEntretien" step="1"/>
-              </div>
-              <div class="detail-field">
-                <span>Lieu</span>
-                <input type="text" v-model="entretienEdite.lieu" placeholder="Salle, visio..." />
-              </div>
-              <div class="detail-field">
-                <span>Intervieweur</span>
-                <select v-model="entretienEdite.idUtilisateurIntervieweur">
-                  <option :value="null">—</option>
-                  <option v-for="u in intervieweurs" :key="u.id" :value="u.id">
-                    {{ u.prenom }} {{ u.nom }} ({{ u.role }})
-                  </option>
-                </select>
-              </div>
-            </div>
+              <span class="priority" :class="String(candidatureSelectionnee.statut).toLowerCase()">
+                {{ libelleStatut(candidatureSelectionnee.statut) }}
+              </span>
+            </header>
 
-            <div class="decision-actions">
-              <button class="approve-button" @click="enregistrer">
-                {{ entretienEdite.id ? "Mettre à jour" : "Enregistrer" }}
-              </button>
-              <button class="reject-button" @click="convoquerEntretien">
-                Envoyer la convocation
-              </button>
-            </div>
+            <div class="detail-body">
+              <h3 class="section-title">Planifier l'entretien</h3>
+              <div class="detail-grid">
+                <div class="detail-field">
+                  <span>Type</span>
+                  <select v-model="entretienEdite.typeEntretien">
+                    <option value="TELEPHONE">Téléphone</option>
+                    <option value="RH">RH</option>
+                    <option value="TECHNIQUE">Technique</option>
+                    <option value="TEST_TECHNIQUE">Test technique</option>
+                    <option value="DIRECTION">Direction</option>
+                  </select>
+                </div>
+                <div class="detail-field">
+                  <span>Date et heure</span>
+                  <input type="datetime-local" v-model="entretienEdite.dateEntretien" step="1" />
+                </div>
+                <div class="detail-field">
+                  <span>Lieu</span>
+                  <input type="text" v-model="entretienEdite.lieu" placeholder="Salle, visio..." />
+                </div>
+                <div class="detail-field">
+                  <span>Intervieweur</span>
+                  <select v-model="entretienEdite.idUtilisateurIntervieweur">
+                    <option :value="null">—</option>
+                    <option v-for="u in intervieweurs" :key="u.id" :value="u.id">
+                      {{ u.prenom }} {{ u.nom }} ({{ u.role }})
+                    </option>
+                  </select>
+                </div>
+              </div>
 
-            <h3 class="section-title">Résultat</h3>
-            <div class="decision-actions">
-              <button class="approve-button" @click="envoyerResultat('RETENU')">
-                Notifier « Retenu »
-              </button>
-              <button class="reject-button" @click="envoyerResultat('REJETE')">
-                Notifier « Rejeté »
-              </button>
-            </div>
+              <div class="decision-actions">
+                <button
+                  class="approve-button"
+                  :disabled="actionEnCours === 'save'"
+                  @click="enregistrer"
+                >
+                  {{ actionEnCours === "save" ? "..." : (entretienEdite.id ? "Mettre à jour" : "Enregistrer") }}
+                </button>
+                <button
+                  class="reject-button"
+                  :disabled="actionEnCours === 'convocation'"
+                  @click="convoquerEntretien"
+                >
+                  {{ actionEnCours === "convocation" ? "..." : "Envoyer la convocation" }}
+                </button>
+              </div>
 
-            <div v-if="candidatureSelectionnee.entretien" class="read-only-notice">
-              Entretien actuel : {{ formatDate(candidatureSelectionnee.entretien.dateEntretien) }}
-              — {{ candidatureSelectionnee.entretien.typeEntretien }}
+              <h3 class="section-title">Résultat</h3>
+              <div class="decision-actions">
+                <button
+                  class="approve-button"
+                  :disabled="actionEnCours === 'RETENU'"
+                  @click="envoyerResultat('RETENU')"
+                >
+                  {{ actionEnCours === "RETENU" ? "..." : "Notifier « Retenu »" }}
+                </button>
+                <button
+                  class="reject-button"
+                  :disabled="actionEnCours === 'REJETE'"
+                  @click="envoyerResultat('REJETE')"
+                >
+                  {{ actionEnCours === "REJETE" ? "..." : "Notifier « Rejeté »" }}
+                </button>
+              </div>
+
+              <div v-if="candidatureSelectionnee.entretien" class="read-only-notice">
+                Entretien actuel : {{ formatDate(candidatureSelectionnee.entretien.dateEntretien) }}
+                — {{ candidatureSelectionnee.entretien.typeEntretien }}
+              </div>
             </div>
           </div>
-        </template>
 
-        <div v-else class="empty-detail">
-          <div class="empty-document">☷</div>
-          <h2>Sélectionnez un candidat</h2>
-          <p>Choisissez une candidature pour planifier ou modifier son entretien.</p>
-        </div>
+          <div v-else class="empty-detail" key="empty">
+            <div class="empty-document">☷</div>
+            <h2>Sélectionnez un candidat</h2>
+            <p>Choisissez une candidature pour planifier ou modifier son entretien.</p>
+          </div>
+        </transition>
       </section>
     </section>
   </main>
 </template>
-
 
 <style scoped>
 .validation-page {
@@ -257,7 +347,6 @@ onMounted(charger);
   --line: #e9ece8;
   --surface: #ffffff;
   --green-soft: #eef6ed;
-
   width: 100%;
   min-height: calc(100vh - 64px);
   padding: 0;
@@ -267,7 +356,6 @@ onMounted(charger);
   color: var(--ink);
 }
 
-/* En-tête */
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -299,7 +387,6 @@ onMounted(charger);
   font-size: 13px;
 }
 
-/* Zone principale : liste + détails */
 .workspace {
   display: grid;
   grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.8fr);
@@ -331,7 +418,6 @@ onMounted(charger);
   font-weight: 700;
 }
 
-/* Recherche */
 .search-box {
   display: flex;
   align-items: center;
@@ -341,6 +427,12 @@ onMounted(charger);
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fafbf9;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(1, 95, 9, 0.08);
 }
 
 .search-box > span {
@@ -360,7 +452,39 @@ onMounted(charger);
   font-size: 12px;
 }
 
-/* Liste */
+.filter-selects {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 14px 14px;
+  border-bottom: 1px solid #f0f1ef;
+}
+
+.filter-selects label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.filter-selects select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  transition: border-color 0.2s;
+}
+
+.filter-selects select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .request-list {
   display: flex;
   flex-direction: column;
@@ -378,12 +502,13 @@ onMounted(charger);
   background: white;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .request-item:hover {
   background: #fafbf9;
   border-color: #e8ebe6;
+  transform: translateX(2px);
 }
 
 .request-item.active {
@@ -423,7 +548,6 @@ onMounted(charger);
   border-bottom: 1px solid #eff0ed;
 }
 
-/* Badges */
 .priority {
   display: inline-block;
   padding: 5px 8px;
@@ -444,7 +568,6 @@ onMounted(charger);
   color: #3b4fbf;
 }
 
-/* Détail */
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -488,13 +611,6 @@ onMounted(charger);
   font-size: 11px;
 }
 
-.detail-field strong {
-  color: #363c36;
-  font-size: 12px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
 .detail-field input,
 .detail-field select,
 .detail-field textarea {
@@ -507,6 +623,7 @@ onMounted(charger);
   color: var(--ink);
   font: inherit;
   font-size: 12px;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .detail-field input:focus,
@@ -517,7 +634,6 @@ onMounted(charger);
   background: #fff;
 }
 
-/* Boutons */
 .decision-actions {
   display: flex;
   gap: 12px;
@@ -534,6 +650,11 @@ onMounted(charger);
   font: inherit;
   font-size: 12px;
   font-weight: 700;
+  transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.decision-actions button:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .reject-button {
@@ -542,7 +663,7 @@ onMounted(charger);
   color: #b74736;
 }
 
-.reject-button:hover {
+.reject-button:hover:not(:disabled) {
   background: #ffebe8;
 }
 
@@ -552,11 +673,12 @@ onMounted(charger);
   color: white;
 }
 
-.approve-button:hover {
+.approve-button:hover:not(:disabled) {
   background: #014b07;
 }
 
-.approve-button:disabled {
+.approve-button:disabled,
+.reject-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -569,7 +691,6 @@ onMounted(charger);
   min-width: 0;
 }
 
-/* Feedback */
 .feedback {
   display: flex;
   justify-content: space-between;
@@ -601,7 +722,6 @@ onMounted(charger);
   text-decoration: underline;
 }
 
-/* États vides */
 .empty-list,
 .empty-detail {
   display: flex;
@@ -648,7 +768,43 @@ onMounted(charger);
   line-height: 1.7;
 }
 
-/* Responsive */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.feedback-enter-active,
+.feedback-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.feedback-enter-from,
+.feedback-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.list-move {
+  transition: transform 0.3s ease;
+}
+
 @media (max-width: 1000px) {
   .workspace {
     grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr);
@@ -659,14 +815,15 @@ onMounted(charger);
   .workspace {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .detail-body,
   .detail-header {
     padding: 17px;
   }
-
   .page-header h1 {
     font-size: 22px;
+  }
+  .filter-selects {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -674,7 +831,6 @@ onMounted(charger);
   .detail-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-
   .decision-actions {
     flex-direction: column;
   }

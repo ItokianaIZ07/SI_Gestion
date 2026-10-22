@@ -7,6 +7,7 @@ import EditCVView from '@/views/modules/client/EditCVView.vue'
 import LoginView from '@/views/LoginView.vue'
 import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
+import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
 import { useAuthStore } from '@/stores/authStore'
 import CVView from '@/views/modules/gestion/rh/CVView.vue'
 import DemandeView from '@/views/modules/gestion/DemandeView.vue'
@@ -49,10 +50,10 @@ const router = createRouter({
     {
       path: "/si/app",
       component: AppLayout,
-      beforeEnter: (to, from) => {
+      beforeEnter: async () => {
         const authStore = useAuthStore()
 
-        if (!authStore.estAuthentifie) {
+        if (!await authStore.restaurerSession()) {
           return { name: 'login' }
         }
       },
@@ -62,10 +63,19 @@ const router = createRouter({
           component: DashboardView,
         },
         {
+          path: 'manager/demandes/creation',
+          name: 'DemandeManifestation',
+          component: ManifestationView
+        },
+        {
           path: "rh/cv",
           component: CVView
         },
         {
+          path: 'manager/demandes/creation',
+          name: 'DemandeManifestation',
+          component: ManifestationView
+        },
           path: "rh/demandes",
           component: DemandeView
         }

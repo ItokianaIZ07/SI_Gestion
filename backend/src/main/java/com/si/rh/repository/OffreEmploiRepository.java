@@ -7,4 +7,5 @@ import java.util.Optional;
 
 @Repository
 public interface OffreEmploiRepository extends JpaRepository<OffreEmploi, Integer> {
+    boolean existsByRecrutement_Id(Integer recrutementId);
 }

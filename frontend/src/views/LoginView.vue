@@ -21,21 +21,25 @@ async function handleLogin() {
     return;
   }
 
+  loading.value = true;
+  try {
+    const response = await store.login(email.value, password.value);
+    if (!response.success) {
+      errorMessage.value = response.message;
+      return;
+    }
+
+    await router.replace("/si/app");
+    console.log("Connexion avec succès");
+  } catch {
+    errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
+  } finally {
+    loading.value = false;
   console.log({
     email: email.value,
     password: password.value,
   });
 
-  const response = await store.login(email.value, password.value);
-  loading.value = false;
-
-  if(!response.success){
-    errorMessage.value = response.message;
-    return;
-  }else{
-    console.log("Connexion avec succès");
-    router.replace("/si/app");
-  }
 }
 </script>
 

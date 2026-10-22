@@ -14,27 +14,25 @@ const router = useRouter();
 
 async function handleLogin() {
   errorMessage.value = "";
-  loading.value = true;
 
   if (!email.value.trim() || !password.value) {
     errorMessage.value = "Veuillez remplir tous les champs.";
     return;
   }
 
-  console.log({
-    email: email.value,
-    password: password.value,
-  });
+  loading.value = true;
+  try {
+    const response = await store.login(email.value, password.value);
+    if (!response.success) {
+      errorMessage.value = response.message;
+      return;
+    }
 
-  const response = await store.login(email.value, password.value);
-  loading.value = false;
-
-  if(!response.success){
-    errorMessage.value = response.message;
-    return;
-  }else{
-    console.log("Connexion avec succès");
-    router.replace("/si/app");
+    await router.replace("/si/app");
+  } catch {
+    errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
+  } finally {
+    loading.value = false;
   }
 }
 </script>

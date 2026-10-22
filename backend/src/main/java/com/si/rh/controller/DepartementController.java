@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.si.rh.service.DepartementService;
 import com.si.rh.model.Departement;
 @RestController
-@RequestMapping("/api/departements")
+@RequestMapping("/api/manager/departements")
 public class DepartementController {
 
     private final DepartementService departementService;

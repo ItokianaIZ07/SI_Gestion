@@ -7,6 +7,8 @@ import './assets/editeur.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' // 1. Importer le plugin
+import api from './services/api.js'
+import { useAuthStore } from './stores/authStore'
 
 
 import App from './App.vue'
@@ -16,6 +18,26 @@ const app = createApp(App)
 const pinia = createPinia();
 
 pinia.use(piniaPluginPersistedstate)
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const url = error.config?.url
+    if (
+      error.response?.status === 401 &&
+      url !== '/auth/login' &&
+      url !== '/auth/me' &&
+      url !== '/auth/csrf'
+    ) {
+      useAuthStore(pinia).clearSession()
+      if (router.currentRoute.value.name !== 'login') {
+        void router.replace({ name: 'login' })
+      }
+    }
+
+    return Promise.reject(error)
+  },
+)
 
 app.use(pinia)
 app.use(router)

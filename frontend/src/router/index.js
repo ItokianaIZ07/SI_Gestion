@@ -10,7 +10,6 @@ import DashboardView from "@/views/modules/gestion/DashboardView.vue";
 import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
 import { useAuthStore } from '@/stores/authStore'
 import CVView from '@/views/modules/gestion/rh/CVView.vue'
-import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,10 +49,10 @@ const router = createRouter({
     {
       path: "/si/app",
       component: AppLayout,
-      beforeEnter: (to, from) => {
+      beforeEnter: async () => {
         const authStore = useAuthStore()
 
-        if (!authStore.estAuthentifie) {
+        if (!await authStore.restaurerSession()) {
           return { name: 'login' }
         }
       },

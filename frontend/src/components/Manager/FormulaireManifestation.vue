@@ -1,9 +1,11 @@
 <script setup>
 import { reactive, ref } from 'vue'
+import api from '@/services/api.js'
 
 // Chaque liste est un tableau d'objets { id, libelle }
 defineProps({
   departements: { type: Array, default: () => [] },
+  departementSelectionne: { type: [String, Number], default: '' },
   typesBesoin: { type: Array, required: true },
   postes: { type: Array, required: true },
   utilisateurs: { type: Array, required: true },
@@ -13,7 +15,7 @@ defineProps({
   priorites: { type: Array, default: () => ['BASSE', 'NORMALE', 'HAUTE', 'URGENTE'] }
 })
 
-const emit = defineEmits(['submit'])
+const emit = defineEmits(['submit', 'update:departementSelectionne'])
 
 const formatDate = (date) => {
   const year = date.getFullYear()
@@ -27,10 +29,14 @@ const aujourdhui = formatDate(new Date())
 const etape = ref(1)
 const racine = ref(null)
 const section1 = ref(null)
+const envoiEnCours = ref(false)
+const erreurEnvoi = ref('')
+const envoiReussi = ref(false)
 
 // Les clés suivent les champs de l'entité
 const formulaire = reactive({
   demandeurId: '',
+  departementId: '',
   typeBesoinId: '',
   posteId: '',
   employeRemplaceId: '',
@@ -72,7 +78,16 @@ function retour() {
   remonter()
 }
 
-function envoyer() {
+function changerDepartement(event) {
+  const departementId = event.target.value
+  formulaire.departementId = departementId
+  formulaire.demandeurId = ''
+  formulaire.posteId = ''
+  formulaire.employeRemplaceId = ''
+  emit('update:departementSelectionne', departementId)
+}
+
+async function envoyer() {
   // Touche Entrée dans la section 1 : on passe à la suite au lieu d'envoyer
   if (etape.value === 1) {
     suivant()
@@ -80,23 +95,42 @@ function envoyer() {
   }
 
   const salaire = vide(formulaire.salaireEstime)
-
-  emit('submit', {
-    demandeurId: formulaire.demandeurId,
-    typeBesoinId: formulaire.typeBesoinId,
-    posteId: formulaire.posteId,
-    employeRemplaceId: vide(formulaire.employeRemplaceId),
-    typeContratSouhaiteId: vide(formulaire.typeContratSouhaiteId),
-    effectif: formulaire.effectif,
-    priorite: formulaire.priorite,
+  const payload = {
+    ...formulaire,
+    demandeurId: Number(formulaire.demandeurId),
+    departementId: Number(formulaire.departementId),
+    typeBesoinId: Number(formulaire.typeBesoinId),
+    posteId: Number(formulaire.posteId),
+    employeRemplaceId: vide(formulaire.employeRemplaceId) === null
+      ? null
+      : Number(formulaire.employeRemplaceId),
+    typeContratSouhaiteId: vide(formulaire.typeContratSouhaiteId) === null
+      ? null
+      : Number(formulaire.typeContratSouhaiteId),
     dateArriveeSouhaitee: vide(formulaire.dateArriveeSouhaitee),
     lieuTravail: vide(formulaire.lieuTravail),
-    motif: formulaire.motif,
     experienceRequise: vide(formulaire.experienceRequise),
     niveauEtude: vide(formulaire.niveauEtude),
     competencesRequises: vide(formulaire.competencesRequises),
     salaireEstime: salaire === null ? null : Number(salaire)
-  })
+  }
+
+  envoiEnCours.value = true
+  erreurEnvoi.value = ''
+  envoiReussi.value = false
+  try {
+    const reponse = await api.post('/manager/besoins', payload )
+    if (!reponse.ok) {
+      const message = reponse.data?.detail || reponse.data?.message
+      throw new Error(message || `Erreur HTTP ${reponse.status}`)
+    }
+    envoiReussi.value = true
+    emit('submit', reponse.data)
+  } catch (error) {
+    erreurEnvoi.value = `Impossible d'envoyer la demande : ${error.message}`
+  } finally {
+    envoiEnCours.value = false
+  }
 }
 </script>
 
@@ -118,11 +152,26 @@ function envoyer() {
       <h2 id="titre-section-1" class="formulaire__titre">Le besoin</h2>
 
       <div class="champ">
+        <label for="besoin-departement">Departement <span class="requis" aria-hidden="true">*</span></label>
+        <select
+          id="besoin-departement"
+          :value="departementSelectionne"
+          @change="changerDepartement"
+          required
+        >
+          <option value="" disabled>Choisir un departement</option>
+          <option v-for="departement in departements" :key="departement.id" :value="departement.id">
+            {{ departement.nom }}
+          </option>
+        </select>
+      </div>
+
+      <div class="champ">
         <label for="besoin-demandeur">Demandeur <span class="requis" aria-hidden="true">*</span></label>
         <select id="besoin-demandeur" v-model="formulaire.demandeurId" required>
           <option value="" disabled>Choisir un demandeur</option>
           <option v-for="utilisateur in utilisateurs" :key="utilisateur.id" :value="utilisateur.id">
-            {{ utilisateur.libelle }}
+            {{ utilisateur.nom }} {{ utilisateur.prenom }}
           </option>
         </select>
       </div>
@@ -142,7 +191,7 @@ function envoyer() {
         <select id="besoin-poste" v-model="formulaire.posteId" required>
           <option value="" disabled>Choisir un poste</option>
           <option v-for="poste in postes" :key="poste.id" :value="poste.id">
-            {{ poste.libelle }}
+            {{ poste.nom }}
           </option>
         </select>
       </div>
@@ -154,18 +203,18 @@ function envoyer() {
       </div>
 
       <div class="champ">
-        <label for="besoin-employe">Employé remplacé</label>
+        <label for="besoin-employe">Employé remplacé <span class="requis" aria-hidden="true">*</span></label>
         <select id="besoin-employe" v-model="formulaire.employeRemplaceId">
           <option value="">Aucun</option>
           <option v-for="employe in employes" :key="employe.id" :value="employe.id">
-            {{ employe.libelle }}
+            {{ employe.nom }} {{ employe.prenom }}
           </option>
         </select>
         <p class="champ__aide">À renseigner uniquement en cas de remplacement.</p>
       </div>
 
       <div class="champ">
-        <label for="besoin-contrat">Type de contrat souhaité</label>
+        <label for="besoin-contrat">Type de contrat souhaité <span class="requis" aria-hidden="true">*</span></label>
         <select id="besoin-contrat" v-model="formulaire.typeContratSouhaiteId">
           <option value="">Non précisé</option>
           <option v-for="contrat in typesContrat" :key="contrat.id" :value="contrat.id">
@@ -184,11 +233,11 @@ function envoyer() {
       </div>
 
       <div class="champ">
-        <label for="besoin-arrivee">Date d'arrivée souhaitée</label>
+        <label for="besoin-arrivee">Date d'arrivée souhaitée <span class="requis" aria-hidden="true">*</span></label>
         <input id="besoin-arrivee" v-model="formulaire.dateArriveeSouhaitee" type="date" :min="aujourdhui">
       </div>
 
-      <div class="champ champ--large">
+      <div class="champ">
         <label for="besoin-lieu">Lieu de travail</label>
         <input id="besoin-lieu" v-model="formulaire.lieuTravail" type="text" maxlength="150"
                placeholder="Ex. Siège, Antananarivo">
@@ -212,25 +261,25 @@ function envoyer() {
       <h2 id="titre-section-2" class="formulaire__titre">Profil recherché et suivi</h2>
 
       <div class="champ">
-        <label for="besoin-etude">Niveau d'étude</label>
+        <label for="besoin-etude">Niveau d'étude <span class="requis" aria-hidden="true">*</span></label>
         <input id="besoin-etude" v-model="formulaire.niveauEtude" type="text" maxlength="100"
                placeholder="Ex. Licence, Master">
       </div>
 
       <div class="champ">
-        <label for="besoin-salaire">Salaire estimé</label>
+        <label for="besoin-salaire">Salaire estimé <span class="requis" aria-hidden="true">*</span></label>
         <input id="besoin-salaire" v-model="formulaire.salaireEstime" type="number" min="0" step="0.01"
                inputmode="decimal" placeholder="Ex. 1500000">
       </div>
 
       <div class="champ champ--large">
-        <label for="besoin-experience">Expérience requise</label>
+        <label for="besoin-experience">Expérience requise <span class="requis" aria-hidden="true">*</span></label>
         <textarea id="besoin-experience" v-model="formulaire.experienceRequise" rows="3" maxlength="255"
                   placeholder="Ex. 2 ans minimum en développement Java"></textarea>
       </div>
 
       <div class="champ champ--large">
-        <label for="besoin-competences">Compétences requises</label>
+        <label for="besoin-competences">Compétences requises <span class="requis" aria-hidden="true">*</span></label>
         <textarea id="besoin-competences" v-model="formulaire.competencesRequises" rows="4"
                   placeholder="Ex. Spring Boot, PostgreSQL, Vue.js…"></textarea>
       </div>
@@ -254,8 +303,12 @@ function envoyer() {
 
       <div class="formulaire__actions formulaire__actions--double champ--large">
         <button type="button" class="bouton" @click="retour">Retour</button>
-        <button type="submit" class="bouton">Envoyer la demande</button>
+        <button type="submit" class="bouton" :disabled="envoiEnCours">
+          {{ envoiEnCours ? 'Envoi en cours…' : 'Envoyer la demande' }}
+        </button>
       </div>
+      <p v-if="erreurEnvoi" class="champ--large" role="alert">{{ erreurEnvoi }}</p>
+      <p v-if="envoiReussi" class="champ--large" role="status">La demande a bien été envoyée.</p>
     </section>
 
   </form>

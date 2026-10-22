@@ -2,7 +2,7 @@ package com.si.rh.controller;
 
 // BY : Fenosoa
 // Transforme les erreurs en {"message": "..."} (le front lit ce champ).
-// Limité aux contrôleurs du module Finance : ajouter ici les prochains (demandes, budget...).
+// Limité aux contrôleurs du module Finance.
 
 import com.si.rh.exception.RegleMetierException;
 
@@ -16,7 +16,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
-@RestControllerAdvice(assignableTypes = { GrilleSalaireController.class })
+@RestControllerAdvice(assignableTypes = {
+        GrilleSalaireController.class,
+        BudgetController.class,
+        DemandeFinanceController.class
+})
 public class FinanceExceptionHandler {
 
     @ExceptionHandler(RegleMetierException.class)
@@ -38,10 +42,11 @@ public class FinanceExceptionHandler {
                 .body(Map.of("message", "Données invalides : vérifiez les montants et les dates."));
     }
 
-    /** Filet de sécurité : une contrainte de la base (ex. chevauchement) refuse l'enregistrement. */
+    /** Filet de sécurité : une contrainte de la base (chevauchement de grille, trigger de validation...) refuse l'opération. */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> contrainteBase(DataIntegrityViolationException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(Map.of("message", "Enregistrement refusé : la période chevauche une autre grille de ce poste."));
+                .body(Map.of("message", "Enregistrement refusé : une règle de la base de données n'est pas respectée "
+                        + "(par exemple une période de grille qui chevauche une autre)."));
     }
 }

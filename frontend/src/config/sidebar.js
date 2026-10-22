@@ -1,5 +1,6 @@
 const sidebarByRole = {
     rh: [
+        { label: "Entretiens", to: "/si/app/rh/entretiens" },
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },

@@ -22,9 +22,7 @@ export function formatDate(date) {
 
 export function statutLabel(statut) {
   const labels = {
-    EN_ATTENTE_RH: "En attente RH",
-    EN_ATTENTE_FINANCE: "En attente Finance",
-    EN_ATTENTE_DIRECTION: "En attente Direction",
+    EN_ATTENTE: "En attente",
     ACCEPTE: "Acceptée",
     REFUSE: "Refusée",
     ANNULE: "Annulée",
@@ -34,6 +32,11 @@ export function statutLabel(statut) {
 }
 
 // exemple d'arguments: (null, "Test", "", "PHP")
+/**
+ * Retourne la première valeur non null
+ * @param {list} valeurs 
+ * @returns {string}
+ */
 
 export function premierNonVide(...valeurs) { 
   return valeurs.find((v) => v !== null && v !== undefined && v !== "") ?? "";
@@ -66,6 +69,7 @@ export function nomDemandeur(b) {
   const nom = [objet.prenom, objet.nom].filter(Boolean).join(" ").trim();
   return premierNonVide(
     nom,
+    typeof b.demandeur === "string" ? b.demandeur : null,
     b.demandeurNom,
     b.nomDemandeur,
     "Demandeur non précisé",
@@ -119,4 +123,19 @@ export function normaliserBesoin(b) {
     effectif: premierNonVide(b.effectif, 1),
     motif: premierNonVide(b.motif, "Aucun motif renseigné"),
   };
+}
+
+export function formatSalaire(montant) {
+  if (montant === null || montant === undefined || montant === "") {
+    return "Non estimé";
+  }
+
+  const valeur = Number(montant);
+  if (!Number.isFinite(valeur)) return "Non estimé";
+
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "MGA",
+    maximumFractionDigits: 0,
+  }).format(valeur);
 }

@@ -57,6 +57,13 @@ public class BesoinService {
         return besoinRepository.findAll();
     }
 
+    public Besoin getById(int id){
+        return besoinRepository.getReferenceById(id);
+    }
+
+    public Besoin save(Besoin besoin){
+        return besoinRepository.save(besoin);
+    }
     public List<BesoinDTO> tous() {
         return besoinRepository.findAll(Sort.by(Sort.Direction.DESC, "dateDemande")).stream().map(this::dto).toList();
     }

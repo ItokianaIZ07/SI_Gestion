@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CandidatureRepository extends JpaRepository<Candidature, Integer> {
+    boolean existsByCandidat_IdAndRecrutement_Id(Integer candidatId, Integer recrutementId);
 
     @Query("""
         SELECT c FROM Candidature c

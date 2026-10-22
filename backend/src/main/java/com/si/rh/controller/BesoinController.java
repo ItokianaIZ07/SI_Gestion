@@ -1,34 +1,25 @@
 package com.si.rh.controller;
 
+import com.si.rh.dto.ApiResponse;
+import com.si.rh.dto.besoin.BesoinDTO;
 import com.si.rh.dto.BesoinRequest;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import com.si.rh.model.Besoin;
 import com.si.rh.service.BesoinService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
-/**
- *@Author Itokiana
- * */
 @RestController
-@RequestMapping("/api/rh/besoins")
+@RequestMapping("/api/besoins")
 public class BesoinController {
+    private final BesoinService service;
 
-    private final BesoinService besoinService;
-
-    public BesoinController(BesoinService besoinService) {
-        this.besoinService = besoinService;
+    public BesoinController(BesoinService service) {
+        this.service = service;
     }
-
 
     @PostMapping
     public ResponseEntity<Integer> creer(@Valid @RequestBody BesoinRequest request) {
@@ -37,6 +28,16 @@ public class BesoinController {
     }
     @GetMapping("")
     public List<Besoin> getListBesoin(){
-        return besoinService.getAll();
+        return service.getAll();
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<BesoinDTO>>> tous() {
+        return ResponseEntity.ok(ApiResponse.success("Liste : récupération réussie", service.tous()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<BesoinDTO>> parId(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success("Besoin récupéré avec succès", service.parId(id)));
     }
 }

@@ -16,5 +16,6 @@ public record ContratDTO(
     LocalDate dateFin,
     LocalDate dateSignature,
     BigDecimal salaire,
-    OffsetDateTime dateCreation
+    OffsetDateTime dateCreation,
+    Integer nbSignatures   // ← AJOUT
 ) {}

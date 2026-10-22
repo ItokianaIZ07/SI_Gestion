@@ -84,17 +84,15 @@ public class EntretienService {
             .orElseThrow(() -> new IllegalArgumentException("Entretien introuvable"));
         Candidature c = e.getCandidature();
 
+        String nomPoste = c.getRecrutement().getBesoin().getPoste().getNom();
         emailService.envoyerConvocation(
-            c.getCandidat().getEmail(),
-            c.getCandidat().getPrenom(),
-            e.getDateEntretien().toLocalDateTime(),
-            e.getTypeEntretien().name(),
-            e.getLieu()
-        );
+            c.getCandidat().getEmail(), c.getCandidat().getPrenom(),
+            e.getDateEntretien().toLocalDateTime(), e.getTypeEntretien().name(),
+            e.getLieu(), nomPoste);
     }
 
     @Transactional
-    public void notifierResultat(Integer idCandidature, String decision) {
+    public void notifierResultat(Integer idCandidature, String decision, Integer idDecideur) {
         Candidature c = candidatureRepo.findByIdAvecDetails(idCandidature)
             .orElseThrow(() -> new IllegalArgumentException("Candidature introuvable"));
 
@@ -103,18 +101,25 @@ public class EntretienService {
             : StatutCandidature.REJETE);
         candidatureRepo.save(c);
 
+        Utilisateur decideur = utilisateurRepo.findById(idDecideur)
+            .orElseThrow(() -> new IllegalArgumentException("Décideur introuvable"));
+
         DecisionRecrutement d = decisionRepo.findByCandidatureId(idCandidature)
             .orElseGet(DecisionRecrutement::new);
         d.setCandidature(c);
         d.setDecision(ValeurDecision.valueOf(decision));
         d.setDateDecision(OffsetDateTime.now());
+        d.setDecideur(decideur);
         decisionRepo.save(d);
 
-        emailService.envoyerResultat(
-            c.getCandidat().getEmail(),
-            c.getCandidat().getPrenom(),
-            decision
-        );
+        try {
+            String nomPoste = c.getRecrutement().getBesoin().getPoste().getNom();
+            emailService.envoyerResultat(
+                c.getCandidat().getEmail(), c.getCandidat().getPrenom(),
+                nomPoste, decision);
+        } catch (Exception ex) {
+            System.err.println("[MAIL] Échec envoi résultat : " + ex.getMessage());
+        }
     }
 
     private EntretienDTO toDTO(Entretien e) {

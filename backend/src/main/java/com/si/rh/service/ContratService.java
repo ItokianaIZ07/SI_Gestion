@@ -144,8 +144,10 @@ public class ContratService {
         }
 
         // 5. E-mail
+        String nomPoste = p.getNom();   // p = le Poste récupéré plus haut
         emailService.envoyerContratASigner(
-            c.getCandidat().getEmail(), c.getCandidat().getPrenom(), ct.getReference());
+            c.getCandidat().getEmail(), c.getCandidat().getPrenom(),
+            nomPoste, ct.getReference());
 
         return toDTO(ct);
     }
@@ -201,6 +203,7 @@ public class ContratService {
 
     private ContratDTO toDTO(Contrat c) {
         Employe e = c.getEmploye();
+        long nb = historiqueRepo.countByEvenementContainingAndContratId("SIGNATURE_", c.getId());
         return new ContratDTO(
             c.getId(),
             c.getReference(),
@@ -213,7 +216,8 @@ public class ContratService {
             c.getDateFin(),
             c.getDateSignature(),
             c.getSalaire(),
-            c.getDateCreation()
+            c.getDateCreation(),
+            (int) nb
         );
     }
 }

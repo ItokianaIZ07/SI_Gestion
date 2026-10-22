@@ -20,45 +20,69 @@ public class EmailService {
         DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
     public void envoyerConvocation(String email, String prenom,
-                                   LocalDateTime date, String type, String lieu) {
-        SimpleMailMessage m = new SimpleMailMessage();
-        m.setTo(email);
-        m.setSubject("Convocation à un entretien");
-        m.setText("""
-            Bonjour %s,
+                                LocalDateTime date, String type, String lieu,
+                                String nomPoste) {
+        try {
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setTo(email);
+            m.setSubject("Convocation à un entretien - " + nomPoste);
+            m.setText("""
+                Bonjour %s,
 
-            Votre entretien (%s) est prévu le %s.
-            Lieu : %s.
+                Nous avons le plaisir de vous convoquer à un entretien pour le poste de %s.
 
-            Cordialement,
-            Service RH
-            """.formatted(prenom, type, date.format(FMT), lieu));
-        mailSender.send(m);
+                Type d'entretien : %s
+                Date : %s
+                Lieu : %s
+
+                Cordialement,
+                Service RH
+                """.formatted(prenom, nomPoste, type, date.format(FMT), lieu));
+            mailSender.send(m);
+        } catch (Exception ex) {
+            System.err.println("[MAIL] Échec convocation : " + ex.getMessage());
+        }
     }
 
-    public void envoyerResultat(String email, String prenom, String decision) {
-        SimpleMailMessage m = new SimpleMailMessage();
-        m.setTo(email);
-        m.setSubject("Résultat de votre candidature");
-        m.setText(("RETENU".equals(decision)
-            ? "Bonjour %s,\n\nNous avons le plaisir de vous informer que votre candidature est retenue.\n\nCordialement,\nService RH"
-            : "Bonjour %s,\n\nNous vous remercions pour votre candidature. Après étude, nous ne pouvons pas y donner suite.\n\nCordialement,\nService RH")
-            .formatted(prenom));
-        mailSender.send(m);
+    public void envoyerResultat(String email, String prenom, String nomPoste,
+                                String decision) {
+        try {
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setTo(email);
+            m.setSubject("Résultat de votre candidature - " + nomPoste);
+            m.setText(("RETENU".equals(decision)
+                ? "Bonjour %s,\n\nNous avons le plaisir de vous informer que votre candidature pour le poste de %s est retenue.\n\nCordialement,\nService RH"
+                : "Bonjour %s,\n\nNous vous remercions pour votre candidature pour le poste de %s. Après étude, nous ne pouvons pas y donner suite.\n\nCordialement,\nService RH")
+                .formatted(prenom, nomPoste));
+            mailSender.send(m);
+        } catch (Exception ex) {
+            System.err.println("[MAIL] Échec résultat : " + ex.getMessage());
+        }
     }
 
-    public void envoyerContratASigner(String email, String prenom, String reference) {
-        SimpleMailMessage m = new SimpleMailMessage();
-        m.setTo(email);
-        m.setSubject("Votre contrat est prêt à signer");
-        m.setText("""
-            Bonjour %s,
+    public void envoyerContratASigner(String email, String prenom,
+                                    String nomPoste, String reference) {
+        try {
+            SimpleMailMessage m = new SimpleMailMessage();
+            m.setTo(email);
+            m.setSubject("Votre contrat est prêt à signer");
+            m.setText("""
+                Bonjour %s,
 
-            Votre contrat %s est disponible. Merci de vous connecter pour le signer.
+                Nous avons le plaisir de vous informer que votre contrat pour le poste de %s
+                est désormais disponible.
 
-            Cordialement,
-            Service RH
-            """.formatted(prenom, reference));
-        mailSender.send(m);
+                Référence du contrat : %s
+
+                Merci de vous connecter à votre espace pour le consulter et le signer.
+
+                Cordialement,
+                Service RH
+                """.formatted(prenom, nomPoste, reference));
+            mailSender.send(m);
+        } catch (Exception ex) {
+            System.err.println("[MAIL] Échec envoi contrat : " + ex.getMessage());
+        }
     }
 }
+

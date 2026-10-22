@@ -25,6 +25,45 @@ export const useAuthStore = defineStore('role', () =>{
             clearSession();
         }
         return { success: true };
+    const chargee = ref(false);
+    const estAuthentifie = ref(false);
+    const user = ref(null);
+
+
+    const addRole = (newRole, force = false) => {
+        if(!force && chargee){
+            return;
+        }
+        if(newRole.trim() === "" && user.value.role.trim() !== ""){
+            return;
+        }
+        user.value.role = newRole.toUpperCase();
+        chargee.value = true;
+    }
+
+    const getRole = () =>{
+        return user.value.role;
+    }
+
+    const logout = async () =>{
+        user.value = null;
+        chargee.value = false;
+        estAuthentifie.value = false;
+
+        const response = await fetch("/api/auth/logout", {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            throw new Error('La déconnexion a échoué'); 
+        }
+
+        return {success: true}
+    }
+
+    const syncRole = (newRole) =>{
+        addRole(newRole);
+        return getRole();
     }
 
     const authentifie = (role, email) =>{

@@ -14,6 +14,7 @@ const router = useRouter();
 
 async function handleLogin() {
   errorMessage.value = "";
+  loading.value = true;
 
   if (!email.value.trim() || !password.value) {
     errorMessage.value = "Veuillez remplir tous les champs.";
@@ -29,11 +30,16 @@ async function handleLogin() {
     }
 
     await router.replace("/si/app");
+    console.log("Connexion avec succès");
   } catch {
     errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
   } finally {
     loading.value = false;
-  }
+  console.log({
+    email: email.value,
+    password: password.value,
+  });
+
 }
 </script>
 

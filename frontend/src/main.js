@@ -7,6 +7,8 @@ import './assets/editeur.css'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate' // 1. Importer le plugin
+
+// Harena : reglage de l'erreur requet api
 import api from './services/api.js'
 import { useAuthStore } from './stores/authStore'
 
@@ -18,7 +20,7 @@ const app = createApp(App)
 const pinia = createPinia();
 
 pinia.use(piniaPluginPersistedstate)
-
+// Harena : reglage de l'erreur requet api
 api.interceptors.response.use(
   (response) => response,
   (error) => {

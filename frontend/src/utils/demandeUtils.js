@@ -33,7 +33,9 @@ export function statutLabel(statut) {
   return labels[statut] ?? statut ?? "Non défini";
 }
 
-export function premierNonVide(...valeurs) {
+// exemple d'arguments: (null, "Test", "", "PHP")
+
+export function premierNonVide(...valeurs) { 
   return valeurs.find((v) => v !== null && v !== undefined && v !== "") ?? "";
 }
 
@@ -42,7 +44,7 @@ export function nomPoste(b) {
     b.poste?.nom,
     b.poste?.libelle,
     b.posteNom,
-    b.poste,
+    typeof b.poste === "string" ? b.poste : null,
     "Poste non précisé",
   );
 }

@@ -84,6 +84,7 @@ public class SecurityConfig {
                         )
                         .ignoringRequestMatchers("/api/auth/login")
                         .ignoringRequestMatchers("/api/auth/logout")
+                        .ignoringRequestMatchers("/api/auth/csrf")
                 )
 
                 // 401 au lieu de 403 quand l'utilisateur n'est pas connecté.

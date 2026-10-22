@@ -9,6 +9,7 @@ import AppLayout from "@/layouts/AppLayout.vue";
 import DashboardView from "@/views/modules/gestion/DashboardView.vue";
 import { useAuthStore } from '@/stores/authStore'
 import CVView from '@/views/modules/gestion/rh/CVView.vue'
+import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -63,6 +64,10 @@ const router = createRouter({
         {
           path: "rh/cv",
           component: CVView
+        },
+        {
+          path: "rh/demandes",
+          component: DemandeView
         }
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.

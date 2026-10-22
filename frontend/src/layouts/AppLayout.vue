@@ -138,6 +138,7 @@ main {
   border: 1px solid #d4d4d4;
   color: var(--color-primary);
   transition: all ease-in 150ms;
+  bottom: 0;
 }
 
 .btn-logout:hover{
@@ -146,6 +147,7 @@ main {
 
 .btn-logout:active{
   box-shadow: none;
+  bottom: 0;
 }
 
 /* ==============================

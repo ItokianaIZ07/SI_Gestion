@@ -48,7 +48,23 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public AuthResponse me(Authentication authentication) {
+    public AuthResponse me(
+            Authentication authentication,
+            HttpServletRequest request) {
+
+        var session = request.getSession(false);
+
+        System.out.println("Session dans /me : "
+                + (session != null ? session.getId() : "AUCUNE"));
+
+        System.out.println("Contexte dans /me : "
+                + (session != null
+                ? session.getAttribute("SPRING_SECURITY_CONTEXT")
+                : "AUCUN"));
+
+        System.out.println("Authentication dans /me : "
+                + authentication);
+
         return authService.creerReponse(authentication);
     }
 

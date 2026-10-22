@@ -7,4 +7,6 @@ import java.util.Optional;
 
 @Repository
 public interface HistoriqueContratRepository extends JpaRepository<HistoriqueContrat, Integer> {
+    long countByEvenementContainingAndContratId(String evenement, Integer contratId);
+
 }

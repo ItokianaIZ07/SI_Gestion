@@ -29,7 +29,7 @@ public class HistoriqueContrat {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_statut_contrat")
-    private StatutContract statutContrat;
+    private StatutContract StatutContract;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_utilisateur_auteur")
@@ -62,11 +62,11 @@ public class HistoriqueContrat {
     public HistoriqueContrat() {
     }
 
-    public HistoriqueContrat(Integer id, Contrat contrat, StatutContract ancienStatut, StatutContract statutContrat, Utilisateur auteur, String evenement, String motif, OffsetDateTime dateModification, BigDecimal ancienSalaire, BigDecimal nouveauSalaire, LocalDate ancienneDateFin, LocalDate nouvelleDateFin) {
+    public HistoriqueContrat(Integer id, Contrat contrat, StatutContract ancienStatut, StatutContract StatutContract, Utilisateur auteur, String evenement, String motif, OffsetDateTime dateModification, BigDecimal ancienSalaire, BigDecimal nouveauSalaire, LocalDate ancienneDateFin, LocalDate nouvelleDateFin) {
         this.id = id;
         this.contrat = contrat;
         this.ancienStatut = ancienStatut;
-        this.statutContrat = statutContrat;
+        this.StatutContract = StatutContract;
         this.auteur = auteur;
         this.evenement = evenement;
         this.motif = motif;
@@ -103,12 +103,12 @@ public class HistoriqueContrat {
         this.ancienStatut = ancienStatut;
     }
 
-    public StatutContract getStatutContrat() {
-        return statutContrat;
+    public StatutContract getStatutContract() {
+        return StatutContract;
     }
 
-    public void setStatutContrat(StatutContract statutContrat) {
-        this.statutContrat = statutContrat;
+    public void setStatutContract(StatutContract StatutContract) {
+        this.StatutContract = StatutContract;
     }
 
     public Utilisateur getAuteur() {

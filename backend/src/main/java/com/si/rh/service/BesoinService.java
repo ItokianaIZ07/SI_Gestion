@@ -20,4 +20,12 @@ public class BesoinService {
     public List<Besoin> getAll(){
         return besoinRepository.findAll();
     }
+
+    public Besoin getById(int id){
+        return besoinRepository.getReferenceById(id);
+    }
+
+    public Besoin save(Besoin besoin){
+        return besoinRepository.save(besoin);
+    }
 }

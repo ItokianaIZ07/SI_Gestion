@@ -442,3 +442,46 @@
     -webkit-box-decoration-break: clone;
   }
 }
+
+
+/* Champ téléphone avec indicatif */
+.ed-champ__telephone {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.ed-champ__indicatif {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.ed-champ__telephone input {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  border-radius: 0 8px 8px 0;
+}
+
+
+.ed-cv__photo {
+  overflow: hidden;
+}
+
+.ed-cv__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}

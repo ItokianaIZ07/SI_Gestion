@@ -1,5 +1,7 @@
 <!-- Brandon -->
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 
 import { ref, computed, onMounted } from "vue";
 import {
@@ -141,6 +143,9 @@ async function signer(contrat, partie) {
 }
 
 onMounted(charger);
+
+const pgEmbauche = usePagination(aEmbaucher, 5);
+const pgContrats = usePagination(contratsFiltres, 6);
 </script>
 
 <template>
@@ -179,7 +184,7 @@ onMounted(charger);
         <div class="request-list" style="max-height: 260px">
           <transition-group name="list" tag="div">
             <button
-              v-for="c in aEmbaucher"
+              v-for="c in pgEmbauche.items"
               :key="c.id"
               type="button"
               class="request-item"
@@ -198,6 +203,7 @@ onMounted(charger);
             <h3>Aucun candidat à embaucher</h3>
           </div>
         </div>
+        <Pagination v-bind="pgEmbauche.barre" compact @update:page="pgEmbauche.aller" />
 
         <header class="panel-heading" style="margin-top: 16px">
           <div>
@@ -232,7 +238,7 @@ onMounted(charger);
         <div class="request-list">
           <transition-group name="list" tag="div">
             <div
-              v-for="ct in contratsFiltres"
+              v-for="ct in pgContrats.items"
               :key="ct.id"
               class="request-item"
               :class="{ actif: ct.statut === 'ACTIF' }"
@@ -292,6 +298,7 @@ onMounted(charger);
             <p>Modifiez vos filtres ou la recherche.</p>
           </div>
         </div>
+        <Pagination v-bind="pgContrats.barre" compact @update:page="pgContrats.aller" />
       </div>
 
       <section class="detail-panel">

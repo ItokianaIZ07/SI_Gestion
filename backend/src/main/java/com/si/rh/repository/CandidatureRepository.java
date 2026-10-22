@@ -45,4 +45,6 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Intege
         WHERE c.id = :id
     """)
     Optional<Candidature> findByIdAvecDetails(@Param("id") Integer id);
+    
+    boolean existsByCandidat_IdAndRecrutement_Id(Integer candidatId, Integer recrutementId);
 }

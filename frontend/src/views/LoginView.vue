@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/authStore"; 
+import { useAuthStore } from "@/stores/authStore";
 import "../assets/theme.css";
 import { useRouter } from "vue-router";
 
@@ -21,20 +21,24 @@ async function handleLogin() {
     return;
   }
 
-  console.log({
-    email: email.value,
-    password: password.value,
-  });
+  loading.value = true;
+  try {
+    const response = await store.login(email.value, password.value);
+    if (!response.success) {
+      errorMessage.value = response.message;
+      return;
+    }
 
-  const response = await store.login(email.value, password.value);
-  loading.value = false;
-
-  if(!response.success){
-    errorMessage.value = response.message;
-    return;
-  }else{
+    await router.replace("/si/app");
     console.log("Connexion avec succès");
-    router.replace("/si/app");
+  } catch {
+    errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
+  } finally {
+    loading.value = false;
+    console.log({
+      email: email.value,
+      password: password.value,
+    });
   }
 }
 </script>

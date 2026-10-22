@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface ContratRepository extends JpaRepository<Contrat, Integer> {
     Optional<Contrat> findByReference(String reference);
 
@@ -28,4 +27,23 @@ public interface ContratRepository extends JpaRepository<Contrat, Integer> {
     List<LigneSalaire> lignesSalaire(@Param("codesStatut") Collection<String> codesStatut,
                                      @Param("debutAnnee") LocalDate debutAnnee,
                                      @Param("finAnnee") LocalDate finAnnee);
+
+    @Query("""
+        SELECT c FROM Contrat c
+        JOIN FETCH c.employe e
+        JOIN FETCH c.typeContrat t
+        JOIN FETCH c.StatutContract s
+        WHERE s.code IN ('BROUILLON', 'EN_ATTENTE_SIGNATURE', 'ACTIF')
+        ORDER BY c.id DESC
+    """)
+    List<Contrat> findActifsEtEnCours();
+
+    @Query("""
+        SELECT c FROM Contrat c
+        JOIN FETCH c.employe e
+        JOIN FETCH c.typeContrat t
+        JOIN FETCH c.StatutContract s
+        WHERE c.id = :id
+    """)
+    Optional<Contrat> findByIdAvecDetails(@Param("id") Integer id);
 }

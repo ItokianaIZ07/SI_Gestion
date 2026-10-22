@@ -8,4 +8,6 @@ import java.util.Optional;
 @Repository
 public interface RecrutementRepository extends JpaRepository<Recrutement, Integer> {
     Optional<Recrutement> findByReference(String reference);
+    boolean existsByReference(String reference);
+    boolean existsByBesoin_Id(Integer besoinId);
 }

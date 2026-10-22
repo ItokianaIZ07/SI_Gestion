@@ -16,4 +16,12 @@ public interface ValidationBesoinRepository extends JpaRepository<ValidationBeso
     @Query("select v from ValidationBesoin v join fetch v.etatValidation join fetch v.decision "
             + "where v.besoin.id in :ids")
     List<ValidationBesoin> findByBesoinIds(@Param("ids") Collection<Integer> ids);
+  
+    @Query("""
+            select vb from ValidationBesoin vb
+            join fetch vb.etatValidation
+            join fetch vb.decision
+            where vb.besoin.id in :besoinIds
+            """)
+    List<ValidationBesoin> findAllForBesoins(@Param("besoinIds") Collection<Integer> besoinIds);
 }

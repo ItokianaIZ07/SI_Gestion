@@ -171,7 +171,6 @@ CREATE TABLE validation_besoin (
     id_decision INTEGER NOT NULL REFERENCES decision(id),
     date_decision TIMESTAMPTZ,
     remarque TEXT,
-    CONSTRAINT uq_validation_besoin_etape UNIQUE (id_besoin, id_etat_validation),
     CONSTRAINT chk_validation_date CHECK (
         (date_decision IS NULL AND id_utilisateur_validateur IS NULL)
         OR (date_decision IS NOT NULL AND id_utilisateur_validateur IS NOT NULL)

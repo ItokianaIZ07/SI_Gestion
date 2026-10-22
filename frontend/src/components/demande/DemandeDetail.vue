@@ -1,0 +1,496 @@
+<script setup>
+import { formatDate, prioriteLabel, statutLabel, formatSalaire } from '@/utils/demandeUtils';
+import { ref } from 'vue';
+import api from '@/services/api';
+
+const props = defineProps({
+    demande: {
+        type: Object,
+        required: true
+    },
+    reloadBesoin: {
+        type: Function,
+        required: true
+    }
+})
+
+console.log(props.demande)
+
+const remarque = ref("");
+const envoiEnCours = ref(false);
+
+const sendDecision = async (idBesoin, decision) => {
+    envoiEnCours.value = true;
+    try{
+        const response = await api.post('/rh/besoins/decision', {
+            idBesoin,
+            decisionCode: decision,
+            remarque: remarque.value
+        });
+        if(response.status === 201){
+            await props.reloadBesoin();
+        }
+    }catch(error){
+        const message = error.response?.data?.detail ??
+          error.response?.data?.message ??
+          (typeof error.response?.data === "string" ? error.response.data : null) ??
+          "La décision n'a pas pu être enregistrée.";
+        alert(message);
+    } finally {
+        envoiEnCours.value = false;
+    }
+}
+
+</script>
+
+<template>
+  <header class="detail-header">
+    <div>
+      <span class="eyebrow">DEMANDE #{{ demande.id }}</span>
+      <h2>{{ demande.poste }}</h2>
+      <p>{{ demande.departement }}</p>
+    </div>
+    <span
+      class="priority"
+      :class="String(demande.priorite).toLowerCase()"
+    >
+      {{ prioriteLabel(demande.priorite) }}
+    </span>
+  </header>
+
+  <div class="detail-body">
+    <div class="status-banner">
+      <span>Statut actuel</span>
+      <strong>{{ statutLabel(demande.statut) }}</strong>
+    </div>
+
+    <h3 class="section-title">Décisions de validation</h3>
+    <div class="validation-grid">
+      <div><span>Ressources humaines</span><strong>{{ demande.decisionRh }}</strong></div>
+      <div><span>Finance</span><strong>{{ demande.decisionFinance }}</strong></div>
+      <div><span>Direction</span><strong>{{ demande.decisionDirection }}</strong></div>
+    </div>
+
+    <h3 class="section-title">Informations générales</h3>
+    <div class="detail-grid">
+      <div class="detail-field">
+        <span>Demandeur</span>
+        <strong>{{ demande.demandeur }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Type de besoin</span>
+        <strong>{{ demande.type }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Nombre de postes</span>
+        <strong>{{ demande.effectif }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Lieu de travail</span>
+        <strong>{{ demande.lieu }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Date de demande</span>
+        <strong>{{ formatDate(demande.dateDemande) }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Arrivée souhaitée</span>
+        <strong>{{ formatDate(demande.dateArrivee) }}</strong>
+      </div>
+    </div>
+
+    <h3 class="section-title">Motif de la demande</h3>
+    <p class="motif">{{ demande.motif }}</p>
+
+    <h3 class="section-title">Profil recherché</h3>
+    <div class="detail-grid">
+      <div class="detail-field">
+        <span>Expérience</span>
+        <strong>{{ demande.experience }}</strong>
+      </div>
+      <div class="detail-field">
+        <span>Niveau d'étude</span>
+        <strong>{{ demande.niveauEtude }}</strong>
+      </div>
+    </div>
+
+    <div class="detail-field full-field">
+      <span>Compétences requises</span>
+      <strong>{{ demande.competences }}</strong>
+    </div>
+
+    <div class="salary-box">
+      <span>Salaire mensuel estimé</span>
+      <strong>{{ formatSalaire(demande.salaire) }}</strong>
+    </div>
+
+    <div class="decision-actions">
+
+        <div class="remarque-container" v-if="demande.statut === 'EN_ATTENTE'">
+            <label>Remarque de décision</label>
+            <input type="text" v-model="remarque" placeholder="remarque s'il y en a">
+        </div>
+
+        <button v-if="demande.statut == 'ACCEPTE'" class="approve-button">Envoyer recrutement</button>
+        <template v-else-if="demande.statut !== 'REFUSE'">
+            <button
+              class="reject-button"
+              :disabled="!demande.peutDecider || envoiEnCours"
+              @click="sendDecision(demande.id, 'REFUSE')"
+            >Refuser</button>
+            <button
+              class="approve-button"
+              :disabled="!demande.peutDecider || envoiEnCours"
+              @click="sendDecision(demande.id, 'ACCEPTE')"
+            >{{ envoiEnCours ? "Envoi..." : "Accepter" }}</button>
+        </template>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.detail-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.detail-header h2 {
+  margin: 0 0 7px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.priority {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: #f0f1ef;
+    color: #6d746d;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.priority.urgente {
+    background: #fff0ed;
+    color: #b74736;
+}
+
+.priority.haute {
+    background: #fff5e7;
+    color: #98621b;
+}
+
+.priority.normale,
+.priority.basse {
+    background: #f0f1ef;
+    color: #697169;
+}
+
+/* En-tête de la demande */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 22px;
+  border-bottom: 1px solid var(--line, #e9ece8);
+}
+
+.detail-header h2 {
+  margin: 9px 0 7px;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink, #292e2a);
+}
+
+.detail-header p {
+  margin: 0;
+  color: var(--muted, #818781);
+  font-size: 13px;
+}
+
+.eyebrow {
+  color: var(--color-primary, #176b24);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 1px;
+}
+
+/* Badge de priorité */
+.priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.priority.urgente {
+  background: #fde8e7;
+  color: #b42318;
+}
+
+.priority.haute {
+  background: #fff0df;
+  color: #b45309;
+}
+
+.priority.normale {
+  background: #e8f2ff;
+  color: #1d4ed8;
+}
+
+.priority.basse {
+  background: #edf0ed;
+  color: #626b62;
+}
+
+/* Corps du détail */
+.detail-body {
+  padding: 22px;
+  color: var(--ink, #292e2a);
+}
+
+/* Bannière du statut */
+.status-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid #e7ece4;
+  border-radius: 8px;
+  background: #fafbf9;
+  font-size: 12px;
+}
+
+.status-banner span {
+  color: var(--muted, #818781);
+}
+
+.status-banner strong {
+  color: var(--color-primary, #176b24);
+  font-weight: 700;
+}
+
+.validation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.validation-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #eff0ed;
+  border-radius: 8px;
+}
+
+.validation-grid span {
+  color: var(--muted, #818781);
+  font-size: 11px;
+}
+
+.validation-grid strong {
+  font-size: 12px;
+}
+
+/* Titres des sections */
+.section-title {
+  margin: 25px 0 14px;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--ink, #292e2a);
+}
+
+/* Grille des informations */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+/* Champs d'information */
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.detail-field span {
+  color: var(--muted, #818781);
+  font-size: 11px;
+}
+
+.detail-field strong {
+  color: #363c36;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Champ occupant toute la largeur */
+.full-field {
+  margin-top: 19px;
+}
+
+/* Motif de la demande */
+.motif {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #eff0ed;
+  border-radius: 8px;
+  background: #fafbf9;
+  color: #656c65;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+/* Salaire estimé */
+.salary-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid #e1ebdd;
+  border-radius: 9px;
+  background: #f6f9f4;
+}
+
+.salary-box span {
+  color: #727a70;
+  font-size: 12px;
+}
+
+.salary-box strong {
+  color: var(--color-primary, #176b24);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+/* Message informatif en lecture seule */
+.read-only-notice {
+  margin-top: 20px;
+  padding: 13px;
+  border: 1px solid var(--line, #e9ece8);
+  border-radius: 8px;
+  background: #fafbf9;
+  color: #737a73;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.decision-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.decision-actions button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.decision-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.reject-button {
+  border: 1px solid #f0d7d3;
+  background: #fff7f6;
+  color: #b74736;
+}
+
+.reject-button:hover {
+  background: #ffebe8;
+}
+
+.approve-button {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.approve-button:hover {
+  background: #014b07;
+}
+
+.decision-hint {
+  margin: 12px 0 0;
+  color: #969c96;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.remarque-container{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remarque-container label{
+    color: var(--color-text);
+    font-style: italic;
+}
+
+.remarque-container input{
+    outline: none;
+    border-radius: 4px;
+    border: 1px solid var(--color-text);
+    height: 24px;
+    padding: 0 4px;
+}
+
+
+/* Adaptation aux tablettes et petits écrans */
+@media (max-width: 760px) {
+  .detail-header,
+  .detail-body {
+    padding: 17px;
+  }
+
+  .detail-header h2 {
+    font-size: 19px;
+  }
+}
+
+/* Adaptation aux téléphones */
+@media (max-width: 480px) {
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .validation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-header {
+    gap: 12px;
+  }
+
+  .salary-box strong {
+    font-size: 17px;
+  }
+}
+
+</style>

@@ -13,4 +13,5 @@ public interface PosteRepository extends JpaRepository<Poste, Integer> {
     /** Postes actifs avec leur département, triés par département puis par nom. */
     @Query("select p from Poste p join fetch p.departement d where p.actif = true order by d.nom, p.nom")
     List<Poste> findActifsAvecDepartement();
+    List<Poste> findByActifTrueOrderByNomAsc();
 }

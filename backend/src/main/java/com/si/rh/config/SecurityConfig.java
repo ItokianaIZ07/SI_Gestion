@@ -83,6 +83,8 @@ public class SecurityConfig {
                                 new CsrfTokenRequestAttributeHandler()
                         )
                         .ignoringRequestMatchers("/api/auth/login")
+                        .ignoringRequestMatchers("/api/auth/logout")
+                        .ignoringRequestMatchers("/api/auth/csrf")
                 )
 
                 // 401 au lieu de 403 quand l'utilisateur n'est pas connecté.
@@ -110,6 +112,9 @@ public class SecurityConfig {
                         // La Direction a accès à toutes les zones.
                         .requestMatchers("/api/direction/**")
                         .hasRole("DIRECTION")
+
+                        .requestMatchers("/api/rh/besoins/**")
+                        .hasAnyRole("RH", "FINANCE", "DIRECTION")
 
                         .requestMatchers("/api/rh/**")
                         .hasAnyRole("RH", "DIRECTION")

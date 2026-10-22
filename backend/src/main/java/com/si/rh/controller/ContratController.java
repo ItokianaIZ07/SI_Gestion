@@ -2,14 +2,11 @@
 
 package com.si.rh.controller;
 
-import com.si.rh.dto.CandidatAEmbaucherDTO;
-import com.si.rh.dto.ContratDTO;
-import com.si.rh.dto.EmbaucheRequest;
-import com.si.rh.dto.SignatureRequest;
+import com.si.rh.dto.*;
+import com.si.rh.repository.UtilisateurRepository;
 import com.si.rh.service.ContratService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +17,7 @@ import java.util.List;
 public class ContratController {
 
     private final ContratService service;
+    private final UtilisateurRepository utilisateurRepo;
 
     @GetMapping("/a-embaucher")
     public List<CandidatAEmbaucherDTO> aEmbaucher() {
@@ -38,7 +36,8 @@ public class ContratController {
 
     @PostMapping("/embaucher")
     public ContratDTO embaucher(@RequestBody EmbaucheRequest req,
-                                @AuthenticationPrincipal(expression = "id") Integer idUser) {
+                                Authentication authentication) {
+        Integer idUser = extraireIdUtilisateur(authentication);
         return service.embaucher(req, idUser);
     }
 
@@ -46,5 +45,14 @@ public class ContratController {
     public ContratDTO signer(@PathVariable Integer id,
                              @RequestBody SignatureRequest req) {
         return service.signer(id, req.getPartie());
+    }
+
+    private Integer extraireIdUtilisateur(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated())
+            throw new IllegalStateException("Utilisateur non authentifié");
+        String email = authentication.getName();
+        return utilisateurRepo.findByEmail(email)
+            .orElseThrow(() -> new IllegalStateException("Utilisateur introuvable : " + email))
+            .getId();
     }
 }

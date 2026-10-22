@@ -2,11 +2,13 @@
 import { ref, computed, onMounted } from "vue";
 import { getBesoins } from "@/services/api";
 import {
+  prioriteLabel,
+  formatDate,
+  statutLabel,
   normaliserBesoin,
 } from "@/utils/demandeUtils";
-import DemandeComponent from "@/components/demande/DemandeComponent.vue";
-import DemandeSelectComponent from "@/components/demande/DemandeSelectComponent.vue";
-import DemandeDetail from "@/components/demande/DemandeDetail.vue";
+import DemandeComponent from "@/components/DemandeComponent.vue";
+import DemandeSelectComponent from "@/components/DemandeSelectComponent.vue";
 
 const besoins = ref([]);
 const chargement = ref(false);
@@ -18,7 +20,9 @@ const demandeSelectionneeId = ref(null);
 
 const filtres = [
   { label: "Toutes", value: "TOUS" },
-  { label: "En attente", value: "EN_ATTENTE" },
+  { label: "En attente RH", value: "EN_ATTENTE_RH" },
+  { label: "En attente Finance", value: "EN_ATTENTE_FINANCE" },
+  { label: "En attente Direction", value: "EN_ATTENTE_DIRECTION" },
   { label: "Acceptées", value: "ACCEPTE" },
   { label: "Refusées", value: "REFUSE" },
   { label: "Annulées", value: "ANNULE" },
@@ -117,7 +121,12 @@ const demandeSelectionnee = computed(
 const totalBesoins = computed(() => besoins.value.length);
 
 const enAttente = computed(
-  () => demandes.value.filter((d) => d.statut === "EN_ATTENTE").length,
+  () =>
+    demandes.value.filter((d) =>
+      ["EN_ATTENTE_RH", "EN_ATTENTE_FINANCE", "EN_ATTENTE_DIRECTION"].includes(
+        d.statut,
+      ),
+    ).length,
 );
 
 const besoinsAcceptes = computed(
@@ -130,6 +139,21 @@ const besoinsRefuses = computed(
 
 function selectionner(demande) {
   demandeSelectionneeId.value = demande.id;
+}
+
+function formatSalaire(montant) {
+  if (montant === null || montant === undefined || montant === "") {
+    return "Non estimé";
+  }
+
+  const valeur = Number(montant);
+  if (!Number.isFinite(valeur)) return "Non estimé";
+
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "MGA",
+    maximumFractionDigits: 0,
+  }).format(valeur);
 }
 
 onMounted(chargerBesoins);
@@ -197,12 +221,12 @@ onMounted(chargerBesoins);
 
         <div class="filter-selects">
           <DemandeSelectComponent
-            :title="'Statut'"
+            :title="Statut"
             v-model="filtreActif"
             :data="filtres"
           />
           <DemandeSelectComponent
-            :title="'Priorité'"
+            :title="Priorité"
             v-model="filtrePriorite"
             :data="priorites"
           />
@@ -237,7 +261,91 @@ onMounted(chargerBesoins);
       </div>
 
       <section class="detail-panel">
-        <DemandeDetail v-if="demandeSelectionnee" :demande="demandeSelectionnee" :reload-besoin="chargerBesoins" />
+        <template v-if="demandeSelectionnee">
+          <header class="detail-header">
+            <div>
+              <span class="eyebrow">DEMANDE #{{ demandeSelectionnee.id }}</span>
+              <h2>{{ demandeSelectionnee.poste }}</h2>
+              <p>{{ demandeSelectionnee.departement }}</p>
+            </div>
+            <span
+              class="priority"
+              :class="String(demandeSelectionnee.priorite).toLowerCase()"
+            >
+              {{ prioriteLabel(demandeSelectionnee.priorite) }}
+            </span>
+          </header>
+
+          <div class="detail-body">
+            <div class="status-banner">
+              <span>Statut actuel</span>
+              <strong>{{ statutLabel(demandeSelectionnee.statut) }}</strong>
+            </div>
+
+            <h3 class="section-title">Informations générales</h3>
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span>Demandeur</span>
+                <strong>{{ demandeSelectionnee.demandeur }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Type de besoin</span>
+                <strong>{{ demandeSelectionnee.type }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Nombre de postes</span>
+                <strong>{{ demandeSelectionnee.effectif }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Lieu de travail</span>
+                <strong>{{ demandeSelectionnee.lieu }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Date de demande</span>
+                <strong>{{
+                  formatDate(demandeSelectionnee.dateDemande)
+                }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Arrivée souhaitée</span>
+                <strong>{{
+                  formatDate(demandeSelectionnee.dateArrivee)
+                }}</strong>
+              </div>
+            </div>
+
+            <h3 class="section-title">Motif de la demande</h3>
+            <p class="motif">{{ demandeSelectionnee.motif }}</p>
+
+            <h3 class="section-title">Profil recherché</h3>
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span>Expérience</span>
+                <strong>{{ demandeSelectionnee.experience }}</strong>
+              </div>
+              <div class="detail-field">
+                <span>Niveau d'étude</span>
+                <strong>{{ demandeSelectionnee.niveauEtude }}</strong>
+              </div>
+            </div>
+
+            <div class="detail-field full-field">
+              <span>Compétences requises</span>
+              <strong>{{ demandeSelectionnee.competences }}</strong>
+            </div>
+
+            <div class="salary-box">
+              <span>Salaire mensuel estimé</span>
+              <strong>{{ formatSalaire(demandeSelectionnee.salaire) }}</strong>
+            </div>
+
+            <div class="read-only-notice">
+              Cette page permet actuellement de consulter les demandes. Les
+              actions de validation et de refus seront reliées aux routes
+              backend correspondantes lorsqu'elles seront définies.
+            </div>
+          </div>
+        </template>
 
         <div v-else class="empty-detail">
           <div class="empty-document">☷</div>
@@ -294,10 +402,28 @@ onMounted(chargerBesoins);
 }
 
 .page-header p,
-.panel-heading p {
+.panel-heading p,
+.detail-header p {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.role-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.role-selector select {
+  min-width: 210px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
 }
 
 /* Cartes statistiques */
@@ -360,7 +486,8 @@ onMounted(chargerBesoins);
   padding: 20px;
 }
 
-.panel-heading h2 {
+.panel-heading h2,
+.detail-header h2 {
   margin: 0 0 7px;
   font-size: 17px;
   font-weight: 700;
@@ -395,32 +522,31 @@ onMounted(chargerBesoins);
   font-size: 12px;
 }
 
-/* Filtres (Selects) */
-.filter-selects {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
+/* Filtres */
+.filter-tabs {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
   padding: 0 14px 14px;
   border-bottom: 1px solid #f0f1ef;
 }
 
-.filter-selects label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: var(--muted);
+.filter-tabs button {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #7c827c;
+  cursor: pointer;
   font-size: 11px;
 }
 
-.filter-selects select {
-  width: 100%;
-  min-width: 0;
-  padding: 9px 8px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: #fff;
-  color: var(--ink);
-  font: inherit;
+.filter-tabs button.selected {
+  border-color: #dce9d9;
+  background: var(--green-soft);
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 /* Liste des demandes */
@@ -431,6 +557,192 @@ onMounted(chargerBesoins);
   max-height: 720px;
   overflow-y: auto;
   padding: 10px;
+}
+
+/* Détails */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-header h2 {
+  margin-top: 9px;
+  font-size: 21px;
+}
+
+.detail-body {
+  padding: 22px;
+}
+
+.status-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid #e7ece4;
+  border-radius: 8px;
+  background: #fafbf9;
+  font-size: 12px;
+}
+
+.status-banner span {
+  color: var(--muted);
+}
+
+.status-banner strong {
+  color: var(--color-primary);
+}
+
+.section-title {
+  margin: 25px 0 14px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.detail-field span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.detail-field strong {
+  color: #363c36;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.motif {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #eff0ed;
+  border-radius: 8px;
+  background: #fafbf9;
+  color: #656c65;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.full-field {
+  margin-top: 19px;
+}
+
+/* Salaire */
+.salary-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid #e1ebdd;
+  border-radius: 9px;
+  background: #f6f9f4;
+}
+
+.salary-box span {
+  color: #727a70;
+  font-size: 12px;
+}
+
+.salary-box strong {
+  color: var(--color-primary);
+  font-size: 19px;
+}
+
+/* Décision */
+.remark-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #747b74;
+  font-size: 12px;
+}
+
+.detail-body textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #e4e7e2;
+  border-radius: 8px;
+  background: #fcfcfb;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+}
+
+.detail-body textarea:focus,
+.role-selector select:focus {
+  outline: 2px solid #d4e6d0;
+  border-color: #9bc296;
+}
+
+.decision-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.decision-actions button {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reject-button {
+  border: 1px solid #f0d7d3;
+  background: #fff7f6;
+  color: #b74736;
+}
+
+.reject-button:hover {
+  background: #ffebe8;
+}
+
+.approve-button {
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.approve-button:hover {
+  background: #014b07;
+}
+
+.decision-hint {
+  margin: 12px 0 0;
+  color: #969c96;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.error-message {
+  color: var(--color-danger);
+  font-size: 12px;
 }
 
 /* Messages et états vides */
@@ -444,10 +756,10 @@ onMounted(chargerBesoins);
   font-size: 13px;
 }
 
-.error-feedback {
-  border: 1px solid #f0d7d3;
-  background: #fff7f6;
-  color: #a43b2e;
+.success-feedback {
+  border: 1px solid #d6ead4;
+  background: #f0f8ee;
+  color: #246d2a;
 }
 
 .feedback button {
@@ -493,31 +805,25 @@ onMounted(chargerBesoins);
   font-size: 24px;
 }
 
-.refresh-button {
-  padding: 11px 15px;
+.read-only-notice {
+  margin-top: 20px;
+  padding: 13px;
+  border: 1px solid var(--line);
   border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid var(--color-primary);
-  background: var(--color-primary);
-  color: white;
+  background: #fafbf9;
+  color: #737a73;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
-.refresh-button:hover {
-  background: #014b07;
-}
-
-.refresh-button:disabled {
-  opacity: 0.6;
-  cursor: wait;
-}
-
-/* Responsive */
+/* Tablette */
 @media (max-width: 1000px) {
   .workspace {
     grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr);
   }
 }
 
+/* Mobile */
 @media (max-width: 760px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -536,6 +842,11 @@ onMounted(chargerBesoins);
     font-size: 22px;
   }
 
+  .detail-body,
+  .detail-header {
+    padding: 17px;
+  }
+
   .page-header h1 {
     font-size: 22px;
   }
@@ -546,6 +857,54 @@ onMounted(chargerBesoins);
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .decision-actions {
+    flex-direction: column;
+  }
+}
+
+.filter-selects {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 0 14px 14px;
+  border-bottom: 1px solid #f0f1ef;
+}
+.filter-selects label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.filter-selects select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+.refresh-button {
+  padding: 11px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.refresh-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.error-feedback {
+  border: 1px solid #f0d7d3;
+  background: #fff7f6;
+  color: #a43b2e;
+}
+@media (max-width: 480px) {
   .filter-selects {
     grid-template-columns: minmax(0, 1fr);
   }

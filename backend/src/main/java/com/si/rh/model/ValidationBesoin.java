@@ -12,7 +12,9 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "validation_besoin")
+@Table(name = "validation_besoin",
+       uniqueConstraints = @UniqueConstraint(name = "uq_validation_besoin_etape",
+                                             columnNames = {"id_besoin", "id_etat_validation"}))
 public class ValidationBesoin {
 
     @Id

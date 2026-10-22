@@ -197,7 +197,7 @@ async function envoyer() {
   erreurEnvoi.value = ''
   envoiReussi.value = false
   try {
-    const reponse = await api.post('/rh/besoins', payload)
+    const reponse = await api.post('/manager/besoins', payload)
     envoiReussi.value = true
     emit('submit', reponse.data)
   } catch (error) {

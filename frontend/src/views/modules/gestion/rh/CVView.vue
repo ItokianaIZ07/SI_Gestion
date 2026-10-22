@@ -1,60 +1,55 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import ApercuPDF from '@/components/ApercuPDF.vue';
-import { candidatsApi, cvsApi } from "@/services/ressources";
-
 import '@/assets/theme.css';
 import CVItem from '@/components/CVItem.vue';
 
-const candidats = ref([]);
+const cvList = ref([
+    {
+        id: 1,
+        nom: 'Rakoto',
+        prenom: 'Jean',
+        poste: 'Développeur Java',
+        date: '20/10/2026',
+        statut: 'Nouveau',
+        fichier: '/cv/jean-rakoto.pdf'
+    },
+    {
+        id: 2,
+        nom: 'Rabe',
+        prenom: 'Marie',
+        poste: 'Développeuse Frontend',
+        date: '19/10/2026',
+        statut: 'Consulté',
+        fichier: '/cv/marie-rabe.pdf'
+    },
+    {
+        id: 3,
+        nom: 'Andria',
+        prenom: 'Hery',
+        poste: 'Technicien informatique',
+        date: '18/10/2026',
+        statut: 'Nouveau',
+        fichier: '/cv/hery-andria.pdf'
+    },
+    {
+        id: 4,
+        nom: 'Rasoa',
+        prenom: 'Sarah',
+        poste: 'Analyste de données',
+        date: '17/10/2026',
+        statut: 'Consulté',
+        fichier: '/cv/sarah-rasoa.pdf'
+    }
+]);
 
 const selectedPDF = ref('');
-const selectedCandidat = ref(null);
-const chargement = ref(true);
-const erreur = ref("");
+const selectedCV = ref(null);
 
-async function selectCandidat(candidat) {
-  selectedCandidat.value = candidat;
-  selectedPDF.value = "";
-  erreur.value = "";
-
-  try {
-    const cvs = await cvsApi.parCandidat(candidat.id);
-
-    if (!cvs || cvs.length === 0) {
-      erreur.value = "Ce candidat ne possède aucun CV.";
-      return;
-    }
-
-    const cv = cvs[0];
-
-    const blob = await cvsApi.fichier(cv.id);
-    selectedPDF.value = URL.createObjectURL(blob);
-
-  } catch (e) {
-    erreur.value = e.message ?? "Impossible de charger le CV.";
-  }
+function selectCV(cv) {
+    selectedCV.value = cv;
+    selectedPDF.value = cv.fichier;
 }
-
-
-async function charger() {
-    chargement.value = true;
-    erreur.value = "";
-
-    try {
-        const reponse = await candidatsApi.liste();
-        candidats.value = reponse ?? [];
-    } catch (e) {
-        erreur.value =
-            e.response?.data?.message ??
-            e.message ??
-            "Impossible de charger les candidats.";
-    } finally {
-        chargement.value = false;
-    }
-}
-
-onMounted(charger);
 </script>
 
 <template>
@@ -68,13 +63,12 @@ onMounted(charger);
                 </div>
 
                 <span class="cv-count">
-                    {{ candidats.length }}
+                    {{ cvList.length }}
                 </span>
             </header>
 
             <div class="cv-list-content">
-                <CVItem v-for="candidat in candidats" :key="candidat.id" :candidat="candidat"
-                    :selectCandidat="selectCandidat" :class="{ active: selectedCandidat?.id === candidat.id }" />
+                <CVItem v-for="cv in cvList" :key="cv.id" :cv="cv" :selectCV="selectCV" :class="{ active: selectedCV?.id === cv.id }"/>
             </div>
         </section>
 
@@ -85,29 +79,45 @@ onMounted(charger);
                     <h2>Aperçu du CV</h2>
                     <p>
                         {{
-                            selectedCandidat
-                                ? `${selectedCandidat.prenom} ${selectedCandidat.nom}`
+                            selectedCV
+                                ? `${selectedCV.prenom} ${selectedCV.nom}`
                                 : 'Sélectionnez un candidat pour consulter son CV.'
                         }}
                     </p>
                 </div>
 
-                <span v-if="selectedCandidat" class="file-type">
+                <span v-if="selectedCV" class="file-type">
                     PDF
                 </span>
             </header>
 
             <div class="preview-content">
-                <ApercuPDF v-if="selectedPDF" :file="selectedPDF" />
+                <ApercuPDF
+                    v-if="selectedPDF"
+                    :file="selectedPDF"
+                />
 
                 <div v-else class="empty-preview">
                     <div class="empty-icon">
-                        <svg viewBox="0 0 48 48" width="48" height="48" fill="none" aria-hidden="true">
+                        <svg
+                            viewBox="0 0 48 48"
+                            width="48"
+                            height="48"
+                            fill="none"
+                            aria-hidden="true"
+                        >
                             <path
                                 d="M13 5H28L38 15V40C38 41.7 36.7 43 35 43H13C11.3 43 10 41.7 10 40V8C10 6.3 11.3 5 13 5Z"
-                                stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                            <path d="M27 5V16H38M17 25H31M17 32H31" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" />
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linejoin="round"
+                            />
+                            <path
+                                d="M27 5V16H38M17 25H31M17 32H31"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
                         </svg>
                     </div>
 
@@ -230,7 +240,7 @@ onMounted(charger);
     background-color: #f4f5f3;
 }
 
-.preview-content> :deep(*) {
+.preview-content > :deep(*) {
     width: 100%;
 }
 

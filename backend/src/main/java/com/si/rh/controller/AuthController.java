@@ -48,6 +48,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    public AuthResponse me(Authentication authentication) {
     public AuthResponse me(
             Authentication authentication,
             HttpServletRequest request) {

@@ -113,9 +113,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/direction/**")
                         .hasRole("DIRECTION")
 
-                        .requestMatchers("/api/rh/besoins/**")
-                        .hasAnyRole("RH", "FINANCE", "DIRECTION")
-
                         .requestMatchers("/api/rh/**")
                         .hasAnyRole("RH", "DIRECTION")
 

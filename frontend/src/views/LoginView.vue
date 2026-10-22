@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/authStore"; 
 import "../assets/theme.css";
 import { useRouter } from "vue-router";
 
@@ -35,11 +35,11 @@ async function handleLogin() {
     errorMessage.value = "Impossible de contacter le serveur. Réessayez.";
   } finally {
     loading.value = false;
-    console.log({
-      email: email.value,
-      password: password.value,
-    });
-  }
+  console.log({
+    email: email.value,
+    password: password.value,
+  });
+
 }
 </script>
 

@@ -15,6 +15,7 @@ const chargement = ref(false);
 const erreur = ref("");
 const message = ref("");
 const selectionId = ref(null);
+const signatureEnCours = ref(null);
 
 const formulaire = ref({
   idCandidature: null,
@@ -55,6 +56,8 @@ function selectionner(c) {
 
 async function embaucher() {
   if (!formulaire.value.idCandidature) return;
+  erreur.value = "";
+  message.value = "";
   try {
     await embaucherCandidat(formulaire.value);
     message.value = "Embauche effectuée : employé + contrat + onboarding créés.";
@@ -66,18 +69,45 @@ async function embaucher() {
 }
 
 async function signer(contrat, partie) {
+  signatureEnCours.value = `${contrat.id}-${partie}`;
+  erreur.value = "";
+  message.value = "";
+
   try {
-    await signerContrat(contrat.id, partie);
-    message.value = `Contrat signé (${partie}).`;
-    await charger();
+    const updated = await signerContrat(contrat.id, partie);
+
+    // Mise à jour locale du contrat concerné (pas de rechargement global)
+    const index = contrats.value.findIndex((c) => c.id === contrat.id);
+    if (index !== -1 && updated) {
+      contrats.value.splice(index, 1, updated);
+    }
+
+    if (updated && updated.statut === "ACTIF") {
+      message.value = `✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`;
+    } else {
+      message.value = `Signature ${partie} enregistrée. En attente de l'autre partie.`;
+    }
   } catch (e) {
     erreur.value = e.response?.data?.message ?? "Échec de la signature.";
+  } finally {
+    signatureEnCours.value = null;
   }
 }
 
 function formatDate(d) {
   if (!d) return "—";
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(new Date(d));
+}
+
+function libelleStatut(code) {
+  const labels = {
+    BROUILLON: "Brouillon",
+    EN_ATTENTE_SIGNATURE: "En attente signature",
+    ACTIF: "Actif",
+    TERMINE: "Terminé",
+    RESILIE: "Résilié",
+  };
+  return labels[code] ?? code;
 }
 
 onMounted(charger);
@@ -106,6 +136,7 @@ onMounted(charger);
 
     <section class="workspace">
       <div class="request-panel">
+        <!-- Liste À EMBAUCHER -->
         <header class="panel-heading">
           <div>
             <h2>À embaucher</h2>
@@ -134,6 +165,7 @@ onMounted(charger);
           </div>
         </div>
 
+        <!-- Liste CONTRATS -->
         <header class="panel-heading" style="margin-top: 16px">
           <div>
             <h2>Contrats</h2>
@@ -142,34 +174,71 @@ onMounted(charger);
         </header>
 
         <div class="request-list">
-          <button
+          <div
             v-for="ct in contrats"
             :key="ct.id"
-            type="button"
             class="request-item"
+            :class="{ actif: ct.statut === 'ACTIF' }"
           >
             <div class="request-item-top">
               <span class="request-id">{{ ct.reference }}</span>
-              <span class="priority">{{ ct.statut }}</span>
+              <span class="priority" :class="String(ct.statut).toLowerCase()">
+                {{ libelleStatut(ct.statut) }}
+              </span>
             </div>
+
             <h3>{{ ct.employeNom }} {{ ct.employePrenom }}</h3>
             <p class="department">{{ ct.typeContrat }} — {{ formatDate(ct.dateDebut) }}</p>
-            <div class="decision-actions" style="margin-top: 8px">
-              <button
-                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
-                class="approve-button"
-                @click.stop="signer(ct, 'RH')"
-              >Signer RH</button>
-              <button
-                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
-                class="reject-button"
-                @click.stop="signer(ct, 'CANDIDAT')"
-              >Signer candidat</button>
+
+            <!-- Indicateur de signatures -->
+            <div class="signatures-info">
+              <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 1 }">
+                {{ ct.nbSignatures >= 1 ? "✓" : "○" }} RH
+              </span>
+              <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 2 }">
+                {{ ct.nbSignatures >= 2 ? "✓" : "○" }} Candidat
+              </span>
+              <span class="signature-compteur">{{ ct.nbSignatures }}/2</span>
             </div>
-          </button>
+
+            <!-- Boutons de signature -->
+            <div
+              v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
+              class="decision-actions"
+              style="margin-top: 8px"
+            >
+              <button
+                v-if="ct.nbSignatures < 1"
+                class="approve-button"
+                :disabled="signatureEnCours === ct.id + '-RH'"
+                @click.stop="signer(ct, 'RH')"
+              >
+                {{ signatureEnCours === ct.id + "-RH" ? "..." : "Signer RH" }}
+              </button>
+              <button
+                v-if="ct.nbSignatures >= 1 && ct.nbSignatures < 2"
+                class="reject-button"
+                :disabled="signatureEnCours === ct.id + '-CANDIDAT'"
+                @click.stop="signer(ct, 'CANDIDAT')"
+              >
+                {{ signatureEnCours === ct.id + "-CANDIDAT" ? "..." : "Signer candidat" }}
+              </button>
+            </div>
+
+            <!-- Message quand contrat ACTIF -->
+            <div v-if="ct.statut === 'ACTIF'" class="contrat-actif-notice">
+              ✓ Contrat signé par les deux parties
+              <span v-if="ct.dateSignature">le {{ formatDate(ct.dateSignature) }}</span>
+            </div>
+          </div>
+
+          <div v-if="!chargement && contrats.length === 0" class="empty-list">
+            <h3>Aucun contrat en cours</h3>
+          </div>
         </div>
       </div>
 
+      <!-- Panneau de détail embauche -->
       <section class="detail-panel">
         <template v-if="candidatSelectionne">
           <header class="detail-header">
@@ -227,7 +296,6 @@ onMounted(charger);
     </section>
   </main>
 </template>
-
 
 <style scoped>
 .validation-page {
@@ -327,8 +395,11 @@ onMounted(charger);
   border-radius: 9px;
   background: white;
   text-align: left;
-  cursor: pointer;
   transition: background 0.2s, border-color 0.2s;
+}
+
+button.request-item {
+  cursor: pointer;
 }
 
 .request-item:hover {
@@ -340,6 +411,11 @@ onMounted(charger);
   border-color: #bfd8bc;
   background: #f4f8f2;
   box-shadow: inset 3px 0 var(--color-primary);
+}
+
+.request-item.actif {
+  background: #f0f9ef;
+  border-color: #b7dfb7;
 }
 
 .request-item-top,
@@ -368,7 +444,7 @@ onMounted(charger);
   margin: 0 0 13px;
 }
 
-/* Badges */
+/* Badges statut */
 .priority {
   display: inline-block;
   padding: 5px 8px;
@@ -398,6 +474,51 @@ onMounted(charger);
 .priority.resilie {
   background: #f0f1ef;
   color: #697169;
+}
+
+/* Indicateur de signatures */
+.signatures-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.signature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7e3;
+  background: #f7f8f6;
+  color: #888;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.signature-pill.signee {
+  background: #eaf5e9;
+  border-color: #b7dfb7;
+  color: #24752b;
+}
+
+.signature-compteur {
+  margin-left: auto;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+}
+
+.contrat-actif-notice {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #eaf5e9;
+  color: #24752b;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Détail */
@@ -512,7 +633,8 @@ onMounted(charger);
   background: #014b07;
 }
 
-.approve-button:disabled {
+.approve-button:disabled,
+.reject-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

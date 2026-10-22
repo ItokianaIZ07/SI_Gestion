@@ -43,6 +43,22 @@ const router = createRouter({
           name: 'editeurEnLigne',
           component: EditCVView
         },
+        // Parcours candidat : offres publiées -> détail -> dépôt de CV
+        {
+          path: 'offres',
+          name: 'offresPubliques',
+          component: () => import('@/views/modules/client/OffresPubliquesView.vue')
+        },
+        {
+          path: 'offres/:publicationId',
+          name: 'offreDetail',
+          component: () => import('@/views/modules/client/OffreDetailView.vue')
+        },
+        {
+          path: 'offres/:publicationId/postuler',
+          name: 'postuler',
+          component: () => import('@/views/modules/client/PostulerView.vue')
+        },
       ]
     },
 
@@ -65,10 +81,56 @@ const router = createRouter({
           path: "rh/cv",
           component: CVView
         },
+        
         {
           path: "rh/demandes",
-          component: DemandeView
-        }
+          component: () => DemandeView,
+        },
+        {
+          path: "rh/recrutements",
+          name: "rhRecrutements",
+          component: () => import("@/views/modules/gestion/rh/RecrutementsView.vue"),
+        },
+        {
+          path: "rh/recrutements/creation",
+          name: "rhRecrutementCreation",
+          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
+        },
+        {
+          path: "rh/recrutements/:id/modifier",
+          name: "rhRecrutementModification",
+          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
+        },
+        {
+          path: "rh/offres",
+          name: "rhOffres",
+          component: () => import("@/views/modules/gestion/rh/OffresView.vue"),
+        },
+        {
+          path: "rh/offres/creation",
+          name: "rhOffreCreation",
+          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
+        },
+        {
+          path: "rh/offres/:id/modifier",
+          name: "rhOffreModification",
+          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
+        },
+        {
+          path: "rh/publications",
+          name: "rhPublications",
+          component: () => import("@/views/modules/gestion/rh/PublicationsView.vue"),
+        },
+        {
+          path: "rh/publications/creation",
+          name: "rhPublicationCreation",
+          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
+        },
+        {
+          path: "rh/publications/:id/modifier",
+          name: "rhPublicationModification",
+          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
+        },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
       ],

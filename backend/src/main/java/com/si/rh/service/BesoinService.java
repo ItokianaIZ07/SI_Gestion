@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -48,6 +50,8 @@ public class BesoinService {
 
     @Transactional
     public Besoin creer(BesoinRequest request) {
+        validerChampsObligatoires(request);
+
         var typeBesoin = typeBesoinRepository.findById(request.typeBesoinId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de besoin introuvable"));
         var poste = posteRepository.findById(request.posteId())
@@ -59,6 +63,10 @@ public class BesoinService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le poste ne correspond pas au département choisi");
         }
 
+        if (estTypeRemplacement(typeBesoin) && (request.employeRemplaceId() == null || request.employeRemplaceId() <= 0)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un employé remplacé est requis pour un besoin de remplacement");
+        }
+
         var besoin = new Besoin();
         besoin.setTypeBesoin(typeBesoin);
         besoin.setPoste(poste);
@@ -66,24 +74,74 @@ public class BesoinService {
         besoin.setEffectif(request.effectif());
         besoin.setPriorite(request.priorite());
         besoin.setDateArriveeSouhaitee(request.dateArriveeSouhaitee());
-        besoin.setLieuTravail(request.lieuTravail());
+        besoin.setLieuTravail(request.lieuTravail().trim());
         besoin.setMotif(request.motif().trim());
-        besoin.setExperienceRequise(request.experienceRequise());
-        besoin.setNiveauEtude(request.niveauEtude());
-        besoin.setCompetencesRequises(request.competencesRequises());
+        besoin.setExperienceRequise(request.experienceRequise().trim());
+        besoin.setNiveauEtude(request.niveauEtude().trim());
+        besoin.setCompetencesRequises(request.competencesRequises().trim());
         besoin.setSalaireEstime(request.salaireEstime());
         besoin.setStatutGlobal(StatutGlobalBesoin.EN_ATTENTE_RH);
 
-        if (request.employeRemplaceId() != null) {
+        if (request.employeRemplaceId() != null && request.employeRemplaceId() > 0) {
             besoin.setEmployeRemplace(employeRepository.findById(request.employeRemplaceId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Employé remplacé introuvable")));
         }
 
-        if (request.typeContratSouhaiteId() != null) {
-            besoin.setTypeContratSouhaite(typeContratRepository.findById(request.typeContratSouhaiteId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de contrat introuvable")));
-        }
+        besoin.setTypeContratSouhaite(typeContratRepository.findById(request.typeContratSouhaiteId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de contrat introuvable")));
 
         return besoinRepository.save(besoin);
+    }
+
+    private void validerChampsObligatoires(BesoinRequest request) {
+        if (request == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La demande est obligatoire");
+        }
+
+        exiger(request.demandeurId() != null && request.demandeurId() > 0, "demandeurId");
+        exiger(request.departementId() != null && request.departementId() > 0, "departementId");
+        exiger(request.typeBesoinId() != null && request.typeBesoinId() > 0, "typeBesoinId");
+        exiger(request.posteId() != null && request.posteId() > 0, "posteId");
+        exiger(request.typeContratSouhaiteId() != null && request.typeContratSouhaiteId() > 0, "typeContratSouhaiteId");
+        exiger(request.effectif() != null && request.effectif() >= 1, "effectif");
+        exiger(request.priorite() != null, "priorite");
+        exiger(request.dateArriveeSouhaitee() != null
+                && !request.dateArriveeSouhaitee().isBefore(LocalDate.now()), "dateArriveeSouhaitee");
+        exiger(texteRenseigne(request.lieuTravail()), "lieuTravail");
+        exiger(texteRenseigne(request.motif()), "motif");
+        exiger(texteRenseigne(request.experienceRequise()), "experienceRequise");
+        exiger(texteRenseigne(request.niveauEtude()), "niveauEtude");
+        exiger(texteRenseigne(request.competencesRequises()), "competencesRequises");
+        exiger(request.salaireEstime() != null
+                && request.salaireEstime().compareTo(BigDecimal.ONE) > 0, "salaireEstime");
+
+        var typeBesoin = typeBesoinRepository.findById(request.typeBesoinId());
+        if (typeBesoin.isPresent() && estTypeRemplacement(typeBesoin.get())
+                && (request.employeRemplaceId() == null || request.employeRemplaceId() <= 0)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Un employé remplacé est requis pour un besoin de remplacement");
+        }
+    }
+
+    private boolean estTypeRemplacement(com.si.rh.model.TypeBesoin typeBesoin) {
+        if (typeBesoin == null) {
+            return false;
+        }
+
+        String code = typeBesoin.getCode() == null ? "" : typeBesoin.getCode().trim().toUpperCase();
+        String libelle = typeBesoin.getLibelle() == null ? "" : typeBesoin.getLibelle().trim().toUpperCase();
+        return "REMPLACEMENT".equals(code) || libelle.contains("REMPLACEMENT");
+    }
+
+    private boolean texteRenseigne(String valeur) {
+        return valeur != null && !valeur.isBlank();
+    }
+
+    private void exiger(boolean condition, String champ) {
+        if (!condition) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le champ " + champ + " est obligatoire et doit être valide"
+            );
+        }
     }
 }

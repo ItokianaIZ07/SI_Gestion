@@ -2,6 +2,7 @@ package com.si.rh.dto;
 
 import com.si.rh.model.enums.Priorite;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,20 +12,20 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record BesoinRequest(
-        @NotNull Integer demandeurId,
-        @NotNull Integer departementId,
-        @NotNull Integer typeBesoinId,
-        @NotNull Integer posteId,
-        Integer employeRemplaceId,
-        Integer typeContratSouhaiteId,
+        @NotNull @Min(1) Integer demandeurId,
+        @NotNull @Min(1) Integer departementId,
+        @NotNull @Min(1) Integer typeBesoinId,
+        @NotNull @Min(1) Integer posteId,
+        @Min(0) Integer employeRemplaceId,
+        @NotNull @Min(1) Integer typeContratSouhaiteId,
         @NotNull @Min(1) Integer effectif,
         @NotNull Priorite priorite,
-        LocalDate dateArriveeSouhaitee,
-        @Size(max = 150) String lieuTravail,
+        @NotNull @FutureOrPresent LocalDate dateArriveeSouhaitee,
+        @NotBlank @Size(max = 150) String lieuTravail,
         @NotBlank String motif,
-        @Size(max = 255) String experienceRequise,
-        @Size(max = 100) String niveauEtude,
-        String competencesRequises,
-        @DecimalMin("0.00") BigDecimal salaireEstime
+        @NotBlank @Size(max = 255) String experienceRequise,
+        @NotBlank @Size(max = 100) String niveauEtude,
+        @NotBlank String competencesRequises,
+        @NotNull @DecimalMin("1.00") BigDecimal salaireEstime
 ) {
 }

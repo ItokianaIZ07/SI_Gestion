@@ -226,6 +226,6 @@ export const api = {
 // Conserve exactement le comportement attendu par l'ancien code.
 
 export async function getBesoins() {
-  const response = await http.get("/rh/besoins/all");
+  const response = await http.get("/rh/besoins");
   return response.data;
 }

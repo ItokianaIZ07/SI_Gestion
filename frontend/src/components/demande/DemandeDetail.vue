@@ -14,6 +14,8 @@ const props = defineProps({
     }
 })
 
+console.log(props.demande)
+
 const remarque = ref("");
 const envoiEnCours = ref(false);
 

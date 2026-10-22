@@ -18,16 +18,17 @@ export const useAuthStore = defineStore('role', () =>{
         estAuthentifie.value = false;
     };
 
-    const logout = async () =>{
-        try {
-            await api.post("/auth/logout");
-        } finally {
-            clearSession();
-        }
-        return { success: true };
+    // const logout = async () =>{
+    //     try {
+    //         await api.post("/auth/logout");
+    //     } finally {
+    //         clearSession();
+    //     }
+    //     return { success: true };
+    // }
     const chargee = ref(false);
-    const estAuthentifie = ref(false);
-    const user = ref(null);
+    // const estAuthentifie = ref(false);
+    // const user = ref(null);
 
 
     const addRole = (newRole, force = false) => {

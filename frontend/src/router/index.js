@@ -76,6 +76,7 @@ const router = createRouter({
           name: 'DemandeManifestation',
           component: ManifestationView
         },
+        {
           path: "rh/demandes",
           component: DemandeView
         }

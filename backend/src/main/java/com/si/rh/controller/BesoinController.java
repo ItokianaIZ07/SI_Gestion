@@ -20,7 +20,7 @@ import java.util.List;
  *@Author Itokiana
  * */
 @RestController
-@RequestMapping("/api/rh/besoins")
+@RequestMapping("/api")
 public class BesoinController {
 
     private final BesoinService besoinService;
@@ -30,12 +30,16 @@ public class BesoinController {
     }
 
 
-    @PostMapping
+    @PostMapping("/manager/besoins")
     public ResponseEntity<Integer> creer(@Valid @RequestBody BesoinRequest request) {
         Besoin besoin = besoinService.creer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(besoin.getId());
     }
-    @GetMapping("")
+    @GetMapping("/manager/besoins")
+    public List<Besoin> getAll(){
+        return besoinService.getAll();
+    }
+    @GetMapping("/rh/besoins")
     public List<Besoin> getListBesoin(){
         return besoinService.getAll();
     }

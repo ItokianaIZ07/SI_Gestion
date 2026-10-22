@@ -39,6 +39,7 @@ async function handleLogin() {
     email: email.value,
     password: password.value,
   });
+}
 
 }
 </script>

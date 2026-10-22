@@ -27,6 +27,7 @@ public class BesoinService {
     private final UtilisateurRepository utilisateurRepository;
     private final EmployeRepository employeRepository;
     private final TypeContratRepository typeContratRepository;
+    private final NotificationService notificationService;
 
     public BesoinService(
             BesoinRepository besoinRepository,
@@ -34,7 +35,8 @@ public class BesoinService {
             PosteRepository posteRepository,
             UtilisateurRepository utilisateurRepository,
             EmployeRepository employeRepository,
-            TypeContratRepository typeContratRepository
+            TypeContratRepository typeContratRepository,
+            NotificationService notificationService
     ) {
         this.besoinRepository = besoinRepository;
         this.typeBesoinRepository = typeBesoinRepository;
@@ -42,6 +44,7 @@ public class BesoinService {
         this.utilisateurRepository = utilisateurRepository;
         this.employeRepository = employeRepository;
         this.typeContratRepository = typeContratRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Besoin> getAll() {
@@ -90,7 +93,9 @@ public class BesoinService {
         besoin.setTypeContratSouhaite(typeContratRepository.findById(request.typeContratSouhaiteId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de contrat introuvable")));
 
-        return besoinRepository.save(besoin);
+        Besoin besoinEnregistre = besoinRepository.save(besoin);
+        notificationService.notifierNouveauBesoin(besoinEnregistre);
+        return besoinEnregistre;
     }
 
     private void validerChampsObligatoires(BesoinRequest request) {

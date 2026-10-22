@@ -10,4 +10,5 @@ import java.util.List;
 public interface UtilisateurRepository extends JpaRepository<Utilisateur, Integer> {
     Optional<Utilisateur> findByEmail(String email);
     List<Utilisateur> findByActifTrueOrderByNomAscPrenomAsc();
+    List<Utilisateur> findByRole_Code(String code);
 }

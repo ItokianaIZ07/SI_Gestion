@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/rh/besoins")
+@RequestMapping("/api/besoins")
 public class BesoinController {
     private final ValidationBesoinService validationBesoinService;
     private final BesoinService service;

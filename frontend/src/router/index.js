@@ -27,6 +27,7 @@ const exigerRole = (...rolesAutorises) => () => {
   }
 }
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
+const rhUniquement = exigerRole('RH')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -190,10 +191,12 @@ const router = createRouter({
         {
           path: "rh/entretiens",
           component: EntretienView,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/contrats",
           component: ContratView,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/recrutements",

@@ -2,14 +2,18 @@
 <script setup>
 import Pagination from "@/components/ui/Pagination.vue";
 import { usePagination } from "@/composable/usePagination";
-
 import { ref, computed, onMounted } from "vue";
+import { useAuthStore } from "@/stores/authStore";
 import {
   getCandidatsAEmbaucher,
   getContrats,
   embaucherCandidat,
   signerContrat,
 } from "@/services/contratService";
+
+const authStore = useAuthStore();
+const role = computed(() => authStore.user?.role?.toUpperCase());
+const estRh = computed(() => role.value === "RH");
 
 const aEmbaucher = ref([]);
 const contrats = ref([]);
@@ -87,6 +91,7 @@ async function charger() {
 }
 
 function selectionner(c) {
+  if (!estRh.value) return;
   selectionId.value = c.id;
   formulaire.value = {
     idCandidature: c.id,
@@ -98,7 +103,7 @@ function selectionner(c) {
 }
 
 async function embaucher() {
-  if (!formulaire.value.idCandidature) return;
+  if (!estRh.value || !formulaire.value.idCandidature) return;
   erreur.value = "";
   message.value = "";
   actionEnCours.value = "embauche";
@@ -116,6 +121,7 @@ async function embaucher() {
 }
 
 async function signer(contrat, partie) {
+  if (!estRh.value) return;
   signatureEnCours.value = `${contrat.id}-${partie}`;
   erreur.value = "";
   message.value = "";
@@ -189,6 +195,7 @@ const pgContrats = usePagination(contratsFiltres, 6);
               type="button"
               class="request-item"
               :class="{ active: selectionId === c.id }"
+              :disabled="!estRh"
               @click="selectionner(c)"
             >
               <div class="request-item-top">
@@ -263,8 +270,9 @@ const pgContrats = usePagination(contratsFiltres, 6);
                 <span class="signature-compteur">{{ ct.nbSignatures }}/2</span>
               </div>
 
+              <!-- Boutons de signature : RH uniquement -->
               <div
-                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
+                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE' && estRh"
                 class="decision-actions"
                 style="margin-top: 8px"
               >
@@ -340,7 +348,8 @@ const pgContrats = usePagination(contratsFiltres, 6);
                 </div>
               </div>
 
-              <div class="decision-actions">
+              <!-- Bouton embauche : RH uniquement -->
+              <div v-if="estRh" class="decision-actions">
                 <button
                   class="approve-button"
                   :disabled="actionEnCours === 'embauche'"
@@ -533,6 +542,11 @@ const pgContrats = usePagination(contratsFiltres, 6);
 
 button.request-item {
   cursor: pointer;
+}
+
+button.request-item:disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 .request-item:hover {

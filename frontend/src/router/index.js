@@ -19,6 +19,8 @@ import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartem
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
 
+import SignerContratView from '@/views/modules/client/SignerContratView.vue'
+
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
 const exigerRole = (...rolesAutorises) => () => {
@@ -29,6 +31,7 @@ const exigerRole = (...rolesAutorises) => () => {
   }
 }
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
+const rhEtDirection = exigerRole('RH', 'DIRECTION')
 const rhUniquement = exigerRole('RH')
 
 const router = createRouter({
@@ -79,6 +82,11 @@ const router = createRouter({
           name: 'postuler',
           component: ChoiceUploadView
           // component: () => import('@/views/modules/client/PostulerView.vue')
+        },
+        {
+          path: 'signer-contrat/:token',
+          name: 'signerContrat',
+          component: SignerContratView
         },
       ]
     },
@@ -206,7 +214,7 @@ const router = createRouter({
           path: "rh/contrats",
           name: "rhContrats",
           component: ContratView,
-          beforeEnter: rhUniquement,
+          beforeEnter: rhEtDirection,
         },
         {
           path: "rh/recrutements",

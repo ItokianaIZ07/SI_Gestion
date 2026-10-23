@@ -13,6 +13,7 @@
     "html2pdf.js": "^0.14.0",
     "pinia": "^4.0.3",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "signature_pad": "^5.1.4",
     "vue": "rc",
     "vue-router": "^5.3.1"
   },

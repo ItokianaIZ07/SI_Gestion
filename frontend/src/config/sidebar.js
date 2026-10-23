@@ -31,7 +31,7 @@ const sidebarByRole = {
 
     direction: [
         // Tous les liens du système
-        // { label: "Contrats", to: "/si/app/rh/contrats" },
+        { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },

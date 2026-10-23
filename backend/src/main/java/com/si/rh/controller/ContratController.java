@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
 import java.util.List;
 
 @RestController
@@ -43,8 +46,8 @@ public class ContratController {
 
     @PostMapping("/{id}/signer")
     public ContratDTO signer(@PathVariable Integer id,
-                             @RequestBody SignatureRequest req) {
-        return service.signer(id, req.getPartie());
+                            @RequestBody SignatureRequest req) {
+        return service.signer(id, req.getPartie(), req.getSignatureBase64());
     }
 
     private Integer extraireIdUtilisateur(Authentication authentication) {
@@ -54,5 +57,16 @@ public class ContratController {
         return utilisateurRepo.findByEmail(email)
             .orElseThrow(() -> new IllegalStateException("Utilisateur introuvable : " + email))
             .getId();
+    }
+
+    @GetMapping("/{id}/signature/{partie}")
+    public ResponseEntity<byte[]> getSignature(@PathVariable Integer id,
+                                            @PathVariable String partie) {
+        byte[] image = service.getSignature(id, partie);
+        if (image == null)
+            return ResponseEntity.notFound().build();
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_PNG)
+            .body(image);
     }
 }

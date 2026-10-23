@@ -4,6 +4,7 @@ import com.si.rh.dto.candidat.*;
 import com.si.rh.exception.*;
 import com.si.rh.model.Candidat;
 import com.si.rh.repository.CandidatRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -29,9 +30,9 @@ public class CandidatService {
 
     public CandidatDTO creer(CandidatEcritureDTO d) {
         if (repo.existsByEmailIgnoreCase(d.email()))
-            throw new RegleMetierException("Cette adresse e-mail est déjà utilisée.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Cette adresse e-mail est déjà utilisée.");
         if (d.numeroCin() != null && !d.numeroCin().isBlank() && repo.existsByNumeroCin(d.numeroCin()))
-            throw new RegleMetierException("Ce numéro CIN est déjà utilisé.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Ce numéro CIN est déjà utilisé.");
         Candidat c = new Candidat();
         appliquer(c, d);
         return dto(repo.save(c));
@@ -40,10 +41,10 @@ public class CandidatService {
     public CandidatDTO modifier(Integer id, CandidatEcritureDTO d) {
         Candidat c = trouver(id);
         if (repo.existsByEmailIgnoreCase(d.email()) && !c.getEmail().equalsIgnoreCase(d.email()))
-            throw new RegleMetierException("Cette adresse e-mail est déjà utilisée.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Cette adresse e-mail est déjà utilisée.");
         if (d.numeroCin() != null && !d.numeroCin().isBlank() && repo.existsByNumeroCin(d.numeroCin())
                 && !d.numeroCin().equals(c.getNumeroCin()))
-            throw new RegleMetierException("Ce numéro CIN est déjà utilisé.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Ce numéro CIN est déjà utilisé.");
         appliquer(c, d);
         return dto(repo.save(c));
     }

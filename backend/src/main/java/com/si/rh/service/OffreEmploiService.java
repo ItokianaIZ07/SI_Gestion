@@ -4,6 +4,7 @@ import com.si.rh.dto.offre.*;
 import com.si.rh.exception.*;
 import com.si.rh.model.*;
 import com.si.rh.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -31,7 +32,7 @@ public class OffreEmploiService {
 
     public OffreEmploiDTO creer(OffreEmploiEcritureDTO d) {
         if (repo.existsByRecrutement_Id(d.recrutementId()))
-            throw new RegleMetierException("Une offre existe déjà pour ce recrutement.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Une offre existe déjà pour ce recrutement.");
         OffreEmploi o = new OffreEmploi();
         appliquer(o, d);
         return dto(repo.save(o));
@@ -40,7 +41,7 @@ public class OffreEmploiService {
     public OffreEmploiDTO modifier(Integer id, OffreEmploiEcritureDTO d) {
         OffreEmploi o = trouver(id);
         if (repo.existsByRecrutement_Id(d.recrutementId()) && !o.getRecrutement().getId().equals(d.recrutementId()))
-            throw new RegleMetierException("Une offre existe déjà pour ce recrutement.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Une offre existe déjà pour ce recrutement.");
         appliquer(o, d);
         return dto(repo.save(o));
     }
@@ -53,7 +54,7 @@ public class OffreEmploiService {
         Recrutement r = recrutementRepo.findById(d.recrutementId())
                 .orElseThrow(() -> new RessourceIntrouvableException("Recrutement introuvable : " + d.recrutementId()));
         if (d.salaireMin() != null && d.salaireMax() != null && d.salaireMin().compareTo(d.salaireMax()) > 0)
-            throw new RegleMetierException("Le salaire minimum ne peut pas dépasser le salaire maximum.");
+            throw new RegleMetierException(HttpStatus.BAD_REQUEST, "Le salaire minimum ne peut pas dépasser le salaire maximum.");
         o.setRecrutement(r);
         o.setTitre(d.titre());
         o.setDescriptionPoste(d.descriptionPoste());

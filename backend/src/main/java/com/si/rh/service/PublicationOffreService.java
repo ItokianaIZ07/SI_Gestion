@@ -4,6 +4,7 @@ import com.si.rh.dto.publication.*;
 import com.si.rh.exception.*;
 import com.si.rh.model.*;
 import com.si.rh.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -51,7 +52,7 @@ public class PublicationOffreService {
                 .orElseThrow(() -> new RessourceIntrouvableException("Offre introuvable : " + d.offreId()));
         LocalDate date = d.datePublication() == null ? LocalDate.now() : d.datePublication();
         if (d.dateExpiration() != null && d.dateExpiration().isBefore(date))
-            throw new RegleMetierException("La date d'expiration ne peut pas précéder la date de publication.");
+            throw new RegleMetierException(HttpStatus.BAD_REQUEST, "La date d'expiration ne peut pas précéder la date de publication.");
         p.setOffre(o);
         p.setPlateforme(d.plateforme());
         p.setUrlPublication(d.urlPublication());

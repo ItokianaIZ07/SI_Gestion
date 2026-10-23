@@ -3,7 +3,7 @@
 .fin-page{--fin-primary:var(--primary,#1F7A4D);--fin-primary-dark:var(--primary-dark,#165C3A);--fin-ink:var(--text,#12301F);--fin-border:#D5E0D9;color:var(--fin-ink);font-family:inherit}
 .fin-page h1{margin:0 0 4px;font-size:28px}
 .fin-sub{margin:0 0 24px;color:#4B5563}
-.fin-card{background:#fff;border:1px solid var(--fin-border);border-radius:12px;padding:20px 24px}
+.fin-card{background:#fff;border:1px solid var(--fin-border);border-radius:12px;padding:20px 24px; max-height: 85vh;}
 .fin-scroll{overflow-x:auto}
 .fin-table{width:100%;border-collapse:collapse;font-size:14px}
 .fin-table th{text-align:left;font-weight:600;color:#4B5563;padding:10px 12px;border-bottom:1px solid var(--fin-border);white-space:nowrap}

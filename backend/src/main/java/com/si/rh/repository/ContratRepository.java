@@ -22,7 +22,7 @@ public interface ContratRepository extends JpaRepository<Contrat, Integer> {
      */
     @Query("select new com.si.rh.dto.LigneSalaire(e.departement.id, c.salaire, c.dateDebut, c.dateFin) "
             + "from Contrat c join c.employe e "
-            + "where c.statutContrat.code in :codesStatut and c.salaire is not null "
+            + "where c.StatutContract.code in :codesStatut and c.salaire is not null "
             + "and c.dateDebut <= :finAnnee and (c.dateFin is null or c.dateFin >= :debutAnnee)")
     List<LigneSalaire> lignesSalaire(@Param("codesStatut") Collection<String> codesStatut,
                                      @Param("debutAnnee") LocalDate debutAnnee,

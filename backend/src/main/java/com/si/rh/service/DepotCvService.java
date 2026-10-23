@@ -9,6 +9,7 @@ import com.si.rh.model.enums.StatutOffre;
 import com.si.rh.model.enums.StatutPublication;
 import com.si.rh.model.enums.StatutRecrutement;
 import com.si.rh.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
@@ -54,10 +55,10 @@ public class DepotCvService {
                     && publication.getOffre().getStatut() == StatutOffre.VALIDEE
                     && (publication.getDateExpiration() == null || !publication.getDateExpiration().isBefore(jour));
             if (!active)
-                throw new RegleMetierException("Cette offre n'est plus ouverte aux candidatures.");
+                throw new RegleMetierException(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS, "Cette offre n'est plus ouverte aux candidatures.");
             recrutement = publication.getOffre().getRecrutement();
             if (d.recrutementId() != null && !d.recrutementId().equals(recrutement.getId()))
-                throw new RegleMetierException("La publication sélectionnée ne correspond pas à ce recrutement.");
+                throw new RegleMetierException(HttpStatus.BAD_REQUEST, "La publication sélectionnée ne correspond pas à ce recrutement.");
         } else if (d.recrutementId() != null) {
             recrutement = recrutementRepo.findById(d.recrutementId()).orElseThrow(
                     () -> new RessourceIntrouvableException("Recrutement introuvable : " + d.recrutementId()));
@@ -66,16 +67,16 @@ public class DepotCvService {
         if (recrutement != null) {
             StatutRecrutement s = recrutement.getStatut();
             if (s == StatutRecrutement.TERMINE || s == StatutRecrutement.ANNULE || s == StatutRecrutement.SUSPENDU)
-                throw new RegleMetierException("Ce recrutement n'accepte plus de candidatures.");
+                throw new RegleMetierException(HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS, "Ce recrutement n'accepte plus de candidatures.");
             if (recrutement.getDateCloture() != null && recrutement.getDateCloture().isBefore(jour))
-                throw new RegleMetierException("La date limite de candidature est dépassée.");
+                throw new RegleMetierException(HttpStatus.BAD_REQUEST, "La date limite de candidature est dépassée.");
         }
 
         Candidat candidat = trouverOuCreerCandidat(d);
 
         if (recrutement != null && candidat.getId() != null
                 && candidatureRepo.existsByCandidat_IdAndRecrutement_Id(candidat.getId(), recrutement.getId()))
-            throw new RegleMetierException("Vous avez déjà postulé à cette offre.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Vous avez déjà postulé à cette offre.");
 
         Cv cv = new Cv();
         cv.setCandidat(candidat);
@@ -109,11 +110,11 @@ public class DepotCvService {
         if (existant.isPresent()) {
             Candidat c = existant.get();
             if (!Objects.equals(c.getNumeroCin(), cin))
-                throw new RegleMetierException("Cette adresse e-mail est déjà associée à un autre dossier candidat.");
+                throw new RegleMetierException(HttpStatus.CONFLICT, "Cette adresse e-mail est déjà associée à un autre dossier candidat.");
             return c;
         }
         if (cin != null && candidatRepo.existsByNumeroCin(cin))
-            throw new RegleMetierException("Ce numéro CIN est déjà utilisé.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Ce numéro CIN est déjà utilisé.");
 
         Candidat c = new Candidat();
         c.setNom(d.nom().trim());

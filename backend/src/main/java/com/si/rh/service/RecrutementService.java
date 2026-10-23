@@ -4,6 +4,7 @@ import com.si.rh.dto.recrutement.*;
 import com.si.rh.exception.*;
 import com.si.rh.model.*;
 import com.si.rh.repository.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -35,9 +36,9 @@ public class RecrutementService {
 
     public RecrutementDTO creer(RecrutementEcritureDTO d) {
         if (repo.existsByReference(d.reference()))
-            throw new RegleMetierException("Cette référence de recrutement existe déjà.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Cette référence de recrutement existe déjà.");
         if (repo.existsByBesoin_Id(d.besoinId()))
-            throw new RegleMetierException("Ce besoin est déjà associé à un recrutement.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Ce besoin est déjà associé à un recrutement.");
         Recrutement r = new Recrutement();
         appliquer(r, d);
         return dto(repo.save(r));
@@ -46,9 +47,9 @@ public class RecrutementService {
     public RecrutementDTO modifier(Integer id, RecrutementEcritureDTO d) {
         Recrutement r = trouver(id);
         if (repo.existsByReference(d.reference()) && !r.getReference().equals(d.reference()))
-            throw new RegleMetierException("Cette référence de recrutement existe déjà.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Cette référence de recrutement existe déjà.");
         if (repo.existsByBesoin_Id(d.besoinId()) && !r.getBesoin().getId().equals(d.besoinId()))
-            throw new RegleMetierException("Ce besoin est déjà associé à un recrutement.");
+            throw new RegleMetierException(HttpStatus.CONFLICT, "Ce besoin est déjà associé à un recrutement.");
         appliquer(r, d);
         return dto(repo.save(r));
     }
@@ -74,7 +75,7 @@ public class RecrutementService {
             r.setResponsable(utilisateurRepo.findById(d.responsableId()).orElseThrow(
                     () -> new RessourceIntrouvableException("Responsable introuvable : " + d.responsableId())));
         if (r.getDateCloture() != null && r.getDateCloture().isBefore(r.getDateOuverture()))
-            throw new RegleMetierException("La date de clôture ne peut pas précéder la date d'ouverture.");
+            throw new RegleMetierException(HttpStatus.BAD_REQUEST, "La date de clôture ne peut pas précéder la date d'ouverture.");
     }
 
     private Recrutement trouver(Integer id) {

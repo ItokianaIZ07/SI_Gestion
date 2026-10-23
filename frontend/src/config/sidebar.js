@@ -1,7 +1,11 @@
 const sidebarByRole = {
     rh: [
+        { label: "Entretiens", to: "/si/app/rh/entretiens" },
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
+        { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Offres d'emploi", to: "/si/app/rh/offres" },
+        { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" }
     ],
 
@@ -15,13 +19,17 @@ const sidebarByRole = {
     finance: [
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
-        { label: "Demandes", to: "/si/app/finance/demandes" }
+        { label: "Demandes", to: "/si/app/finance/demandes" },
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
     ],
 
     direction: [
         // Tous les liens du système
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
+        { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Offres d'emploi", to: "/si/app/rh/offres" },
+        { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
 
         { label: "Liste des départements", to: "/si/app/manager/departements" },
@@ -31,7 +39,8 @@ const sidebarByRole = {
 
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
-        { label: "Demandes Finance", to: "/si/app/finance/demandes" }
+        { label: "Demandes Finance", to: "/si/app/finance/demandes" },
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
     ]
 };
 

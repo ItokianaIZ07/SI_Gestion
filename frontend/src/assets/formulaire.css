@@ -14,8 +14,8 @@
   gap: 24px;
   padding: 36px;
   background: var(--fond-card);
-  border: 1.5px solid var(--couleur-texte);
-  border-radius: 12px;
+  border: 1px solid var(--couleur-texte);
+  border-radius: var(--radius-lg);
 }
 
 .champ { display: flex; flex-direction: column; gap: 8px; }
@@ -32,7 +32,7 @@
   font: inherit;
   color: var(--texte);
   background: var(--fond-card);
-  border: 1.5px solid var(--couleur-texte);
+  border: 1px solid var(--couleur-texte);
   border-radius: 8px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -40,7 +40,7 @@
 .champ textarea { resize: vertical; min-height: 140px; }
 
 .champ input::placeholder,
-.champ textarea::placeholder { color: var(--couleur-texte); }
+.champ textarea::placeholder { color: var(--color-faint); }
 
 .champ input:hover,
 .champ textarea:hover { border-color: var(--texte-doux); }
@@ -49,8 +49,8 @@
 .champ input:focus,
 .champ textarea:focus {
   outline: none;
-  border-color: var(--secondaire);
-  box-shadow: 0 0 0 1px var(--texte-success);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
 }
 
 /* Bouton « Choisir un fichier » natif */
@@ -85,24 +85,61 @@
 
 .champ__erreur[hidden] { display: none; }
 
+.requis{
+  color: var(--texte-danger);
+}
+
+select {
+  width: 100%;
+  padding: 11px 40px 11px 14px;
+  font: inherit;
+  color: var(--color-ink);
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select:hover {
+  border-color: var(--color-faint);
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+select:disabled {
+  background-color: var(--color-subtle);
+  cursor: not-allowed;
+}
+
 /* ---------- Bouton d'envoi ---------- */
 .formulaire__actions { display: flex; justify-content: flex-end; }
 
 .bouton {
-  padding: 12px 32px;
+  padding: 11px 28px;
   font: inherit;
   font-weight: 600;
-  color: var(--texte);
-  background: var(--fond);
-  border: 1.5px solid var(--couleur-texte);
-  border-radius: 8px;
+  color: #fff;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
 
 .bouton:hover {
-  background: var(--fond-card);
-  border-color: var(--texte-doux);
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .bouton:focus-visible {
@@ -116,8 +153,8 @@
   max-width: 760px;
   padding: 24px;
   background: var(--fond-card);
-  border: 1.5px solid var(--couleur-texte);
-  border-radius: 12px;
+  border: 1px solid var(--couleur-texte);
+  border-radius: var(--radius-lg);
 }
 
 .apercu[hidden] { display: none; }
@@ -177,4 +214,105 @@
 @media (prefers-reduced-motion: reduce) {
   .champ input, .champ textarea, .bouton,
   .champ input[type="file"]::file-selector-button { transition: none; }
+}
+
+/* À coller à la fin de formulaire.css (formulaire en 2 sections) */
+
+/* ---------- Indicateur d'étapes ---------- */
+.etapes {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etapes li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--texte-doux);
+  background: var(--fond);
+  border: 1px solid var(--couleur-texte);
+  border-radius: 8px;
+}
+
+/* détail discret : bordure verte sur l'étape en cours */
+.etapes__item--actif {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-line);
+}
+
+.etapes__numero {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+/* ---------- Sections ---------- */
+.formulaire__section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.formulaire__titre {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.formulaire__note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--texte-doux);
+}
+
+.champ__aide {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--texte-doux);
+}
+
+/* ---------- Boutons ---------- */
+.formulaire__actions { gap: 12px; }
+.formulaire__actions--double { justify-content: space-between; }
+
+/* ---------- Champs en lecture seule ---------- */
+.champ input:disabled,
+.champ input[readonly] {
+  color: var(--texte-doux);
+  background: var(--fond);
+  border-color: var(--couleur-texte);
+  cursor: not-allowed;
+}
+
+.champ input:disabled:hover { border-color: var(--couleur-texte); }
+
+/* ---------- Mobile ---------- */
+@media (max-width: 800px) {
+  .formulaire__section { grid-template-columns: 1fr; }
+  .etapes { flex-direction: column; }
+}
+
+/* ---------- Dans l'espace de gestion (sidebar) ---------- */
+.app-layout .principal { padding: 0; gap: 28px; justify-content: flex-start; }
+.app-layout .intro { width: 100%; max-width: 760px; text-align: left; }
+.app-layout .intro h1 { font-size: 1.6rem; }
+.app-layout .intro p { font-size: 0.98rem; }
+.app-layout .principal > p[role="alert"] {
+  width: 100%; max-width: 760px; margin: 0; padding: 12px 16px; font-size: 14px;
+  color: var(--color-danger); background: var(--color-danger-background);
+  border: 1px solid var(--color-danger-line); border-radius: var(--radius-sm);
 }

@@ -1,11 +1,56 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/services/api.js'
 
 const departements = ref([])
 const chargement = ref(true)
 const erreur = ref('')
+const recherche = ref('')
+const filtreEffectif = ref('tous')
+const filtrePostes = ref('tous')
+const filtreDemandes = ref('tous')
+
+const departementsFiltres = computed(() => {
+  const terme = recherche.value.trim().toLocaleLowerCase('fr')
+
+  return departements.value.filter((departement) => {
+    const nomCorrespond = departement.nom.toLocaleLowerCase('fr').includes(terme)
+    const effectif = Number(departement.effectifActif ?? 0)
+    const effectifMax = Number(departement.effectifMax ?? 0)
+    const correspondEffectif =
+      filtreEffectif.value === 'tous' ||
+      (filtreEffectif.value === 'avec-place' && effectifMax > effectif) ||
+      (filtreEffectif.value === 'capacite-atteinte' && effectifMax > 0 && effectif >= effectifMax)
+    const nombrePostes = Number(departement.postes ?? 0)
+    const correspondPostes =
+      filtrePostes.value === 'tous' ||
+      (filtrePostes.value === 'avec' && nombrePostes > 0) ||
+      (filtrePostes.value === 'sans' && nombrePostes === 0)
+    const nombreDemandes = Number(departement.demandes ?? 0)
+    const correspondDemandes =
+      filtreDemandes.value === 'tous' ||
+      (filtreDemandes.value === 'avec' && nombreDemandes > 0) ||
+      (filtreDemandes.value === 'sans' && nombreDemandes === 0)
+
+    return nomCorrespond && correspondEffectif && correspondPostes && correspondDemandes
+  })
+})
+
+const filtresActifs = computed(
+  () =>
+    Boolean(recherche.value) ||
+    filtreEffectif.value !== 'tous' ||
+    filtrePostes.value !== 'tous' ||
+    filtreDemandes.value !== 'tous',
+)
+
+function reinitialiserFiltres() {
+  recherche.value = ''
+  filtreEffectif.value = 'tous'
+  filtrePostes.value = 'tous'
+  filtreDemandes.value = 'tous'
+}
 
 async function getVisionDepartements() {
   const { data } = await api.get('/manager/departements/vision-globale')
@@ -50,8 +95,56 @@ onMounted(chargerDepartements)
       <div class="tableau__entete">
         <div>
           <h2>Départements de l’entreprise</h2>
-          <p>{{ departements.length }} département(s)</p>
+          <p>{{ departementsFiltres.length }} résultat(s) sur {{ departements.length }} département(s)</p>
         </div>
+      </div>
+
+      <div class="filtres" aria-label="Filtres des départements">
+        <label class="filtre filtre--recherche">
+          <span>Rechercher</span>
+          <input
+            v-model="recherche"
+            type="search"
+            placeholder="Nom du département"
+            aria-label="Rechercher un département par son nom"
+          >
+        </label>
+
+        <label class="filtre">
+          <span>Effectif</span>
+          <select v-model="filtreEffectif" aria-label="Filtrer par effectif">
+            <option value="tous">Tous les effectifs</option>
+            <option value="avec-place">Capacité disponible</option>
+            <option value="capacite-atteinte">Capacité atteinte</option>
+          </select>
+        </label>
+
+        <label class="filtre">
+          <span>Postes</span>
+          <select v-model="filtrePostes" aria-label="Filtrer par nombre de postes">
+            <option value="tous">Tous</option>
+            <option value="avec">Avec postes</option>
+            <option value="sans">Sans poste</option>
+          </select>
+        </label>
+
+        <label class="filtre">
+          <span>Demandes</span>
+          <select v-model="filtreDemandes" aria-label="Filtrer par nombre de demandes">
+            <option value="tous">Toutes</option>
+            <option value="avec">Avec demandes</option>
+            <option value="sans">Sans demande</option>
+          </select>
+        </label>
+
+        <button
+          v-if="filtresActifs"
+          class="reinitialiser"
+          type="button"
+          @click="reinitialiserFiltres"
+        >
+          Effacer les filtres
+        </button>
       </div>
 
       <div class="table-conteneur">
@@ -66,7 +159,7 @@ onMounted(chargerDepartements)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="departement in departements" :key="departement.id">
+            <tr v-for="departement in departementsFiltres" :key="departement.id">
               <td>
                 <RouterLink
                   class="lien-departement"
@@ -91,6 +184,11 @@ onMounted(chargerDepartements)
                 >
                   Voir le détail <span aria-hidden="true">→</span>
                 </RouterLink>
+              </td>
+            </tr>
+            <tr v-if="!departementsFiltres.length">
+              <td colspan="5" class="aucun-resultat">
+                Aucun département ne correspond aux filtres sélectionnés.
               </td>
             </tr>
           </tbody>
@@ -183,6 +281,59 @@ h1 {
   border-bottom: 1px solid #e5e7eb;
 }
 
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fcfdfc;
+}
+
+.filtre {
+  display: grid;
+  min-width: 160px;
+  gap: 6px;
+}
+
+.filtre span {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.filtre input,
+.filtre select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #334155;
+  font: inherit;
+}
+
+.filtre--recherche {
+  flex: 1 1 220px;
+}
+
+.reinitialiser {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: var(--principale, #015f09);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reinitialiser:hover {
+  background: #f0f7f1;
+}
+
 h2 {
   margin: 0;
   font-size: 1.15rem;
@@ -215,6 +366,12 @@ th {
 
 td {
   color: #334155;
+}
+
+.aucun-resultat {
+  padding: 28px 18px;
+  color: #64748b;
+  text-align: center;
 }
 
 tbody tr:last-child td {
@@ -264,6 +421,16 @@ tbody tr:hover {
 
   .tableau__entete {
     padding: 16px;
+  }
+
+  .filtres {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .filtre {
+    min-width: 0;
   }
 }
 </style>

@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.List;
 
 public interface EmployeRepository extends JpaRepository<Employe, Integer> {
 
@@ -22,4 +21,8 @@ public interface EmployeRepository extends JpaRepository<Employe, Integer> {
 
     @Query("SELECT COUNT(e) > 0 FROM Employe e WHERE e.candidature.id = :idCandidature")
     boolean existsByIdCandidature(@Param("idCandidature") Integer idCandidature);
+
+    List<Employe> findByDepartement_Id(Integer departementId);
+
+    long countByDepartement_IdAndStatut(Integer departementId, StatutEmploye statut);
 }

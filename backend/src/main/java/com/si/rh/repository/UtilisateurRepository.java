@@ -23,4 +23,7 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Intege
         ORDER BY u.nom, u.prenom
     """)
     List<Utilisateur> findIntervieweurs();
+    
+    List<Utilisateur> findByRole_Code(String code);
+
 }

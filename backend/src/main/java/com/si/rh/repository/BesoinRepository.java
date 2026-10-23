@@ -29,4 +29,7 @@ public interface BesoinRepository extends JpaRepository<Besoin, Integer> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from Besoin b where b.id = :id")
     Optional<Besoin> findByIdForUpdate(@Param("id") Integer id);
+
+    List<Besoin> findByPoste_Departement_IdOrderByDateDemandeDesc(Integer departementId);
+    long countByPoste_Departement_Id(Integer departementId);
 }

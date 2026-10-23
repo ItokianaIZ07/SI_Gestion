@@ -1,4 +1,6 @@
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 // Liste des besoins (demandes) exprimés par les managers.
 // Point de départ du circuit : un besoin ACCEPTE peut être transformé en recrutement.
 //
@@ -67,6 +69,9 @@ function lancer(b) {
 }
 
 onMounted(charger);
+
+/* Pagination du tableau */
+const pg = usePagination(lignes, 10);
 </script>
 
 <template>
@@ -118,7 +123,7 @@ onMounted(charger);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="b in lignes" :key="b.id">
+            <tr v-for="b in pg.items" :key="b.id">
               <td>
                 <span class="g-principal">{{ posteDe(b) }}</span>
                 <span class="g-secondaire">{{ departementDe(b) }}<template v-if="b.lieuTravail"> · {{ b.lieuTravail }}</template></span>
@@ -145,6 +150,7 @@ onMounted(charger);
           </tbody>
         </table>
       </div>
+      <Pagination v-bind="pg.barre" @update:page="pg.aller" />
     </section>
   </div>
 </template>

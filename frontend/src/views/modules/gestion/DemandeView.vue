@@ -1,4 +1,6 @@
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 import { ref, computed, onMounted } from "vue";
 import { getBesoins } from "@/services/api";
 import {
@@ -133,6 +135,8 @@ function selectionner(demande) {
 }
 
 onMounted(chargerBesoins);
+
+const pg = usePagination(demandesFiltrees, 8);
 </script>
 
 <template>
@@ -215,7 +219,7 @@ onMounted(chargerBesoins);
 
         <div v-else class="request-list">
           <DemandeComponent
-            v-for="demande in demandesFiltrees"
+            v-for="demande in pg.items"
             :key="demande.id"
             :demande="demande"
             :class="{ active: demandeSelectionnee?.id === demande.id }"
@@ -234,6 +238,7 @@ onMounted(chargerBesoins);
             </p>
           </div>
         </div>
+        <Pagination v-if="!chargement" v-bind="pg.barre" compact @update:page="pg.aller" />
       </div>
 
       <section class="detail-panel">

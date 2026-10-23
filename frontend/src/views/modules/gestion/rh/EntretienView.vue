@@ -1,5 +1,7 @@
 <!-- Brandon -->
 <script setup>
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
 import { ref, computed, onMounted } from "vue";
 import { useEntretiens } from "@/composable/useEntretiens";
 
@@ -151,6 +153,8 @@ function libelleStatut(statut) {
 }
 
 onMounted(charger);
+
+const pg = usePagination(candidaturesFiltrees, 8);
 </script>
 
 <template>
@@ -209,7 +213,7 @@ onMounted(charger);
         <div class="request-list">
           <transition-group name="list" tag="div">
             <button
-              v-for="c in candidaturesFiltrees"
+              v-for="c in pg.items"
               :key="c.id"
               type="button"
               class="request-item"
@@ -236,6 +240,7 @@ onMounted(charger);
             <p>Modifiez vos filtres ou la recherche.</p>
           </div>
         </div>
+        <Pagination v-bind="pg.barre" compact @update:page="pg.aller" />
       </div>
 
       <section class="detail-panel">

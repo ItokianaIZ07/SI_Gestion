@@ -14,7 +14,10 @@ const extrait = (t, n = 160) => (t && t.length > n ? `${t.slice(0, n).trimEnd()}
 
 <template>
     <article class="offre">
-        <h2>{{ offre.titre }}</h2>
+        <div class="offre__tete">
+            <span class="offre__avatar" aria-hidden="true">{{ (offre.titre ?? "?").trim()[0]?.toUpperCase() }}</span>
+            <h2>{{ offre.titre }}</h2>
+        </div>
         <p class="offre__meta">
             <span v-if="offre.niveauEtude">{{ offre.niveauEtude }}</span>
             <span>{{ offre.experienceMinAnnees }} an(s) d'expérience min.</span>
@@ -39,13 +42,30 @@ const extrait = (t, n = 160) => (t && t.length > n ? `${t.slice(0, n).trimEnd()}
     gap: 10px;
     padding: 24px;
     background: var(--fond-card);
-    border: 1.5px solid var(--couleur-texte);
-    border-radius: 12px;
-    transition: border-color .2s;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: border-color .2s, box-shadow .2s, transform .2s;
 }
 
 .offre:hover {
-    border-color: var(--secondaire);
+    border-color: var(--color-primary-line);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.offre__tete { display: flex; align-items: center; gap: 12px; }
+
+.offre__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
 }
 
 .offre h2 {
@@ -74,8 +94,8 @@ const extrait = (t, n = 160) => (t && t.length > n ? `${t.slice(0, n).trimEnd()}
 .offre__meta span {
     padding: 3px 10px;
     font-size: .85rem;
-    color: var(--texte-doux);
-    background: var(--fond);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
     border-radius: 999px;
 }
 

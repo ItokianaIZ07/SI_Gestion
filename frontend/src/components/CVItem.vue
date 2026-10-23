@@ -78,7 +78,7 @@ function dateLisible(date) {
   width: 100%;
   padding: 14px 12px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   background: #fff;
   text-align: left;
   cursor: pointer;
@@ -87,8 +87,8 @@ function dateLisible(date) {
 }
 
 .cv-item:hover {
-  background: #f7f8f6;
-  border-color: #e6e9e4;
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary-line);
 }
 
 .cv-item:focus-visible {
@@ -105,8 +105,8 @@ function dateLisible(date) {
   height: 42px;
   border: 1px solid #e8ebe6;
   border-radius: 10px;
-  background: #f3f4f1;
-  color: #606a60;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
   font-size: 13px;
   font-weight: 700;
 }

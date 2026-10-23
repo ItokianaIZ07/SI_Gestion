@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +29,9 @@ public class ContratService {
     private final TypeContratRepository typeContratRepo;
     private final StatutContractRepository statutRepo;
     private final UtilisateurRepository utilisateurRepo;
+    private final PosteRepository posteRepo;
     private final EmailService emailService;
+    private final SignatureTokenService signatureTokenService;
 
     // ============ Lecture ============
 
@@ -143,11 +147,14 @@ public class ContratService {
             tacheRepo.save(t);
         }
 
-        // 5. E-mail
-        String nomPoste = p.getNom();   // p = le Poste récupéré plus haut
-        emailService.envoyerContratASigner(
-            c.getCandidat().getEmail(), c.getCandidat().getPrenom(),
-            nomPoste, ct.getReference());
+        // 5. E-mail : informer le candidat que son contrat est en préparation
+        String nomPoste = p.getNom();
+        emailService.envoyerContratEnPreparation(
+            c.getCandidat().getEmail(),
+            c.getCandidat().getPrenom(),
+            nomPoste,
+            ct.getReference()
+        );
 
         return toDTO(ct);
     }
@@ -155,7 +162,7 @@ public class ContratService {
     // ============ Signature ============
 
     @Transactional
-    public ContratDTO signer(Integer idContrat, String partie) {
+    public ContratDTO signer(Integer idContrat, String partie, String signatureBase64) {
         Contrat ct = contratRepo.findById(idContrat)
             .orElseThrow(() -> new IllegalArgumentException("Contrat introuvable"));
         StatutContract actuel = ct.getStatutContract();
@@ -168,18 +175,51 @@ public class ContratService {
         StatutContract actif = statutRepo.findByCode("ACTIF")
             .orElseThrow(() -> new IllegalStateException("Statut ACTIF absent"));
 
-        historiqueRepo.save(historique(ct, actuel, actuel, null,
-            "SIGNATURE_" + partie, "Signature " + partie));
+        HistoriqueContrat h = historique(ct, actuel, actuel, null,
+            "SIGNATURE_" + partie, "Signature " + partie);
+
+        // Décoder et stocker l'image si présente
+        if (signatureBase64 != null && !signatureBase64.isEmpty()) {
+            try {
+                String base64 = signatureBase64.replace("data:image/png;base64,", "");
+                h.setSignatureImage(Base64.getDecoder().decode(base64));
+            } catch (IllegalArgumentException ex) {
+                System.err.println("[SIGNATURE] base64 invalide : " + ex.getMessage());
+            }
+        }
+        historiqueRepo.save(h);
 
         long signatures = historiqueRepo
             .countByEvenementContainingAndContratId("SIGNATURE_", ct.getId());
 
+        // ---- 1ère signature (RH) → envoyer le lien au candidat
+        if ("RH".equals(partie) && signatures < 2) {
+            Employe e = ct.getEmploye();
+            if (e == null)
+                throw new IllegalArgumentException("Employé introuvable");
+
+            Poste p = e.getPoste();
+            String nomPoste = p != null ? p.getNom() : "votre poste";
+
+            signatureTokenService.genererEtEnvoyerLienApresRH(
+                ct.getId(), e.getEmail(), e.getPrenom(), nomPoste);
+        }
+
+        // ---- 2 signatures → activer + email de confirmation
         if (signatures >= 2) {
             ct.setStatutContract(actif);
-            ct.setDateSignature(java.time.LocalDate.now());
+            ct.setDateSignature(LocalDate.now());
             contratRepo.save(ct);
             historiqueRepo.save(historique(ct, actuel, actif, null,
                 "ACTIVATION", "Contrat signé des deux parties"));
+
+            Employe e = ct.getEmploye();
+            if (e != null) {
+                Poste p = e.getPoste();
+                String nomPoste = p != null ? p.getNom() : "votre poste";
+                emailService.envoyerConfirmationContratActif(
+                    e.getEmail(), e.getPrenom(), ct.getReference(), nomPoste);
+            }
         }
 
         return toDTO(ct);
@@ -219,5 +259,67 @@ public class ContratService {
             c.getDateCreation(),
             (int) nb
         );
+    }
+
+    @Transactional
+    public ContratDTO signerCandidat(Integer idContrat,String signatureBase64) {
+        Contrat ct = contratRepo.findById(idContrat)
+            .orElseThrow(() -> new IllegalArgumentException("Contrat introuvable"));
+
+        StatutContract actuel = ct.getStatutContract();
+        if ("BROUILLON".equals(actuel.getCode()))
+            throw new IllegalStateException("Contrat en brouillon");
+        if ("ACTIF".equals(actuel.getCode()))
+            throw new IllegalStateException("Contrat déjà actif");
+
+        StatutContract actif = statutRepo.findByCode("ACTIF")
+            .orElseThrow(() -> new IllegalStateException("Statut ACTIF absent"));
+
+        // Enregistre la signature candidat
+        HistoriqueContrat h = historique(ct, actuel, actuel, null,
+            "SIGNATURE_CANDIDAT", "Signature du candidat via lien sécurisé");
+
+        if (signatureBase64 != null && !signatureBase64.isEmpty()) {
+            try {
+                String base64 = signatureBase64.replace("data:image/png;base64,", "");
+                h.setSignatureImage(Base64.getDecoder().decode(base64));
+            } catch (IllegalArgumentException ex) {
+                System.err.println("[SIGNATURE] base64 invalide : " + ex.getMessage());
+            }
+        }
+        historiqueRepo.save(h);
+
+        long signatures = historiqueRepo
+            .countByEvenementContainingAndContratId("SIGNATURE_", ct.getId());
+
+        if (signatures >= 2) {
+            ct.setStatutContract(actif);
+            ct.setDateSignature(LocalDate.now());
+            contratRepo.save(ct);
+            historiqueRepo.save(historique(ct, actuel, actif, null,
+                "ACTIVATION", "Contrat signé par les deux parties"));
+
+            Employe e = ct.getEmploye();
+            if (e != null) {
+                Poste p = e.getPoste();
+                String nomPoste = p != null ? p.getNom() : "votre poste";
+                emailService.envoyerConfirmationContratActif(
+                    e.getEmail(), e.getPrenom(), ct.getReference(), nomPoste);
+            }
+        }
+
+        return toDTO(ct);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getSignature(Integer idContrat, String partie) {
+        String evt = "SIGNATURE_" + partie.toUpperCase();
+        return historiqueRepo.findAll().stream()
+            .filter(h -> h.getContrat().getId().equals(idContrat))
+            .filter(h -> evt.equals(h.getEvenement()))
+            .filter(h -> h.getSignatureImage() != null)
+            .map(HistoriqueContrat::getSignatureImage)
+            .findFirst()
+            .orElse(null);
     }
 }

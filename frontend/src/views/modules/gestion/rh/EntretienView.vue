@@ -3,7 +3,12 @@
 import Pagination from "@/components/ui/Pagination.vue";
 import { usePagination } from "@/composable/usePagination";
 import { ref, computed, onMounted } from "vue";
+import { useAuthStore } from "@/stores/authStore";
 import { useEntretiens } from "@/composable/useEntretiens";
+
+const authStore = useAuthStore();
+const role = computed(() => authStore.user?.role?.toUpperCase());
+const estRh = computed(() => role.value === "RH");
 
 const {
   candidatures,
@@ -58,6 +63,7 @@ const candidatureSelectionnee = computed(() =>
 );
 
 function selectionner(c) {
+  if (!estRh.value) return;
   selectionId.value = c.id;
   if (c.entretien) {
     let date = c.entretien.dateEntretien || "";
@@ -84,6 +90,7 @@ function afficherFeedback(texte, type = "success") {
 }
 
 async function enregistrer() {
+  if (!estRh.value) return;
   if (!entretienEdite.value?.dateEntretien) {
     alert("Veuillez saisir une date d'entretien.");
     return;
@@ -108,6 +115,7 @@ async function enregistrer() {
 }
 
 async function convoquerEntretien() {
+  if (!estRh.value) return;
   if (!entretienEdite.value?.id) {
     afficherFeedback("Enregistrez d'abord l'entretien.", "error");
     return;
@@ -124,7 +132,7 @@ async function convoquerEntretien() {
 }
 
 async function envoyerResultat(decision) {
-  if (!candidatureSelectionnee.value) return;
+  if (!estRh.value || !candidatureSelectionnee.value) return;
   actionEnCours.value = decision;
   const resultat = await notifierResultat(candidatureSelectionnee.value.id, decision);
   actionEnCours.value = null;
@@ -218,6 +226,7 @@ const pg = usePagination(candidaturesFiltrees, 8);
               type="button"
               class="request-item"
               :class="{ active: selectionId === c.id }"
+              :disabled="!estRh"
               @click="selectionner(c)"
             >
               <div class="request-item-top">
@@ -292,7 +301,8 @@ const pg = usePagination(candidaturesFiltrees, 8);
                 </div>
               </div>
 
-              <div class="decision-actions">
+              <!-- Boutons planification : RH uniquement -->
+              <div v-if="estRh" class="decision-actions">
                 <button
                   class="approve-button"
                   :disabled="actionEnCours === 'save'"
@@ -309,23 +319,26 @@ const pg = usePagination(candidaturesFiltrees, 8);
                 </button>
               </div>
 
-              <h3 class="section-title">Résultat</h3>
-              <div class="decision-actions">
-                <button
-                  class="approve-button"
-                  :disabled="actionEnCours === 'RETENU'"
-                  @click="envoyerResultat('RETENU')"
-                >
-                  {{ actionEnCours === "RETENU" ? "..." : "Notifier « Retenu »" }}
-                </button>
-                <button
-                  class="reject-button"
-                  :disabled="actionEnCours === 'REJETE'"
-                  @click="envoyerResultat('REJETE')"
-                >
-                  {{ actionEnCours === "REJETE" ? "..." : "Notifier « Rejeté »" }}
-                </button>
-              </div>
+              <!-- Résultat : RH uniquement -->
+              <template v-if="estRh">
+                <h3 class="section-title">Résultat</h3>
+                <div class="decision-actions">
+                  <button
+                    class="approve-button"
+                    :disabled="actionEnCours === 'RETENU'"
+                    @click="envoyerResultat('RETENU')"
+                  >
+                    {{ actionEnCours === "RETENU" ? "..." : "Notifier « Retenu »" }}
+                  </button>
+                  <button
+                    class="reject-button"
+                    :disabled="actionEnCours === 'REJETE'"
+                    @click="envoyerResultat('REJETE')"
+                  >
+                    {{ actionEnCours === "REJETE" ? "..." : "Notifier « Rejeté »" }}
+                  </button>
+                </div>
+              </template>
 
               <div v-if="candidatureSelectionnee.entretien" class="read-only-notice">
                 Entretien actuel : {{ formatDate(candidatureSelectionnee.entretien.dateEntretien) }}
@@ -510,7 +523,11 @@ const pg = usePagination(candidaturesFiltrees, 8);
   transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 
-.request-item:hover {
+.request-item:disabled {
+  cursor: default;
+}
+
+.request-item:not(:disabled):hover {
   background: #fafbf9;
   border-color: #e8ebe6;
   transform: translateX(2px);

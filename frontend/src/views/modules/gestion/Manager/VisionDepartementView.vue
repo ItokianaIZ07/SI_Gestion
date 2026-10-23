@@ -2,12 +2,17 @@
 import { ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import VisionDepartementPanel from '@/components/Manager/VisionDepartementPanel.vue'
-import { getVisionDepartement } from '@/services/managerDepartementService.js'
+import api from '@/services/api.js'
 
 const route = useRoute()
 const departement = ref(null)
 const chargement = ref(true)
 const erreur = ref('')
+
+async function getVisionDepartement(departementId) {
+  const { data } = await api.get(`/manager/departements/vision-globale/${departementId}`)
+  return data
+}
 
 async function chargerVision(departementId) {
   chargement.value = true

@@ -1,11 +1,16 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { getVisionDepartements } from '@/services/managerDepartementService.js'
+import api from '@/services/api.js'
 
 const departements = ref([])
 const chargement = ref(true)
 const erreur = ref('')
+
+async function getVisionDepartements() {
+  const { data } = await api.get('/manager/departements/vision-globale')
+  return data
+}
 
 async function chargerDepartements() {
   chargement.value = true

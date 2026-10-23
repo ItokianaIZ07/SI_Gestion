@@ -1,7 +1,12 @@
 <script setup>
+import { useRoute } from 'vue-router';
 import NavBar from '@/components/NavBar.vue';
 import UploadCV from '@/components/UploadCV.vue';
 import EditCV from '@/components/EditCV.vue';
+
+const route = useRoute();
+
+const publicationId = Number(route.params.publicationId);
 </script>
 
 
@@ -17,8 +22,8 @@ import EditCV from '@/components/EditCV.vue';
     </div>
 
     <div class="choix">
-      <UploadCV />
-      <EditCV />
+      <UploadCV :id-publication="publicationId" />
+      <EditCV :id-publication="publicationId" />
     </div>
   </main>
 

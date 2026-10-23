@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 import BoutonRetour from '@/components/BoutonRetour.vue';
 import NavBar from '@/components/NavBar.vue';
@@ -7,9 +7,16 @@ import { usePhoto } from '@/composable/usePhoto';
 import { useExperiences } from '@/composable/useExperiences';
 import { useFormations } from '@/composable/useFormations';
 import { useLignes } from '@/composable/useLignes';
+import { estEnMajuscule } from '@/utils/StringUtil';
 import html2pdf from 'html2pdf.js';
+import { clientApi } from '@/services/ressources';
+import { chargerAnnonces } from '@/services/annonces';
+import { useRoute } from 'vue-router';
 
 const { photo, photoUrl, choisirPhoto } = usePhoto()
+const route = useRoute();
+
+const publicationId = Number(route.params.publicationId);
 
 //identite
 const nom = ref('Brandon ANDRIANAVALONA')
@@ -30,8 +37,11 @@ const telFormate = computed(() => {
 const email = ref('prenom@mail.com')
 const accroche = ref('Consultant BI, communicatif et orienté travail d’équipe')
 
+const annonce = ref("");
+const cin = ref("")
+
 //experiences
-const { experiences, ajouterExperience, supprimerExperience, dureeExperience } = useExperiences()
+const { experiences, ajouterExperience, supprimerExperience, dureeExperience, experiencesEnTexte, totalAnneesTravail } = useExperiences()
 
 //formations
 const { formations, ajouterFormation, supprimerFormation } = useFormations()
@@ -57,21 +67,94 @@ const auteurTemoignage = ref('Prénom Nom, responsabilité')
 const voyages = ref('Tour du monde (2015-2016)')
 const sport = ref('Course à pied (semi-marathon), natation')
 
-const downloadCV = () => {
-  const cvPanel = document.querySelector(".ed-cv");
+const normaliseNom = () =>{
+  const splitedName = nom.value.split(" ");
+  let name = "";let firstName = "";
+
+  splitedName.forEach((n)=>{
+    if(estEnMajuscule(n)){
+      name = name + " " +n;
+    }else{
+      firstName = firstName + " " + n;
+    }
+  });
+
+  return {name, firstName};
+}
+
+const cinValid = () => {
+  return cin.value.toString().length === 12
+}
+
+const initializeCVPdf = (filename) => {
+  const element = document.querySelector(".ed-cv");
+  if(!filename.endsWith('.pdf')){
+    filename += ".pdf";
+  }
+  
   const options = {
     margin: 10,
-    filename: `${nom.value}_${email}.pdf`,
+    filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
-  html2pdf().set(options).from(cvPanel).save();
+
+  return html2pdf().set(options).from(element);
+}
+
+const downloadCV = async () => {
+  if(!cinValid()){
+    alert("Le numéro CIN doit contenir 12 chiffres")
+    return;
+  }
+
+  const worker = initializeCVPdf(`${nom.value}_${email.value}`)
+  await worker.save();
 }
 
 const uploadCV =  async () => {
+  if(!cinValid()){
+    alert("Le numéro CIN doit contenir 12 chiffres")
+    return;
+  }
+
+  const {name, firstName} = normaliseNom();
+  const filename = `${nom.value}_${email.value}`;
+
+  const worker = initializeCVPdf(filename);
   
+  try{
+    const pdfBlob = await worker.outputPdf('blob'); 
+    await clientApi.deposerCv(
+        {
+          nom: name,
+          prenom: firstName,
+          email: email.value,
+          telephone: tel.value,
+          numeroCin: cin.value.toString().trim(),
+          experience: totalAnneesTravail() || 0,
+          details: experiencesEnTexte(),
+          nomFichier: filename,
+          mimeType: "application/pdf",
+          recrutementId: annonce.value.offre.recrutementId,
+          publicationId: publicationId,
+        },
+        pdfBlob,
+      );
+  }catch(error){
+    console.error(error.message);
+  }
 }
+
+onMounted(async () => {
+  try {
+    const annonces = await chargerAnnonces();
+    annonce.value = annonces.find((a) => a.publication.id === publicationId) ?? null;
+  } catch (e) {
+    console.error(e.message);
+  }
+});
 
 </script>
 <template>
@@ -83,7 +166,7 @@ const uploadCV =  async () => {
   <!-- ===== Barre d'actions ===== -->
   <div class="ed-barre">
     <h1 class="ed-barre__titre">Création CV</h1>
-    <button class="ed-bouton" type="button">Envoyer</button>
+    <button class="ed-bouton" type="button" @click="uploadCV()">Envoyer</button>
   </div>
 
   <main class="ed-editeur">
@@ -94,7 +177,7 @@ const uploadCV =  async () => {
       <details class="ed-bloc" open>
         <summary>Identité</summary>
         <div class="ed-bloc__contenu">
-          <label class="ed-champ">Nom complet
+          <label class="ed-champ">Nom complet <span class="name-notice">(Le nom doit être en majuscule et le prénom en minuscule)</span>
             <input type="text" name="nom" v-model="nom" autocomplete="name">
           </label>
           <label class="ed-champ">Titre du poste recherché
@@ -123,6 +206,13 @@ const uploadCV =  async () => {
               E-mail
               <input type="email" name="email" v-model="email" autocomplete="email">
             </label>
+
+          </div>
+          <div class="ed-ligne">
+            <label class="ed-champ">
+             Numéro CIN
+             <input type="number" name="cin" v-model="cin" minlength="12" maxlength="12">
+           </label>
           </div>
 
           <label class="ed-champ">
@@ -395,3 +485,11 @@ const uploadCV =  async () => {
   </main>
 
 </template>
+
+<style scoped>
+  .name-notice{
+    color: rgba(143, 143, 143, 0.404);
+    font-size: small;
+    font-style: italic;
+  }
+</style>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 import BoutonRetour from '@/components/BoutonRetour.vue';
 import NavBar from '@/components/NavBar.vue';
@@ -7,9 +7,16 @@ import { usePhoto } from '@/composable/usePhoto';
 import { useExperiences } from '@/composable/useExperiences';
 import { useFormations } from '@/composable/useFormations';
 import { useLignes } from '@/composable/useLignes';
+import { estEnMajuscule } from '@/utils/StringUtil';
 import html2pdf from 'html2pdf.js';
+import { clientApi } from '@/services/ressources';
+import { chargerAnnonces } from '@/services/annonces';
+import { useRoute } from 'vue-router';
 
 const { photo, photoUrl, choisirPhoto } = usePhoto()
+const route = useRoute();
+
+const publicationId = Number(route.params.publicationId);
 
 //identite
 const nom = ref('Brandon ANDRIANAVALONA')
@@ -29,6 +36,8 @@ const telFormate = computed(() => {
 })
 const email = ref('prenom@mail.com')
 const accroche = ref('Consultant BI, communicatif et orienté travail d’équipe')
+
+const annonce = ref("");
 
 //experiences
 const { experiences, ajouterExperience, supprimerExperience, dureeExperience } = useExperiences()
@@ -57,6 +66,21 @@ const auteurTemoignage = ref('Prénom Nom, responsabilité')
 const voyages = ref('Tour du monde (2015-2016)')
 const sport = ref('Course à pied (semi-marathon), natation')
 
+const normaliseNom = () =>{
+  const splitedName = nom.value.split(" ");
+  let name = "";let firstName = "";
+
+  splitedName.forEach((n)=>{
+    if(estEnMajuscule(n)){
+      name += n;
+    }else{
+      firstName += n;
+    }
+  });
+
+  return {name, firstName};
+}
+
 const downloadCV = () => {
   const cvPanel = document.querySelector(".ed-cv");
   const options = {
@@ -70,8 +94,34 @@ const downloadCV = () => {
 }
 
 const uploadCV =  async () => {
-  
+  const {name, firstName} = normaliseNom();
+
+  await clientApi.deposerCv(
+      {
+        nom: name,
+        prenom: firstName,
+        email: email.value,
+        telephone: tel.value,
+        numeroCin: form.cin.trim(),
+        experience: Number(form.annees) || 0,
+        details: form.experience.trim(),
+        nomFichier: fichier.value.name,
+        mimeType: "application/pdf",
+        recrutementId: annonce.value.offre.recrutementId,
+        publicationId: publicationId,
+      },
+      fichier.value,
+    );
 }
+
+onMounted(async () => {
+  try {
+    const annonces = await chargerAnnonces();
+    annonce.value = annonces.find((a) => a.publication.id === publicationId) ?? null;
+  } catch (e) {
+    erreur.value = e.message;
+  }
+});
 
 </script>
 <template>
@@ -94,7 +144,7 @@ const uploadCV =  async () => {
       <details class="ed-bloc" open>
         <summary>Identité</summary>
         <div class="ed-bloc__contenu">
-          <label class="ed-champ">Nom complet
+          <label class="ed-champ">Nom complet <span class="name-notice">(Le nom doit être en majuscule et le prénom en minuscule)</span>
             <input type="text" name="nom" v-model="nom" autocomplete="name">
           </label>
           <label class="ed-champ">Titre du poste recherché
@@ -395,3 +445,11 @@ const uploadCV =  async () => {
   </main>
 
 </template>
+
+<style scoped>
+  .name-notice{
+    color: rgba(143, 143, 143, 0.404);
+    font-size: small;
+    font-style: italic;
+  }
+</style>

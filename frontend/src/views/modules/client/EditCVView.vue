@@ -69,6 +69,10 @@ const downloadCV = () => {
   html2pdf().set(options).from(cvPanel).save();
 }
 
+const uploadCV =  async () => {
+  
+}
+
 </script>
 <template>
 

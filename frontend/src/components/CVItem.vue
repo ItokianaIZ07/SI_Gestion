@@ -1,5 +1,5 @@
 <script setup>
-defineProps({
+const props = defineProps({
   selectCandidat: {
     type: Function,
     required: true,

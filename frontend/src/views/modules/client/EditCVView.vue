@@ -38,9 +38,10 @@ const email = ref('prenom@mail.com')
 const accroche = ref('Consultant BI, communicatif et orienté travail d’équipe')
 
 const annonce = ref("");
+const cin = ref("")
 
 //experiences
-const { experiences, ajouterExperience, supprimerExperience, dureeExperience } = useExperiences()
+const { experiences, ajouterExperience, supprimerExperience, dureeExperience, experiencesEnTexte, totalAnneesTravail } = useExperiences()
 
 //formations
 const { formations, ajouterFormation, supprimerFormation } = useFormations()
@@ -72,46 +73,78 @@ const normaliseNom = () =>{
 
   splitedName.forEach((n)=>{
     if(estEnMajuscule(n)){
-      name += n;
+      name = name + " " +n;
     }else{
-      firstName += n;
+      firstName = firstName + " " + n;
     }
   });
 
   return {name, firstName};
 }
 
-const downloadCV = () => {
-  const cvPanel = document.querySelector(".ed-cv");
+const cinValid = () => {
+  return cin.value.toString().length === 12
+}
+
+const initializeCVPdf = (filename) => {
+  const element = document.querySelector(".ed-cv");
+  if(!filename.endsWith('.pdf')){
+    filename += ".pdf";
+  }
+  
   const options = {
     margin: 10,
-    filename: `${nom.value}_${email}.pdf`,
+    filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
-  html2pdf().set(options).from(cvPanel).save();
+
+  return html2pdf().set(options).from(element);
+}
+
+const downloadCV = async () => {
+  if(!cinValid()){
+    alert("Le numéro CIN doit contenir 12 chiffres")
+    return;
+  }
+
+  const worker = initializeCVPdf(`${nom.value}_${email.value}`)
+  await worker.save();
 }
 
 const uploadCV =  async () => {
-  const {name, firstName} = normaliseNom();
+  if(!cinValid()){
+    alert("Le numéro CIN doit contenir 12 chiffres")
+    return;
+  }
 
-  await clientApi.deposerCv(
-      {
-        nom: name,
-        prenom: firstName,
-        email: email.value,
-        telephone: tel.value,
-        numeroCin: form.cin.trim(),
-        experience: Number(form.annees) || 0,
-        details: form.experience.trim(),
-        nomFichier: fichier.value.name,
-        mimeType: "application/pdf",
-        recrutementId: annonce.value.offre.recrutementId,
-        publicationId: publicationId,
-      },
-      fichier.value,
-    );
+  const {name, firstName} = normaliseNom();
+  const filename = `${nom.value}_${email.value}`;
+
+  const worker = initializeCVPdf(filename);
+  
+  try{
+    const pdfBlob = await worker.outputPdf('blob'); 
+    await clientApi.deposerCv(
+        {
+          nom: name,
+          prenom: firstName,
+          email: email.value,
+          telephone: tel.value,
+          numeroCin: cin.value.toString().trim(),
+          experience: totalAnneesTravail() || 0,
+          details: experiencesEnTexte(),
+          nomFichier: filename,
+          mimeType: "application/pdf",
+          recrutementId: annonce.value.offre.recrutementId,
+          publicationId: publicationId,
+        },
+        pdfBlob,
+      );
+  }catch(error){
+    console.error(error.message);
+  }
 }
 
 onMounted(async () => {
@@ -119,7 +152,7 @@ onMounted(async () => {
     const annonces = await chargerAnnonces();
     annonce.value = annonces.find((a) => a.publication.id === publicationId) ?? null;
   } catch (e) {
-    erreur.value = e.message;
+    console.error(e.message);
   }
 });
 
@@ -133,7 +166,7 @@ onMounted(async () => {
   <!-- ===== Barre d'actions ===== -->
   <div class="ed-barre">
     <h1 class="ed-barre__titre">Création CV</h1>
-    <button class="ed-bouton" type="button">Envoyer</button>
+    <button class="ed-bouton" type="button" @click="uploadCV()">Envoyer</button>
   </div>
 
   <main class="ed-editeur">
@@ -173,6 +206,13 @@ onMounted(async () => {
               E-mail
               <input type="email" name="email" v-model="email" autocomplete="email">
             </label>
+
+          </div>
+          <div class="ed-ligne">
+            <label class="ed-champ">
+             Numéro CIN
+             <input type="number" name="cin" v-model="cin" minlength="12" maxlength="12">
+           </label>
           </div>
 
           <label class="ed-champ">

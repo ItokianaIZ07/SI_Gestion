@@ -1,20 +1,20 @@
 package com.si.rh.service;
 
+import com.si.rh.dto.BesoinRequest;
 import com.si.rh.dto.besoin.BesoinDTO;
 import com.si.rh.exception.RessourceIntrouvableException;
-import com.si.rh.dto.BesoinRequest;
 import com.si.rh.model.Besoin;
 import com.si.rh.model.enums.StatutGlobalBesoin;
 import com.si.rh.repository.BesoinRepository;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.si.rh.repository.EmployeRepository;
 import com.si.rh.repository.PosteRepository;
 import com.si.rh.repository.TypeBesoinRepository;
 import com.si.rh.repository.TypeContratRepository;
 import com.si.rh.repository.UtilisateurRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -24,12 +24,14 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 public class BesoinService {
+
     private final BesoinRepository besoinRepository;
     private final TypeBesoinRepository typeBesoinRepository;
     private final PosteRepository posteRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final EmployeRepository employeRepository;
     private final TypeContratRepository typeContratRepository;
+    private final NotificationService notificationService;
 
     public BesoinService(
             BesoinRepository besoinRepository,
@@ -37,7 +39,8 @@ public class BesoinService {
             PosteRepository posteRepository,
             UtilisateurRepository utilisateurRepository,
             EmployeRepository employeRepository,
-            TypeContratRepository typeContratRepository
+            TypeContratRepository typeContratRepository,
+            NotificationService notificationService
     ) {
         this.besoinRepository = besoinRepository;
         this.typeBesoinRepository = typeBesoinRepository;
@@ -45,21 +48,24 @@ public class BesoinService {
         this.utilisateurRepository = utilisateurRepository;
         this.employeRepository = employeRepository;
         this.typeContratRepository = typeContratRepository;
+        this.notificationService = notificationService;
     }
 
-    public List<Besoin> getAll(){
+    // ---------- Lecture ----------
+
+    public List<Besoin> getAll() {
         return besoinRepository.findAll();
     }
 
-    public Besoin getById(int id){
+    public Besoin getById(int id) {
         return besoinRepository.getReferenceById(id);
     }
 
-    public Besoin save(Besoin besoin){
-        return besoinRepository.save(besoin);
-    }
     public List<BesoinDTO> tous() {
-        return besoinRepository.findAll(Sort.by(Sort.Direction.DESC, "dateDemande")).stream().map(this::dto).toList();
+        return besoinRepository.findAll(Sort.by(Sort.Direction.DESC, "dateDemande"))
+                .stream()
+                .map(this::dto)
+                .toList();
     }
 
     public BesoinDTO parId(Integer id) {
@@ -73,6 +79,14 @@ public class BesoinService {
                 b.getDateArriveeSouhaitee(), b.getLieuTravail(), b.getMotif(), b.getExperienceRequise(),
                 b.getNiveauEtude(), b.getCompetencesRequises(), b.getSalaireEstime(), b.getStatutGlobal(),
                 b.getDateDemande());
+    }
+
+    // ---------- Écriture ----------
+
+    // Nécessaire : sans cette annotation, save() hériterait de la transaction en lecture seule de la classe
+    @Transactional
+    public Besoin save(Besoin besoin) {
+        return besoinRepository.save(besoin);
     }
 
     @Transactional
@@ -117,8 +131,12 @@ public class BesoinService {
         besoin.setTypeContratSouhaite(typeContratRepository.findById(request.typeContratSouhaiteId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Type de contrat introuvable")));
 
-        return besoinRepository.save(besoin);
+        Besoin besoinEnregistre = besoinRepository.save(besoin);
+        notificationService.notifierNouveauBesoin(besoinEnregistre);
+        return besoinEnregistre;
     }
+
+    // ---------- Validation ----------
 
     private void validerChampsObligatoires(BesoinRequest request) {
         if (request == null) {

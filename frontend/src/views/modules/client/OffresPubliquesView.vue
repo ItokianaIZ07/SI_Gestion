@@ -56,11 +56,11 @@ const pg = usePagination(resultats, 6);
     </ul>
 
     <Pagination v-if="!chargement && !erreur" class="offres__pagination" v-bind="pg.barre" @update:page="pg.aller" />
-
+<!-- 
     <p class="offres__spontanee">
       Aucune offre ne vous correspond ?
       <RouterLink to="/si/client/upload-selection">Déposez une candidature spontanée</RouterLink>.
-    </p>
+    </p> -->
   </div>
 </template>
 

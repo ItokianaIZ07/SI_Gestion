@@ -14,6 +14,9 @@ import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
 import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
+import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
+import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
+import PostulerView from '@/views/modules/client/PostulerView.vue'
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
 const exigerRole = (...rolesAutorises) => () => {
@@ -42,18 +45,18 @@ const router = createRouter({
           path: "",
           component: null
         },
+        // {
+        //   path: "upload-selection",
+        //   name: 'upload',
+        //   component: ChoiceUploadView
+        // },
         {
-          path: "upload-selection",
-          name: 'upload',
-          component: ChoiceUploadView
-        },
-        {
-          path: 'upload-cv',
+          path: 'offres/:publicationId/upload-cv',
           name: 'uploadCVManuel',
-          component: FormulaireUploadCVView
+          component: PostulerView
         },
         {
-          path: 'editor-cv',
+          path: 'offres/:publicationId/editor-cv',
           name: 'editeurEnLigne',
           component: EditCVView
         },
@@ -71,7 +74,8 @@ const router = createRouter({
         {
           path: 'offres/:publicationId/postuler',
           name: 'postuler',
-          component: () => import('@/views/modules/client/PostulerView.vue')
+          component: ChoiceUploadView
+          // component: () => import('@/views/modules/client/PostulerView.vue')
         },
       ]
     },
@@ -120,14 +124,18 @@ const router = createRouter({
           component: ManifestationView
         },
         {
+          path: 'manager/departements',
+          name: 'ListeDepartements',
+          component: ListeDepartementsView
+        },
+        {
+          path: 'manager/departements/:departementId',
+          name: 'DetailVisionDepartement',
+          component: VisionDepartementView
+        },
+        {
           path: "rh/cv",
           component: CVView
-        },
-        
-        {
-          path: 'manager/demandes/creation',
-          // name: 'DemandeManifestation',
-          component: ManifestationView
         },
         {
           path: "rh/demandes",

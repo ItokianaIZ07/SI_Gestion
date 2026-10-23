@@ -3,7 +3,7 @@ import { api } from "./api";
 
 //Candidats RETENU sans employe (a embaucher)
 export async function getCandidatsAEmbaucher() {
-  const data  = await api.get("/rh/contrats/a-embaucher");
+  const { data } = await api.get("/rh/contrats/a-embaucher");
   return data;
 }
 

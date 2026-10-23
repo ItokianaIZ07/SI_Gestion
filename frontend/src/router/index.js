@@ -14,6 +14,8 @@ import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
 import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
+import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
+import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
 const exigerRole = (...rolesAutorises) => () => {
@@ -120,14 +122,18 @@ const router = createRouter({
           component: ManifestationView
         },
         {
+          path: 'manager/departements',
+          name: 'ListeDepartements',
+          component: ListeDepartementsView
+        },
+        {
+          path: 'manager/departements/:departementId',
+          name: 'DetailVisionDepartement',
+          component: VisionDepartementView
+        },
+        {
           path: "rh/cv",
           component: CVView
-        },
-        
-        {
-          path: 'manager/demandes/creation',
-          // name: 'DemandeManifestation',
-          component: ManifestationView
         },
         {
           path: "rh/demandes",

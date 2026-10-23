@@ -11,6 +11,12 @@ import java.util.List;
 
 @Repository
 public interface ValidationBesoinRepository extends JpaRepository<ValidationBesoin, Integer> {
+
+    // BY : Fenosoa
+    @Query("select v from ValidationBesoin v join fetch v.etatValidation join fetch v.decision "
+            + "where v.besoin.id in :ids")
+    List<ValidationBesoin> findByBesoinIds(@Param("ids") Collection<Integer> ids);
+  
     @Query("""
             select vb from ValidationBesoin vb
             join fetch vb.etatValidation

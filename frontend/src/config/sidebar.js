@@ -19,7 +19,8 @@ const sidebarByRole = {
     finance: [
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
-        { label: "Demandes", to: "/si/app/finance/demandes" }
+        { label: "Demandes", to: "/si/app/finance/demandes" },
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
     ],
 
     direction: [
@@ -38,7 +39,8 @@ const sidebarByRole = {
 
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
-        { label: "Demandes Finance", to: "/si/app/finance/demandes" }
+        { label: "Demandes Finance", to: "/si/app/finance/demandes" },
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
     ]
 };
 

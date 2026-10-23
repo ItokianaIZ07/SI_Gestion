@@ -15,6 +15,16 @@ import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
 
+// Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
+const exigerRole = (...rolesAutorises) => () => {
+  const authStore = useAuthStore()
+  const role = authStore.user?.role?.toUpperCase()
+  if (!rolesAutorises.includes(role)) {
+    return { path: '/si/app' }
+  }
+}
+const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -77,10 +87,33 @@ const router = createRouter({
         }
       },
       children: [
+        { path: "", component: DashboardView },
+        { path: "rh/cv", component: CVView },
+
+        // ----- Module Finance -----
         {
-          path: "",
-          component: DashboardView,
+          path: "finance/demandes",
+          component: () => import('@/views/modules/finance/DemandesFinanceView.vue'),
+          beforeEnter: financeEtDirection,
         },
+        {
+          path: "finance/grille-salaire",
+          component: () => import('@/views/modules/finance/GrilleSalaireView.vue'),
+          beforeEnter: financeEtDirection,
+        },
+        {
+          path: "finance/budget",
+          component: () => import('@/views/modules/finance/BudgetView.vue'),
+          beforeEnter: financeEtDirection,
+        },
+        // À décommenter quand la page Dépenses sera créée :
+        // {
+        //   path: "finance/depenses",
+        //   component: () => import('@/views/modules/finance/DepensesView.vue'),
+        //   beforeEnter: financeEtDirection,
+        // },
+
+        // Ajouter ici les routes RH, Manager et Direction.
         {
           path: 'manager/demandes/creation',
           name: 'DemandeManifestation',

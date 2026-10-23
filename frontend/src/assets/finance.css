@@ -1,0 +1,40 @@
+/* Styles du module Finance (préfixe fin-). Les couleurs lisent les variables
+   du layout existant si elles existent, sinon utilisent le vert par défaut. */
+.fin-page{--fin-primary:var(--primary,#1F7A4D);--fin-primary-dark:var(--primary-dark,#165C3A);--fin-ink:var(--text,#12301F);--fin-border:#D5E0D9;color:var(--fin-ink);font-family:inherit}
+.fin-page h1{margin:0 0 4px;font-size:28px}
+.fin-sub{margin:0 0 24px;color:#4B5563}
+.fin-card{background:#fff;border:1px solid var(--fin-border);border-radius:12px;padding:20px 24px}
+.fin-scroll{overflow-x:auto}
+.fin-table{width:100%;border-collapse:collapse;font-size:14px}
+.fin-table th{text-align:left;font-weight:600;color:#4B5563;padding:10px 12px;border-bottom:1px solid var(--fin-border);white-space:nowrap}
+.fin-table td{padding:14px 12px;border-bottom:1px solid #E7EEE9;vertical-align:middle}
+.fin-table tr:last-child td{border-bottom:0}
+.fin-num{text-align:right;white-space:nowrap}
+.fin-btn{min-height:40px;padding:0 16px;border-radius:8px;font:600 14px inherit;font-family:inherit;cursor:pointer;border:1px solid transparent}
+.fin-btn-pri{background:var(--fin-primary);color:#fff;border-color:var(--fin-primary)}
+.fin-btn-pri:hover:not(:disabled){background:var(--fin-primary-dark)}
+.fin-btn-sec{background:#fff;color:var(--fin-primary);border-color:var(--fin-primary)}
+.fin-btn-sec:hover:not(:disabled){background:#E8F4EC}
+.fin-btn-dan{background:#fff;color:#B3261E;border-color:#B3261E}
+.fin-btn-dan:hover:not(:disabled){background:#FDE8E6}
+.fin-btn:disabled{background:#E5E9E6;color:#5A6B60;border-color:#E5E9E6;cursor:not-allowed}
+.fin-acts{display:flex;gap:8px}
+.fin-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.fin-ok{background:#E3F3EA;color:#14633B}
+.fin-ko{background:#FDE8E6;color:#9B1C13}
+.fin-wait{background:#FFF3D6;color:#7A4B00}
+.fin-none{background:#ECEFED;color:#4B5563}
+.fin-steps{display:flex;gap:6px;flex-wrap:wrap}
+.fin-toolbar{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.fin-champ{min-height:40px;padding:0 12px;border:1px solid #9DB3A5;border-radius:8px;background:#fff;color:inherit;font:400 14px inherit;font-family:inherit}
+.fin-champ:focus{outline:2px solid var(--fin-primary);outline-offset:1px}
+.fin-label{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:#4B5563}
+.fin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px}
+.fin-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.fin-kpi small{display:block;color:#4B5563;font-size:13px;margin-bottom:6px}
+.fin-kpi strong{font-size:24px}
+.fin-bar{height:8px;border-radius:99px;background:#E1EAE4;min-width:120px;margin-bottom:4px}
+.fin-bar i{display:block;height:100%;border-radius:99px;background:var(--fin-primary)}
+.fin-bar i.hot{background:#B3261E}
+.fin-error{background:#FDE8E6;color:#9B1C13;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:14px}
+.fin-hint{font-size:13px;color:#4B5563;margin:0 0 12px}

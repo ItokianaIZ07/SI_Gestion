@@ -7,6 +7,7 @@ import { usePhoto } from '@/composable/usePhoto';
 import { useExperiences } from '@/composable/useExperiences';
 import { useFormations } from '@/composable/useFormations';
 import { useLignes } from '@/composable/useLignes';
+import html2pdf from 'html2pdf.js';
 
 const { photo, photoUrl, choisirPhoto } = usePhoto()
 
@@ -55,6 +56,19 @@ const auteurTemoignage = ref('Prénom Nom, responsabilité')
 //centre intere
 const voyages = ref('Tour du monde (2015-2016)')
 const sport = ref('Course à pied (semi-marathon), natation')
+
+const downloadCV = () => {
+  const cvPanel = document.querySelector(".ed-cv");
+  const options = {
+    margin: 10,
+    filename: `${nom.value}_${email}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  html2pdf().set(options).from(cvPanel).save();
+}
+
 </script>
 <template>
 
@@ -251,7 +265,7 @@ const sport = ref('Course à pied (semi-marathon), natation')
 
       <div class="ed-apercu__outils">
         <span class="ed-apercu__label">Aperçu du CV</span>
-        <button class="ed-bouton ed-bouton--leger" type="button">Télécharger</button>
+        <button class="ed-bouton ed-bouton--leger" type="button" @click="downloadCV()">Télécharger</button>
       </div>
 
       <!-- .feuille = conteneur : tout le CV s'adapte à sa largeur -->

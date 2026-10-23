@@ -1,7 +1,13 @@
 const sidebarByRole = {
     rh: [
         { label: "Entretiens", to: "/si/app/rh/entretiens" },
-        { label: "Contrats", to: "/si/app/rh/contrats" },
+        {
+            label: "Contrats",
+            children: [
+                { label: "Embaucher", to: "/si/app/rh/embauche" },
+                { label: "Liste des contrats", to: "/si/app/rh/contrats" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },

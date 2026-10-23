@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface PosteRepository extends JpaRepository<Poste, Integer> {
     List<Poste> findByActifTrueOrderByNomAsc();
+    List<Poste> findByDepartement_IdOrderByNomAsc(Integer departementId);
+    long countByDepartement_Id(Integer departementId);
 }

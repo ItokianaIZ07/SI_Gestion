@@ -11,6 +11,8 @@ import ManifestationView from '@/views/modules/gestion/Manager/ManifestationView
 import { useAuthStore } from '@/stores/authStore'
 import CVView from '@/views/modules/gestion/rh/CVView.vue'
 import DemandeView from '@/views/modules/gestion/DemandeView.vue'
+import ListeDepartementsView from '@/views/modules/gestion/Manager/ListeDepartementsView.vue'
+import VisionDepartementView from '@/views/modules/gestion/Manager/VisionDepartementView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -61,6 +63,16 @@ const router = createRouter({
         {
           path: "",
           component: DashboardView,
+        },
+        {
+          path: 'manager/departements',
+          name: 'ListeDepartements',
+          component: ListeDepartementsView
+        },
+        {
+          path: 'manager/departements/:departementId',
+          name: 'DetailVisionDepartement',
+          component: VisionDepartementView
         },
         {
           path: 'manager/demandes/creation',

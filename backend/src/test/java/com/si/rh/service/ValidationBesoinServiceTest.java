@@ -62,7 +62,8 @@ class ValidationBesoinServiceTest {
                 besoinRepository,
                 decisionService,
                 etatValidationService,
-                utilisateurDetailsService);
+                utilisateurDetailsService,
+                );
     }
 
     @Test

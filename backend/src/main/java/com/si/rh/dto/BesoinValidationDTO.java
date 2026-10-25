@@ -11,6 +11,9 @@ public record BesoinValidationDTO(
         String demandeur,
         String type,
         Integer effectif,
+
+        Integer effectifTotal,
+        Integer effectifMax,
         String priorite,
         String lieuTravail,
         String motif,

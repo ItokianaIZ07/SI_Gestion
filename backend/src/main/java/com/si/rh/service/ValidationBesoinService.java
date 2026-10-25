@@ -1,13 +1,12 @@
 package com.si.rh.service;
 
 import com.si.rh.dto.BesoinValidationDTO;
-import com.si.rh.model.Besoin;
-import com.si.rh.model.Decision;
-import com.si.rh.model.EtatValidation;
-import com.si.rh.model.Utilisateur;
-import com.si.rh.model.ValidationBesoin;
+import com.si.rh.model.*;
+import com.si.rh.model.enums.StatutEmploye;
 import com.si.rh.model.enums.StatutGlobalBesoin;
 import com.si.rh.repository.BesoinRepository;
+import com.si.rh.repository.DepartementRepository;
+import com.si.rh.repository.EmployeRepository;
 import com.si.rh.repository.ValidationBesoinRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,18 +34,22 @@ public class ValidationBesoinService {
     private final DecisionService decisionService;
     private final EtatValidationService etatValidationService;
     private final UtilisateurDetailsService utilisateurDetailsService;
+    private final EmployeRepository employeRepository;
 
     public ValidationBesoinService(
             ValidationBesoinRepository validationBesoinRepository,
             BesoinRepository besoinRepository,
             DecisionService decisionService,
             EtatValidationService etatValidationService,
-            UtilisateurDetailsService utilisateurDetailsService) {
+            UtilisateurDetailsService utilisateurDetailsService,
+            DepartementRepository departementRepository,
+            EmployeRepository employeRepository) {
         this.validationBesoinRepository = validationBesoinRepository;
         this.besoinRepository = besoinRepository;
         this.decisionService = decisionService;
         this.etatValidationService = etatValidationService;
         this.utilisateurDetailsService = utilisateurDetailsService;
+        this.employeRepository = employeRepository;
     }
 
     @Transactional(readOnly = true)
@@ -169,6 +172,7 @@ public class ValidationBesoinService {
             String role) {
         Map<String, ValidationBesoin> courantes = decisionsCourantes(historique);
         boolean peutDecider = peutDecider(role, courantes);
+        Departement departement = besoin.getPoste().getDepartement();
         return new BesoinValidationDTO(
                 besoin.getId(),
                 besoin.getPoste().getNom(),
@@ -176,6 +180,8 @@ public class ValidationBesoinService {
                 besoin.getDemandeur().getPrenom() + " " + besoin.getDemandeur().getNom(),
                 besoin.getTypeBesoin().getLibelle(),
                 besoin.getEffectif(),
+                (int) employeRepository.countByDepartement_IdAndStatut(departement.getId(), StatutEmploye.ACTIF),
+                departement.getEffectifMax(),
                 besoin.getPriorite().name(),
                 besoin.getLieuTravail(),
                 besoin.getMotif(),
@@ -224,6 +230,7 @@ public class ValidationBesoinService {
         Map<String, ValidationBesoin> courantes = new HashMap<>();
         for (ValidationBesoin validation : historique) {
             String etape = validation.getEtatValidation().getCode();
+//            map.merge(cle, valeurInitiale, (ancienneValeur, nouvelleValeur) -> fonctionDeFusion);
             courantes.merge(etape, validation,
                     (existante, candidate) -> ordreRecence.compare(candidate, existante) > 0
                             ? candidate : existante);

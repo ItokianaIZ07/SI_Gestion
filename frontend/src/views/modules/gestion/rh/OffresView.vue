@@ -4,6 +4,7 @@ import { usePagination } from "@/composable/usePagination";
 import { ref, computed, onMounted } from "vue";
 import { offresApi, recrutementsApi, publicationsApi } from "@/services/ressources";
 import { STATUTS_OFFRE, formatDate, formatSalaire } from "@/config/libelles";
+import { useRouter } from "vue-router";
 import PageEntete from "@/components/gestion/PageEntete.vue";
 import StatutBadge from "@/components/gestion/StatutBadge.vue";
 import MessageAlerte from "@/components/gestion/MessageAlerte.vue";
@@ -18,6 +19,15 @@ const succes = ref("");
 
 const recherche = ref("");
 const filtreStatut = ref("");
+
+const router = useRouter();
+
+function ouvrirCandidatures(offre) {
+  router.push({
+    name: "CandidaturesOffre",
+    params: { offreId: offre.id },
+  });
+}
 
 async function charger() {
   chargement.value = true;
@@ -120,7 +130,12 @@ const pg = usePagination(lignes, 10);
             </tr>
           </thead>
           <tbody>
-            <tr v-for="o in pg.items" :key="o.id">
+            <tr
+              v-for="o in pg.items"
+              :key="o.id"
+              class="ligne-offre"
+              @click="ouvrirCandidatures(o)"
+            >
               <td>
                 <span class="g-principal">{{ o.titre }}</span>
                 <span class="g-secondaire">{{ nbPublications.get(o.id) ?? 0 }} publication(s) active(s)</span>
@@ -134,12 +149,19 @@ const pg = usePagination(lignes, 10);
               <td>{{ formatDate(o.dateCreation) }}</td>
               <td><StatutBadge :statut="o.statut" /></td>
               <td>
-                <div class="g-actions-cellule">
+                <div class="g-actions-cellule" @click.stop>
                   <RouterLink v-if="o.statut === 'VALIDEE'" class="g-btn g-btn--petit g-btn--primaire" :to="{ path: '/si/app/rh/publications/creation', query: { offreId: o.id } }">
                     Publier
                   </RouterLink>
                   <RouterLink class="g-btn g-btn--petit" :to="`/si/app/rh/offres/${o.id}/modifier`">Modifier</RouterLink>
                   <button class="g-btn g-btn--petit g-btn--danger" type="button" @click="supprimer(o)">Supprimer</button>
+                  <button
+                    class="g-btn g-btn--petit"
+                    type="button"
+                    @click="ouvrirCandidatures(o)"
+                  >
+                    Voir les candidatures
+                  </button>
                 </div>
               </td>
             </tr>

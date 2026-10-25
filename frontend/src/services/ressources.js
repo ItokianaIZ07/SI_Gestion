@@ -24,7 +24,16 @@ export const cvsApi = {
     api.getBlob(`/cvs/${id}/fichier`),
 };
 export const candidatsApi = crud("/candidats");
-export const candidaturesApi = crud("/candidatures");
+
+export const candidaturesApi = {
+  ...crud("/candidatures"),
+
+  parRecrutement: (recrutementId) =>
+    api.get(`/candidatures/recrutement/${recrutementId}`),
+
+  changerStatut: (id, statut) =>
+    api.patch(`/candidatures/${id}/statut`, { statut }),
+};
 
 export const clientApi = {
   publications: () => api.get("/client/publications-offres"),

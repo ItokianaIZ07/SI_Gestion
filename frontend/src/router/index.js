@@ -190,6 +190,20 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
         },
         {
+          path: "rh/offres/:offreId/candidatures",
+          name: "CandidaturesOffre",
+          component: () =>
+            import("@/views/modules/gestion/rh/CandidaturesOffreView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/candidats/:candidatId/cv",
+          name: "CvCandidat",
+          component: () =>
+            import("@/views/modules/gestion/rh/CvCandidatView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
           path: "rh/publications",
           name: "rhPublications",
           component: () => import("@/views/modules/gestion/rh/PublicationsView.vue"),

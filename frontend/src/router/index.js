@@ -16,6 +16,7 @@ import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
 import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
+import DepartementFormView from "@/views/modules/gestion/Manager/DepartementFormView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
@@ -132,6 +133,11 @@ const router = createRouter({
           path: 'manager/departements/:departementId',
           name: 'DetailVisionDepartement',
           component: VisionDepartementView
+        },
+        {
+          path: 'manager/departements/creation',
+          name: 'CreationDepartement',
+          component: DepartementFormView
         },
         {
           path: "rh/cv",

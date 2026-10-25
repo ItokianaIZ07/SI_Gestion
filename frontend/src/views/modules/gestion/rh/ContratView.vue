@@ -2,39 +2,26 @@
 <script setup>
 import Pagination from "@/components/ui/Pagination.vue";
 import { usePagination } from "@/composable/usePagination";
-
 import { ref, computed, onMounted } from "vue";
-import {
-  getCandidatsAEmbaucher,
-  getContrats,
-  embaucherCandidat,
-  signerContrat,
-} from "@/services/contratService";
+import { useAuthStore } from "@/stores/authStore";
+import { getContrats, signerContrat } from "@/services/contratService";
+import SignaturePad from "@/components/SignaturePad.vue";           // ← AJOUT
 
-const aEmbaucher = ref([]);
+const authStore = useAuthStore();
+const role = computed(() => authStore.user?.role?.toUpperCase());
+const estRh = computed(() => role.value === "RH");
+
 const contrats = ref([]);
 const chargement = ref(false);
 const erreur = ref("");
 const message = ref("");
-const selectionId = ref(null);
 const signatureEnCours = ref(null);
 const feedbackAnim = ref("");
-const actionEnCours = ref(null);
+const afficherSignature = ref(false);                             // ← AJOUT
 
 const rechercheContrat = ref("");
 const filtreStatutContrat = ref("TOUS");
-
-const formulaire = ref({
-  idCandidature: null,
-  salaire: 0,
-  typeContrat: "CDI",
-  dateDebut: new Date().toISOString().slice(0, 10),
-  periodeEssaiJours: 90,
-});
-
-const candidatSelectionne = computed(() =>
-  aEmbaucher.value.find((c) => c.id === selectionId.value) ?? null
-);
+const contratSelectionneId = ref(null);
 
 const contratsFiltres = computed(() => {
   const terme = rechercheContrat.value.trim().toLowerCase();
@@ -48,12 +35,14 @@ const contratsFiltres = computed(() => {
   });
 });
 
+const contratSelectionne = computed(() =>
+  contrats.value.find((c) => c.id === contratSelectionneId.value) ?? null
+);
+
 function afficherFeedback(texte, type = "success") {
   feedbackAnim.value = type;
   message.value = texte;
-  setTimeout(() => {
-    feedbackAnim.value = "";
-  }, 4000);
+  setTimeout(() => { feedbackAnim.value = ""; }, 4000);
 }
 
 function libelleStatut(code) {
@@ -69,15 +58,28 @@ function libelleStatut(code) {
 
 function formatDate(d) {
   if (!d) return "—";
+  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "long" }).format(new Date(d));
+}
+
+function formatDateCourt(d) {
+  if (!d) return "—";
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "short" }).format(new Date(d));
+}
+
+function formatMontant(v) {
+  if (v == null) return "—";
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "MGA",
+    maximumFractionDigits: 0,
+  }).format(v);
 }
 
 async function charger() {
   chargement.value = true;
   erreur.value = "";
   try {
-    const [c1, c2] = await Promise.all([getCandidatsAEmbaucher(), getContrats()]);
-    aEmbaucher.value = Array.isArray(c1) ? c1 : [];
+    const c2 = await getContrats();
     contrats.value = Array.isArray(c2) ? c2 : [];
   } catch (e) {
     erreur.value = e.response?.data?.message ?? "Impossible de charger les contrats.";
@@ -86,66 +88,49 @@ async function charger() {
   }
 }
 
-function selectionner(c) {
-  selectionId.value = c.id;
-  formulaire.value = {
-    idCandidature: c.id,
-    salaire: c.salaireEstime ?? 0,
-    typeContrat: c.typeContratSouhaite ?? "CDI",
-    dateDebut: new Date().toISOString().slice(0, 10),
-    periodeEssaiJours: 90,
-  };
+function selectionner(ct) {
+  contratSelectionneId.value = ct.id;
 }
 
-async function embaucher() {
-  if (!formulaire.value.idCandidature) return;
-  erreur.value = "";
-  message.value = "";
-  actionEnCours.value = "embauche";
+/* Ouvre la modale de signature manuscrite */
+function ouvrirSignature() {                                       // ← AJOUT
+  afficherSignature.value = true;
+}
 
-  try {
-    await embaucherCandidat(formulaire.value);
-    afficherFeedback("Embauche effectuée : employé + contrat + onboarding créés ✓");
-    selectionId.value = null;
-    await charger();
-  } catch (e) {
-    erreur.value = e.response?.data?.message ?? "Échec de l'embauche.";
-  } finally {
-    actionEnCours.value = null;
+/* Reçoit l'image base64 de la signature et lance la sauvegarde */
+function onSignatureValide(base64) {                               // ← AJOUT
+  if (contratSelectionne.value) {
+    signer(contratSelectionne.value, "RH", base64);
   }
 }
 
-async function signer(contrat, partie) {
+async function signer(contrat, partie, signatureBase64 = null) {   // ← signature avec base64
+  if (!estRh.value) return;
   signatureEnCours.value = `${contrat.id}-${partie}`;
   erreur.value = "";
   message.value = "";
 
   try {
-    const updated = await signerContrat(contrat.id, partie);
-
+    const updated = await signerContrat(contrat.id, partie, signatureBase64);
     const index = contrats.value.findIndex((c) => c.id === contrat.id);
-    if (index !== -1 && updated) {
-      contrats.value.splice(index, 1, updated);
-    }
+    if (index !== -1 && updated) contrats.value.splice(index, 1, updated);
 
     if (updated && updated.statut === "ACTIF") {
-      afficherFeedback(
-        `✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`
-      );
+      afficherFeedback(`✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`);
     } else {
-      afficherFeedback(`Signature ${partie} enregistrée. En attente de l'autre partie.`);
+      afficherFeedback(`Signature ${partie} enregistrée. En attente de la signature du candidat.`);
     }
   } catch (e) {
     erreur.value = e.response?.data?.message ?? "Échec de la signature.";
   } finally {
     signatureEnCours.value = null;
+    afficherSignature.value = false;                               // ← ferme la modale
   }
 }
 
 onMounted(charger);
 
-const pgEmbauche = usePagination(aEmbaucher, 5);
-const pgContrats = usePagination(contratsFiltres, 6);
+const pg = usePagination(contratsFiltres, 8);
 </script>
 
 <template>
@@ -153,8 +138,8 @@ const pgContrats = usePagination(contratsFiltres, 6);
     <header class="page-header">
       <div>
         <span class="eyebrow">MODULE RH — CONTRATS</span>
-        <h1>Embauche et contrats</h1>
-        <p>Transition post-recrutement vers employé + contrat + onboarding.</p>
+        <h1>Contrats</h1>
+        <p>Consultez et faites signer les contrats créés lors des embauches.</p>
       </div>
       <button class="approve-button refresh-button" :disabled="chargement" @click="charger">
         {{ chargement ? "Chargement..." : "Actualiser" }}
@@ -173,52 +158,18 @@ const pgContrats = usePagination(contratsFiltres, 6);
     </transition>
 
     <section class="workspace">
+      <!-- ===== Colonne gauche : liste des contrats ===== -->
       <div class="request-panel">
         <header class="panel-heading">
           <div>
-            <h2>À embaucher</h2>
-            <p>{{ aEmbaucher.length }} candidat(s) RETENU sans employé</p>
-          </div>
-        </header>
-
-        <div class="request-list" style="max-height: 260px">
-          <transition-group name="list" tag="div">
-            <button
-              v-for="c in pgEmbauche.items"
-              :key="c.id"
-              type="button"
-              class="request-item"
-              :class="{ active: selectionId === c.id }"
-              @click="selectionner(c)"
-            >
-              <div class="request-item-top">
-                <span class="request-id">#{{ c.id }}</span>
-              </div>
-              <h3>{{ c.candidatPrenom }} {{ c.candidatNom }}</h3>
-              <p class="department">{{ c.poste }} — {{ c.departement }}</p>
-            </button>
-          </transition-group>
-
-          <div v-if="!chargement && aEmbaucher.length === 0" class="empty-list">
-            <h3>Aucun candidat à embaucher</h3>
-          </div>
-        </div>
-        <Pagination v-bind="pgEmbauche.barre" compact @update:page="pgEmbauche.aller" />
-
-        <header class="panel-heading" style="margin-top: 16px">
-          <div>
-            <h2>Contrats</h2>
+            <h2>Liste des contrats</h2>
             <p>{{ contratsFiltres.length }} / {{ contrats.length }} contrat(s)</p>
           </div>
         </header>
 
         <div class="search-box">
           <span aria-hidden="true">⌕</span>
-          <input
-            v-model="rechercheContrat"
-            type="search"
-            placeholder="Référence, employé, type..."
-          />
+          <input v-model="rechercheContrat" type="search" placeholder="Référence, employé, type..." />
         </div>
 
         <div class="filter-selects" style="grid-template-columns: 1fr">
@@ -237,11 +188,16 @@ const pgContrats = usePagination(contratsFiltres, 6);
 
         <div class="request-list">
           <transition-group name="list" tag="div">
-            <div
-              v-for="ct in pgContrats.items"
+            <button
+              v-for="ct in pg.items"
               :key="ct.id"
+              type="button"
               class="request-item"
-              :class="{ actif: ct.statut === 'ACTIF' }"
+              :class="{
+                active: contratSelectionneId === ct.id,
+                actif: ct.statut === 'ACTIF',
+              }"
+              @click="selectionner(ct)"
             >
               <div class="request-item-top">
                 <span class="request-id">{{ ct.reference }}</span>
@@ -251,7 +207,7 @@ const pgContrats = usePagination(contratsFiltres, 6);
               </div>
 
               <h3>{{ ct.employeNom }} {{ ct.employePrenom }}</h3>
-              <p class="department">{{ ct.typeContrat }} — {{ formatDate(ct.dateDebut) }}</p>
+              <p class="department">{{ ct.typeContrat }} — {{ formatDateCourt(ct.dateDebut) }}</p>
 
               <div class="signatures-info">
                 <span class="signature-pill" :class="{ signee: ct.nbSignatures >= 1 }">
@@ -262,35 +218,7 @@ const pgContrats = usePagination(contratsFiltres, 6);
                 </span>
                 <span class="signature-compteur">{{ ct.nbSignatures }}/2</span>
               </div>
-
-              <div
-                v-if="ct.statut === 'EN_ATTENTE_SIGNATURE'"
-                class="decision-actions"
-                style="margin-top: 8px"
-              >
-                <button
-                  v-if="ct.nbSignatures < 1"
-                  class="approve-button"
-                  :disabled="signatureEnCours === ct.id + '-RH'"
-                  @click.stop="signer(ct, 'RH')"
-                >
-                  {{ signatureEnCours === ct.id + "-RH" ? "..." : "Signer RH" }}
-                </button>
-                <button
-                  v-if="ct.nbSignatures >= 1 && ct.nbSignatures < 2"
-                  class="reject-button"
-                  :disabled="signatureEnCours === ct.id + '-CANDIDAT'"
-                  @click.stop="signer(ct, 'CANDIDAT')"
-                >
-                  {{ signatureEnCours === ct.id + "-CANDIDAT" ? "..." : "Signer candidat" }}
-                </button>
-              </div>
-
-              <div v-if="ct.statut === 'ACTIF'" class="contrat-actif-notice">
-                ✓ Contrat signé par les deux parties
-                <span v-if="ct.dateSignature">le {{ formatDate(ct.dateSignature) }}</span>
-              </div>
-            </div>
+            </button>
           </transition-group>
 
           <div v-if="!chargement && contratsFiltres.length === 0" class="empty-list">
@@ -298,73 +226,145 @@ const pgContrats = usePagination(contratsFiltres, 6);
             <p>Modifiez vos filtres ou la recherche.</p>
           </div>
         </div>
-        <Pagination v-bind="pgContrats.barre" compact @update:page="pgContrats.aller" />
+        <Pagination v-bind="pg.barre" compact @update:page="pg.aller" />
       </div>
 
+      <!-- ===== Colonne droite : détail contrat ===== -->
       <section class="detail-panel">
         <transition name="fade" mode="out-in">
           <div
-            v-if="candidatSelectionne"
-            :key="'detail-' + candidatSelectionne.id"
+            v-if="contratSelectionne"
+            :key="'detail-' + contratSelectionne.id"
           >
             <header class="detail-header">
               <div>
-                <span class="eyebrow">EMBAUCHE #{{ candidatSelectionne.id }}</span>
-                <h2>{{ candidatSelectionne.candidatPrenom }} {{ candidatSelectionne.candidatNom }}</h2>
-                <p>{{ candidatSelectionne.poste }} — {{ candidatSelectionne.departement }}</p>
+                <span class="eyebrow">CONTRAT {{ contratSelectionne.reference }}</span>
+                <h2>{{ contratSelectionne.employeNom }} {{ contratSelectionne.employePrenom }}</h2>
+                <p>{{ contratSelectionne.typeContrat }} — {{ formatDate(contratSelectionne.dateDebut) }}</p>
               </div>
+              <span class="priority" :class="String(contratSelectionne.statut).toLowerCase()">
+                {{ libelleStatut(contratSelectionne.statut) }}
+              </span>
             </header>
 
             <div class="detail-body">
-              <h3 class="section-title">Paramètres du contrat</h3>
+              <!-- Bandeau statut -->
+              <div class="status-banner">
+                <span>Statut actuel</span>
+                <strong>{{ libelleStatut(contratSelectionne.statut) }}</strong>
+              </div>
+
+              <!-- Signatures -->
+              <h3 class="section-title">Signatures</h3>
+              <div class="signatures-block">
+                <div class="signature-step" :class="{ done: contratSelectionne.nbSignatures >= 1 }">
+                  <span class="signature-step__icon">
+                    {{ contratSelectionne.nbSignatures >= 1 ? "✓" : "○" }}
+                  </span>
+                  <div>
+                    <strong>Signature RH</strong>
+                    <p>{{ contratSelectionne.nbSignatures >= 1 ? "Signée" : "En attente" }}</p>
+                  </div>
+                </div>
+                <div class="signature-step" :class="{ done: contratSelectionne.nbSignatures >= 2 }">
+                  <span class="signature-step__icon">
+                    {{ contratSelectionne.nbSignatures >= 2 ? "✓" : "○" }}
+                  </span>
+                  <div>
+                    <strong>Signature candidat</strong>
+                    <p>{{ contratSelectionne.nbSignatures >= 2 ? "Signée" : "En attente" }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Informations générales -->
+              <h3 class="section-title">Informations du contrat</h3>
               <div class="detail-grid">
                 <div class="detail-field">
+                  <span>Référence</span>
+                  <strong>{{ contratSelectionne.reference }}</strong>
+                </div>
+                <div class="detail-field">
                   <span>Type de contrat</span>
-                  <select v-model="formulaire.typeContrat">
-                    <option value="CDI">CDI</option>
-                    <option value="CDD">CDD</option>
-                    <option value="STAGE">Stage</option>
-                  </select>
+                  <strong>{{ contratSelectionne.typeContrat }}</strong>
                 </div>
                 <div class="detail-field">
                   <span>Date de début</span>
-                  <input type="date" v-model="formulaire.dateDebut" />
+                  <strong>{{ formatDate(contratSelectionne.dateDebut) }}</strong>
                 </div>
                 <div class="detail-field">
-                  <span>Salaire (MGA)</span>
-                  <input type="number" v-model.number="formulaire.salaire" min="0" step="1000" />
+                  <span>Date de fin</span>
+                  <strong>{{ contratSelectionne.dateFin ? formatDate(contratSelectionne.dateFin) : "Indéterminée" }}</strong>
                 </div>
                 <div class="detail-field">
-                  <span>Période d'essai (jours)</span>
-                  <input type="number" v-model.number="formulaire.periodeEssaiJours" min="0" />
+                  <span>Salaire mensuel</span>
+                  <strong class="montant">{{ formatMontant(contratSelectionne.salaire) }}</strong>
+                </div>
+                <div class="detail-field">
+                  <span>Date de signature</span>
+                  <strong>{{ contratSelectionne.dateSignature ? formatDate(contratSelectionne.dateSignature) : "Pas encore signé" }}</strong>
                 </div>
               </div>
 
-              <div class="decision-actions">
-                <button
-                  class="approve-button"
-                  :disabled="actionEnCours === 'embauche'"
-                  @click="embaucher"
+              <!-- Actions RH -->
+              <template v-if="estRh">
+                <h3 class="section-title">Actions</h3>
+
+                <!-- Signer RH (si pas encore signé) -->
+                <div
+                  v-if="contratSelectionne.statut === 'EN_ATTENTE_SIGNATURE' && contratSelectionne.nbSignatures < 1"
+                  class="decision-actions"
                 >
-                  {{ actionEnCours === "embauche" ? "..." : "Créer l'employé + le contrat" }}
-                </button>
-              </div>
+                  <button
+                    class="approve-button"
+                    :disabled="signatureEnCours === contratSelectionne.id + '-RH'"
+                    @click="ouvrirSignature"
+                  >
+                    {{ signatureEnCours === contratSelectionne.id + "-RH" ? "..." : "Signer RH" }}
+                  </button>
+                </div>
+
+                <!-- En attente candidat -->
+                <div
+                  v-else-if="contratSelectionne.statut === 'EN_ATTENTE_SIGNATURE' && contratSelectionne.nbSignatures === 1"
+                  class="attente-candidat"
+                >
+                  <span class="attente-candidat__icon">⏳</span>
+                  <div>
+                    <strong>En attente de la signature du candidat</strong>
+                    <p>Le candidat a reçu un mail avec un lien sécurisé pour signer son contrat.</p>
+                  </div>
+                </div>
+
+                <!-- Contrat actif -->
+                <div v-else-if="contratSelectionne.statut === 'ACTIF'" class="contrat-actif-notice">
+                  ✓ Contrat signé par les deux parties
+                  <span v-if="contratSelectionne.dateSignature">le {{ formatDate(contratSelectionne.dateSignature) }}</span>
+                </div>
+              </template>
 
               <div class="read-only-notice">
-                Cette action crée en une transaction : l'employé, le contrat (statut
-                EN_ATTENTE_SIGNATURE), l'historique, l'onboarding et ses tâches.
+                Cette page permet de consulter et de signer les contrats en tant que RH.
+                La signature du candidat se fait via un lien sécurisé reçu par email.
               </div>
             </div>
           </div>
 
           <div v-else class="empty-detail" key="empty">
             <div class="empty-document">☷</div>
-            <h2>Sélectionnez un candidat</h2>
-            <p>Choisissez un candidat RETENU pour créer son contrat.</p>
+            <h2>Sélectionnez un contrat</h2>
+            <p>Choisissez un contrat dans la liste pour voir ses détails et le faire signer.</p>
           </div>
         </transition>
       </section>
     </section>
+
+    <!-- ===== Modale de signature manuscrite ===== -->
+    <SignaturePad
+      v-if="afficherSignature"
+      @validate="onSignatureValide"
+      @cancel="afficherSignature = false"
+    />
   </main>
 </template>
 
@@ -463,10 +463,7 @@ const pgContrats = usePagination(contratsFiltres, 6);
   box-shadow: 0 0 0 3px rgba(1, 95, 9, 0.08);
 }
 
-.search-box > span {
-  color: #818781;
-  font-size: 22px;
-}
+.search-box > span { color: #818781; font-size: 22px; }
 
 .search-box input {
   width: 100%;
@@ -516,7 +513,7 @@ const pgContrats = usePagination(contratsFiltres, 6);
   display: flex;
   flex-direction: column;
   gap: 7px;
-  max-height: 420px;
+  max-height: 720px;
   overflow-y: auto;
   padding: 10px;
 }
@@ -528,11 +525,8 @@ const pgContrats = usePagination(contratsFiltres, 6);
   border-radius: 9px;
   background: white;
   text-align: left;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
-}
-
-button.request-item {
   cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .request-item:hover {
@@ -549,11 +543,13 @@ button.request-item {
 
 .request-item.actif {
   background: #f0f9ef;
-  border-color: #b7dfb7;
 }
 
-.request-item-top,
-.request-item-bottom {
+.request-item.actif.active {
+  background: #e8f4e7;
+}
+
+.request-item-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -562,7 +558,6 @@ button.request-item {
 }
 
 .request-id,
-.request-item-bottom,
 .department {
   color: var(--muted);
   font-size: 11px;
@@ -574,9 +569,7 @@ button.request-item {
   font-size: 14px;
 }
 
-.department {
-  margin: 0 0 13px;
-}
+.department { margin: 0 0 13px; }
 
 .priority {
   display: inline-block;
@@ -588,26 +581,10 @@ button.request-item {
   font-weight: 700;
 }
 
-.priority.en_attente_signature {
-  background: #fff5e7;
-  color: #98621b;
-}
-
-.priority.actif {
-  background: #eaf5e9;
-  color: #24752b;
-}
-
-.priority.brouillon {
-  background: #f0f1ef;
-  color: #697169;
-}
-
-.priority.termine,
-.priority.resilie {
-  background: #f0f1ef;
-  color: #697169;
-}
+.priority.en_attente_signature { background: #fff5e7; color: #98621b; }
+.priority.actif { background: #eaf5e9; color: #24752b; }
+.priority.brouillon { background: #f0f1ef; color: #697169; }
+.priority.termine, .priority.resilie { background: #f0f1ef; color: #697169; }
 
 .signatures-info {
   display: flex;
@@ -644,28 +621,7 @@ button.request-item {
   font-weight: 600;
 }
 
-.contrat-actif-notice {
-  margin-top: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: #eaf5e9;
-  color: #24752b;
-  font-size: 12px;
-  font-weight: 600;
-  animation: slideIn 0.35s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Détail */
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -681,9 +637,23 @@ button.request-item {
   font-size: 21px;
 }
 
-.detail-body {
-  padding: 22px;
+.detail-body { padding: 22px; }
+
+.status-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid #e7ece4;
+  border-radius: 8px;
+  background: #fafbf9;
+  font-size: 12px;
 }
+
+.status-banner span { color: var(--muted); }
+.status-banner strong { color: var(--color-primary); }
 
 .section-title {
   margin: 25px 0 14px;
@@ -709,29 +679,74 @@ button.request-item {
   font-size: 11px;
 }
 
-.detail-field input,
-.detail-field select,
-.detail-field textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 9px 11px;
-  border: 1px solid #e4e7e2;
-  border-radius: 8px;
-  background: #fcfcfb;
-  color: var(--ink);
-  font: inherit;
-  font-size: 12px;
-  transition: border-color 0.2s, background 0.2s;
+.detail-field strong {
+  color: #363c36;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
-.detail-field input:focus,
-.detail-field select:focus,
-.detail-field textarea:focus {
-  outline: 2px solid #d4e6d0;
-  border-color: #9bc296;
-  background: #fff;
+.detail-field strong.montant {
+  color: var(--color-primary);
+  font-size: 16px;
+  font-weight: 700;
 }
 
+/* Bloc signatures détaillé */
+.signatures-block {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.signature-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed #e4e7e2;
+  border-radius: 9px;
+  background: #fafbf9;
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.signature-step.done {
+  border-style: solid;
+  border-color: #b7dfb7;
+  background: #f0f9ef;
+}
+
+.signature-step__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef1ed;
+  color: #888;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.signature-step.done .signature-step__icon {
+  background: #d5ecd3;
+  color: #24752b;
+}
+
+.signature-step strong {
+  display: block;
+  font-size: 13px;
+  color: #292e2a;
+}
+
+.signature-step p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #818781;
+}
+
+/* Actions */
 .decision-actions {
   display: flex;
   gap: 12px;
@@ -755,16 +770,6 @@ button.request-item {
   transform: scale(0.97);
 }
 
-.reject-button {
-  border: 1px solid #f0d7d3;
-  background: #fff7f6;
-  color: #b74736;
-}
-
-.reject-button:hover:not(:disabled) {
-  background: #ffebe8;
-}
-
 .approve-button {
   border: 1px solid var(--color-primary);
   background: var(--color-primary);
@@ -775,10 +780,59 @@ button.request-item {
   background: #014b07;
 }
 
-.approve-button:disabled,
-.reject-button:disabled {
+.approve-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.attente-candidat {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px dashed #e5c98f;
+  border-radius: 9px;
+  background: #fffaf0;
+}
+
+.attente-candidat__icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.attente-candidat strong {
+  display: block;
+  color: #98621b;
+  font-size: 13px;
+}
+
+.attente-candidat p {
+  margin: 3px 0 0;
+  color: #98621b;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.contrat-actif-notice {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 9px;
+  background: #eaf5e9;
+  color: #24752b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.read-only-notice {
+  margin-top: 20px;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafbf9;
+  color: #737a73;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .refresh-button {
@@ -800,25 +854,9 @@ button.request-item {
   font-size: 13px;
 }
 
-.success-feedback {
-  border: 1px solid #d6ead4;
-  background: #f0f8ee;
-  color: #246d2a;
-}
-
-.error-feedback {
-  border: 1px solid #f0d7d3;
-  background: #fff7f6;
-  color: #a43b2e;
-}
-
-.feedback button {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-}
+.success-feedback { border: 1px solid #d6ead4; background: #f0f8ee; color: #246d2a; }
+.error-feedback { border: 1px solid #f0d7d3; background: #fff7f6; color: #a43b2e; }
+.feedback button { border: 0; background: transparent; color: inherit; cursor: pointer; text-decoration: underline; }
 
 .empty-list,
 .empty-detail {
@@ -831,10 +869,7 @@ button.request-item {
 }
 
 .empty-list h3,
-.empty-detail h2 {
-  margin: 12px 0 7px;
-  font-size: 15px;
-}
+.empty-detail h2 { margin: 12px 0 7px; font-size: 15px; }
 
 .empty-list p,
 .empty-detail p {
@@ -855,79 +890,28 @@ button.request-item {
   font-size: 24px;
 }
 
-.read-only-notice {
-  margin-top: 20px;
-  padding: 13px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fafbf9;
-  color: #737a73;
-  font-size: 12px;
-  line-height: 1.7;
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(6px); }
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
+.feedback-enter-active, .feedback-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
+.feedback-enter-from, .feedback-leave-to { opacity: 0; transform: translateY(-8px); }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-.feedback-enter-active,
-.feedback-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.feedback-enter-from,
-.feedback-leave-to {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.3s ease;
-}
-
-.list-enter-from,
-.list-leave-to {
-  opacity: 0;
-  transform: translateX(-10px);
-}
-
-.list-move {
-  transition: transform 0.3s ease;
-}
+.list-enter-active, .list-leave-active { transition: all 0.3s ease; }
+.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(-10px); }
+.list-move { transition: transform 0.3s ease; }
 
 @media (max-width: 1000px) {
-  .workspace {
-    grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr);
-  }
+  .workspace { grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr); }
 }
 
 @media (max-width: 760px) {
-  .workspace {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .detail-body,
-  .detail-header {
-    padding: 17px;
-  }
-  .page-header h1 {
-    font-size: 22px;
-  }
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .detail-body, .detail-header { padding: 17px; }
+  .page-header h1 { font-size: 22px; }
 }
 
 @media (max-width: 480px) {
-  .detail-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .decision-actions {
-    flex-direction: column;
-  }
+  .detail-grid, .signatures-block { grid-template-columns: minmax(0, 1fr); }
+  .decision-actions { flex-direction: column; }
 }
 </style>

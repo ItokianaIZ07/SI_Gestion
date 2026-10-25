@@ -14,9 +14,13 @@ import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
 import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
+import EmbaucheView from '@/views/modules/gestion/rh/EmbaucheView.vue'
 import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
+
+import SignerContratView from '@/views/modules/client/SignerContratView.vue'
+
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
 const exigerRole = (...rolesAutorises) => () => {
@@ -27,6 +31,8 @@ const exigerRole = (...rolesAutorises) => () => {
   }
 }
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
+const rhEtDirection = exigerRole('RH', 'DIRECTION')
+const rhUniquement = exigerRole('RH')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -76,6 +82,11 @@ const router = createRouter({
           name: 'postuler',
           component: ChoiceUploadView
           // component: () => import('@/views/modules/client/PostulerView.vue')
+        },
+        {
+          path: 'signer-contrat/:token',
+          name: 'signerContrat',
+          component: SignerContratView
         },
       ]
     },
@@ -189,11 +200,21 @@ const router = createRouter({
         },
         {
           path: "rh/entretiens",
+          name: "rhEntretiens",
           component: EntretienView,
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/embauche",
+          name: "rhEmbauche",
+          component: EmbaucheView,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/contrats",
+          name: "rhContrats",
           component: ContratView,
+          beforeEnter: rhEtDirection,
         },
         {
           path: "rh/recrutements",

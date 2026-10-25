@@ -2,10 +2,12 @@
 <script setup>
 import Pagination from "@/components/ui/Pagination.vue";
 import { usePagination } from "@/composable/usePagination";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useAuthStore } from "@/stores/authStore";
-import { getContrats, signerContrat } from "@/services/contratService";
-import SignaturePad from "@/components/SignaturePad.vue";           // ← AJOUT
+import { getContrats, signerContrat, getSignatureUrl } from "@/services/contratService";
+import SignaturePad from "@/components/SignaturePad.vue";
+import ContratDocument from "@/components/contrat/ContratDocument.vue";
+import html2pdf from "html2pdf.js";
 
 const authStore = useAuthStore();
 const role = computed(() => authStore.user?.role?.toUpperCase());
@@ -17,11 +19,17 @@ const erreur = ref("");
 const message = ref("");
 const signatureEnCours = ref(null);
 const feedbackAnim = ref("");
-const afficherSignature = ref(false);                             // ← AJOUT
+const afficherSignature = ref(false);
 
 const rechercheContrat = ref("");
 const filtreStatutContrat = ref("TOUS");
 const contratSelectionneId = ref(null);
+
+/* ---------- AJOUT : affichage contrat + PDF ---------- */
+const afficherContrat = ref(false);
+const contratDocRef = ref(null);
+const signatureRhUrl = ref("");
+const signatureCandidatUrl = ref("");
 
 const contratsFiltres = computed(() => {
   const terme = rechercheContrat.value.trim().toLowerCase();
@@ -90,21 +98,24 @@ async function charger() {
 
 function selectionner(ct) {
   contratSelectionneId.value = ct.id;
+  // Réinitialise les signatures chargées quand on change de contrat
+  signatureRhUrl.value = "";
+  signatureCandidatUrl.value = "";
 }
 
 /* Ouvre la modale de signature manuscrite */
-function ouvrirSignature() {                                       // ← AJOUT
+function ouvrirSignature() {
   afficherSignature.value = true;
 }
 
 /* Reçoit l'image base64 de la signature et lance la sauvegarde */
-function onSignatureValide(base64) {                               // ← AJOUT
+function onSignatureValide(base64) {
   if (contratSelectionne.value) {
     signer(contratSelectionne.value, "RH", base64);
   }
 }
 
-async function signer(contrat, partie, signatureBase64 = null) {   // ← signature avec base64
+async function signer(contrat, partie, signatureBase64 = null) {
   if (!estRh.value) return;
   signatureEnCours.value = `${contrat.id}-${partie}`;
   erreur.value = "";
@@ -115,6 +126,10 @@ async function signer(contrat, partie, signatureBase64 = null) {   // ← signat
     const index = contrats.value.findIndex((c) => c.id === contrat.id);
     if (index !== -1 && updated) contrats.value.splice(index, 1, updated);
 
+    // Recharge les signatures (celle qui vient d'être ajoutée)
+    signatureRhUrl.value = "";
+    signatureCandidatUrl.value = "";
+
     if (updated && updated.statut === "ACTIF") {
       afficherFeedback(`✓ Contrat ${updated.reference} signé par les deux parties — il est maintenant ACTIF.`);
     } else {
@@ -124,8 +139,53 @@ async function signer(contrat, partie, signatureBase64 = null) {   // ← signat
     erreur.value = e.response?.data?.message ?? "Échec de la signature.";
   } finally {
     signatureEnCours.value = null;
-    afficherSignature.value = false;                               // ← ferme la modale
+    afficherSignature.value = false;
   }
+}
+
+/* ---------- AJOUT : voir le contrat ---------- */
+async function ouvrirContrat() {
+  const c = contratSelectionne.value;
+  if (!c) return;
+
+  // Charge les signatures en parallèle (vide si absentes)
+  const [rh, cand] = await Promise.all([
+    signatureRhUrl.value || getSignatureUrl(c.id, "RH"),
+    signatureCandidatUrl.value || getSignatureUrl(c.id, "CANDIDAT"),
+  ]);
+  signatureRhUrl.value = rh;
+  signatureCandidatUrl.value = cand;
+
+  afficherContrat.value = true;
+}
+
+/* ---------- AJOUT : générer le PDF ---------- */
+async function telechargerPDF() {
+  const c = contratSelectionne.value;
+  if (!c) return;
+
+  // 1. Charge les signatures si nécessaire
+  if (!signatureRhUrl.value) {
+    signatureRhUrl.value = await getSignatureUrl(c.id, "RH");
+  }
+  if (!signatureCandidatUrl.value) {
+    signatureCandidatUrl.value = await getSignatureUrl(c.id, "CANDIDAT");
+  }
+
+  // 2. Ouvre la modale pour que le DOM soit rendu
+  afficherContrat.value = true;
+  await nextTick();
+
+  const el = contratDocRef.value?.$el;
+  if (!el) return;
+
+  html2pdf().set({
+    margin: 10,
+    filename: `contrat-${c.reference}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+  }).from(el).save();
 }
 
 onMounted(charger);
@@ -310,6 +370,16 @@ const pg = usePagination(contratsFiltres, 8);
               <template v-if="estRh">
                 <h3 class="section-title">Actions</h3>
 
+                <!-- AJOUT : Voir le contrat + Générer en PDF -->
+                <div class="decision-actions" style="margin-bottom: 12px">
+                  <button type="button" class="approve-button" @click="ouvrirContrat">
+                    Voir le contrat
+                  </button>
+                  <button type="button" class="reject-button" @click="telechargerPDF">
+                    Générer en PDF
+                  </button>
+                </div>
+
                 <!-- Signer RH (si pas encore signé) -->
                 <div
                   v-if="contratSelectionne.statut === 'EN_ATTENTE_SIGNATURE' && contratSelectionne.nbSignatures < 1"
@@ -365,10 +435,29 @@ const pg = usePagination(contratsFiltres, 8);
       @validate="onSignatureValide"
       @cancel="afficherSignature = false"
     />
+
+    <!-- ===== AJOUT : Modale "Voir le contrat" ===== -->
+    <div v-if="afficherContrat && contratSelectionne" class="modal-contrat" @click.self="afficherContrat = false">
+      <div class="modal-contrat__inner">
+        <div class="modal-contrat__barre">
+          <span>Aperçu du contrat — {{ contratSelectionne.reference }}</span>
+          <button type="button" @click="afficherContrat = false">✕ Fermer</button>
+        </div>
+        <div class="modal-contrat__scroll">
+          <ContratDocument
+            ref="contratDocRef"
+            :contrat="contratSelectionne"
+            :signature-rh="signatureRhUrl"
+            :signature-candidat="signatureCandidatUrl"
+          />
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
 <style scoped>
+/* ====== Styles existants (inchangés) ====== */
 .validation-page {
   --ink: #292e2a;
   --muted: #818781;
@@ -621,7 +710,6 @@ const pg = usePagination(contratsFiltres, 8);
   font-weight: 600;
 }
 
-/* Détail */
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -692,7 +780,6 @@ const pg = usePagination(contratsFiltres, 8);
   font-weight: 700;
 }
 
-/* Bloc signatures détaillé */
 .signatures-block {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -746,7 +833,6 @@ const pg = usePagination(contratsFiltres, 8);
   color: #818781;
 }
 
-/* Actions */
 .decision-actions {
   display: flex;
   gap: 12px;
@@ -783,6 +869,17 @@ const pg = usePagination(contratsFiltres, 8);
 .approve-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Le bouton "Générer en PDF" réutilise .reject-button (existant dans Embauche) */
+.reject-button {
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  color: #292e2a;
+}
+
+.reject-button:hover:not(:disabled) {
+  background: #f7f7f7;
 }
 
 .attente-candidat {
@@ -913,5 +1010,58 @@ const pg = usePagination(contratsFiltres, 8);
 @media (max-width: 480px) {
   .detail-grid, .signatures-block { grid-template-columns: minmax(0, 1fr); }
   .decision-actions { flex-direction: column; }
+}
+
+/* ====== AJOUT : Modale contrat ====== */
+.modal-contrat {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.modal-contrat__inner {
+  background: #fff;
+  border-radius: 10px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-contrat__barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.modal-contrat__barre button {
+  border: 1px solid #d4d4d4;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.modal-contrat__barre button:hover {
+  background: #f0f0f0;
+}
+
+.modal-contrat__scroll {
+  overflow-y: auto;
+  padding: 24px;
+  background: #f4f5f3;
 }
 </style>

@@ -1,3 +1,4 @@
+// BY : Brandon
 package com.si.rh.dto;
 
 import java.math.BigDecimal;
@@ -17,5 +18,16 @@ public record ContratDTO(
     LocalDate dateSignature,
     BigDecimal salaire,
     OffsetDateTime dateCreation,
-    Integer nbSignatures   // ← AJOUT
+    Integer nbSignatures,
+
+  
+    String employeCin,
+    LocalDate employeDateNaissance,
+    String employeAdresse,
+    String employeEmail,
+    String employeTelephone,
+    String poste,
+    String departement,
+    String dureeContrat,        
+    Integer periodeEssaiJours   
 ) {}

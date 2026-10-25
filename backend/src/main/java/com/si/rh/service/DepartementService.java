@@ -11,14 +11,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.si.rh.dto.DepartementResumeResponse;
+import com.si.rh.dto.DepartementRequest;
 import com.si.rh.dto.VisionDepartementResponse;
 import com.si.rh.model.Departement;
+import com.si.rh.model.GrilleSalaire;
+import com.si.rh.model.Poste;
 import com.si.rh.model.enums.StatutEmploye;
 import com.si.rh.model.enums.StatutGlobalBesoin;
 import com.si.rh.repository.BesoinRepository;
 import com.si.rh.repository.DepartementRepository;
 import com.si.rh.repository.EmployeRepository;
+import com.si.rh.repository.GrilleSalaireRepository;
 import com.si.rh.repository.PosteRepository;
+import com.si.rh.repository.UtilisateurRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,23 +33,77 @@ public class DepartementService {
     private final DepartementRepository departementRepository;
     private final EmployeRepository employeRepository;
     private final PosteRepository posteRepository;
+    private final GrilleSalaireRepository grilleSalaireRepository;
     private final BesoinRepository besoinRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
     public DepartementService(
             DepartementRepository departementRepository,
             EmployeRepository employeRepository,
             PosteRepository posteRepository,
-            BesoinRepository besoinRepository
+            GrilleSalaireRepository grilleSalaireRepository,
+            BesoinRepository besoinRepository,
+            UtilisateurRepository utilisateurRepository
     ) {
         this.departementRepository = departementRepository;
         this.employeRepository = employeRepository;
         this.posteRepository = posteRepository;
+        this.grilleSalaireRepository = grilleSalaireRepository;
         this.besoinRepository = besoinRepository;
+        this.utilisateurRepository = utilisateurRepository;
     }
     public List<Departement> getAll() {
         return departementRepository.findAll();
     }
 
+    @Transactional
+    public Departement creer(DepartementRequest request) {
+        request.postes().forEach(poste -> {
+            var grille = poste.grilleSalaire();
+            if (grille.valeurMax().compareTo(grille.valeurMin()) < 0) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Le salaire maximum doit être supérieur ou égal au minimum."
+                );
+            }
+            if (grille.dateFinValidite() != null
+                    && grille.dateFinValidite().isBefore(grille.dateDebutValidite())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "La date de fin doit suivre la date de début."
+                );
+            }
+        });
+
+        var manager = utilisateurRepository.findById(request.managerId())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Manager introuvable"
+                ));
+
+        var departement = new Departement();
+        departement.setNom(request.nom().trim());
+        departement.setManager(manager);
+        departement.setEffectifMax(request.effectifMax());
+        Departement departementEnregistre = departementRepository.save(departement);
+
+        request.postes().forEach(posteRequest -> {
+            Poste poste = new Poste();
+            poste.setDepartement(departementEnregistre);
+            poste.setNom(posteRequest.nom().trim());
+            Poste posteEnregistre = posteRepository.save(poste);
+
+            GrilleSalaire grille = new GrilleSalaire();
+            grille.setPoste(posteEnregistre);
+            grille.setValeurMin(posteRequest.grilleSalaire().valeurMin());
+            grille.setValeurMax(posteRequest.grilleSalaire().valeurMax());
+            grille.setDateDebutValidite(posteRequest.grilleSalaire().dateDebutValidite());
+            grille.setDateFinValidite(posteRequest.grilleSalaire().dateFinValidite());
+            grilleSalaireRepository.save(grille);
+        });
+
+        return departementEnregistre;
+    }
 
     @Transactional(readOnly = true)
     public List<DepartementResumeResponse> getTousLesDepartements() {

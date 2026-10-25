@@ -17,6 +17,7 @@ import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
 import EmbaucheView from '@/views/modules/gestion/rh/EmbaucheView.vue'
 import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
+import DepartementFormView from "@/views/modules/gestion/Manager/DepartementFormView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
 
 import SignerContratView from '@/views/modules/client/SignerContratView.vue'
@@ -143,6 +144,11 @@ const router = createRouter({
           path: 'manager/departements/:departementId',
           name: 'DetailVisionDepartement',
           component: VisionDepartementView
+        },
+        {
+          path: 'manager/departements/creation',
+          name: 'CreationDepartement',
+          component: DepartementFormView
         },
         {
           path: "rh/cv",

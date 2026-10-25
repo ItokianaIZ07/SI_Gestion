@@ -9,6 +9,8 @@ import {
 import DemandeComponent from "@/components/demande/DemandeComponent.vue";
 import DemandeSelectComponent from "@/components/demande/DemandeSelectComponent.vue";
 import DemandeDetail from "@/components/demande/DemandeDetail.vue";
+import Notification from "@/components/ui/Notification.vue";
+
 
 const besoins = ref([]);
 const chargement = ref(false);
@@ -17,6 +19,8 @@ const recherche = ref("");
 const filtreActif = ref("TOUS");
 const filtrePriorite = ref("TOUTES");
 const demandeSelectionneeId = ref(null);
+const message = ref("");
+const typeMessage = ref("succes");
 
 const filtres = [
   { label: "Toutes", value: "TOUS" },
@@ -33,6 +37,7 @@ const priorites = [
   { label: "Normale", value: "NORMALE" },
   { label: "Basse", value: "BASSE" },
 ];
+
 
 async function chargerBesoins() {
   chargement.value = true;
@@ -134,6 +139,11 @@ function selectionner(demande) {
   demandeSelectionneeId.value = demande.id;
 }
 
+function afficherNotification(notif, type = "succes") {
+  message.value = notif;
+  typeMessage.value = type;
+}
+
 onMounted(chargerBesoins);
 
 const pg = usePagination(demandesFiltrees, 8);
@@ -141,6 +151,11 @@ const pg = usePagination(demandesFiltrees, 8);
 
 <template>
   <main class="validation-page">
+    <Notification 
+      :message="message"
+      :type="typeMessage"
+      @fermer="message=''"
+    />
     <header class="page-header">
       <div>
         <span class="eyebrow">GESTION DES RESSOURCES HUMAINES</span>
@@ -242,7 +257,7 @@ const pg = usePagination(demandesFiltrees, 8);
       </div>
 
       <section class="detail-panel">
-        <DemandeDetail v-if="demandeSelectionnee" :demande="demandeSelectionnee" :reload-besoin="chargerBesoins" />
+        <DemandeDetail v-if="demandeSelectionnee" :demande="demandeSelectionnee" :reload-besoin="chargerBesoins" :show-notification="afficherNotification" />
 
         <div v-else class="empty-detail">
           <div class="empty-document">☷</div>

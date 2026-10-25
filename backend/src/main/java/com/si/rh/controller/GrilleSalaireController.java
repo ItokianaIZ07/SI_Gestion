@@ -49,4 +49,10 @@ public class GrilleSalaireController {
     public List<PosteResponse> listerPostes() {
         return grilleService.listerPostes();
     }
+
+    @GetMapping("/grilles-salaire/departement/{idDepartement}")
+    public List<GrilleSalaireResponse> listerGrillesParDepartement(
+            @PathVariable Integer idDepartement) {
+        return grilleService.listerGrillesParDepartement(idDepartement);
+    }
 }

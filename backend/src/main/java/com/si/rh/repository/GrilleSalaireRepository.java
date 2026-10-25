@@ -18,4 +18,6 @@ public interface GrilleSalaireRepository extends JpaRepository<GrilleSalaire, In
 
     /** Toutes les grilles d'un poste (pour vérifier le chevauchement des périodes). */
     List<GrilleSalaire> findByPosteId(Integer idPoste);
+
+    List<GrilleSalaire> findByPosteDepartementId(Integer idDepartement);
 }  

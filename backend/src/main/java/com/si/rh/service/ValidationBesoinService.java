@@ -8,6 +8,7 @@ import com.si.rh.repository.BesoinRepository;
 import com.si.rh.repository.DepartementRepository;
 import com.si.rh.repository.EmployeRepository;
 import com.si.rh.repository.ValidationBesoinRepository;
+import com.si.rh.repository.GrilleSalaireRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 public class ValidationBesoinService {
@@ -35,6 +37,7 @@ public class ValidationBesoinService {
     private final EtatValidationService etatValidationService;
     private final UtilisateurDetailsService utilisateurDetailsService;
     private final EmployeRepository employeRepository;
+    private final GrilleSalaireRepository grilleSalaireRepository;
 
     public ValidationBesoinService(
             ValidationBesoinRepository validationBesoinRepository,
@@ -43,13 +46,15 @@ public class ValidationBesoinService {
             EtatValidationService etatValidationService,
             UtilisateurDetailsService utilisateurDetailsService,
             DepartementRepository departementRepository,
-            EmployeRepository employeRepository) {
+            EmployeRepository employeRepository,
+            GrilleSalaireRepository grilleSalaireRepository) {
         this.validationBesoinRepository = validationBesoinRepository;
         this.besoinRepository = besoinRepository;
         this.decisionService = decisionService;
         this.etatValidationService = etatValidationService;
         this.utilisateurDetailsService = utilisateurDetailsService;
         this.employeRepository = employeRepository;
+        this.grilleSalaireRepository = grilleSalaireRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +83,8 @@ public class ValidationBesoinService {
             Integer idBesoin,
             String codeDecision,
             String remarque,
+            BigDecimal salaire,
+            Integer idGrilleSalaire,
             String emailUtilisateur) {
         Utilisateur utilisateur = utilisateurDetailsService.getByEmail(emailUtilisateur);
         String role = normaliserCode(utilisateur.getRole().getCode());
@@ -102,6 +109,14 @@ public class ValidationBesoinService {
                     "Cette étape ne peut pas décider : le besoin est terminé, l'étape a déjà répondu ou le RH n'a pas accepté.");
         }
 
+        if ("RH".equals(role) && "ACCEPTE".equals(decisionCode)) {
+            appliquerGrilleSalaire(
+                    besoin,
+                    salaire,
+                    idGrilleSalaire
+            );
+        }
+
         Decision decision = decisionService.getByCode(decisionCode);
         EtatValidation etat = etatValidationService.getByCode(role);
 
@@ -117,6 +132,65 @@ public class ValidationBesoinService {
         historique.add(sauvegardee);
         synchroniserStatutEnBase(besoin, decisionsCourantes(historique));
         return sauvegardee;
+    }
+    private void appliquerGrilleSalaire(
+            Besoin besoin,
+            BigDecimal salaire,
+            Integer idGrilleSalaire) {
+
+        if (salaire == null || idGrilleSalaire == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Pour accepter le besoin, le RH doit sélectionner "
+                            + "une grille salariale et préciser le salaire."
+            );
+        }
+
+        if (salaire.signum() < 0) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le salaire ne peut pas être négatif."
+            );
+        }
+
+        GrilleSalaire grille = grilleSalaireRepository
+                .findById(idGrilleSalaire)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Grille salariale introuvable."
+                ));
+
+        if (grille.getPoste() == null
+                || grille.getPoste().getDepartement() == null
+                || besoin.getPoste() == null
+                || besoin.getPoste().getDepartement() == null
+                || !grille.getPoste().getDepartement().getId()
+                .equals(besoin.getPoste().getDepartement().getId())) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La grille salariale ne correspond pas "
+                            + "au département du besoin."
+            );
+        }
+
+        if (grille.getValeurMin() == null
+                || grille.getValeurMax() == null
+                || salaire.compareTo(grille.getValeurMin()) < 0
+                || salaire.compareTo(grille.getValeurMax()) > 0) {
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le salaire doit être compris entre "
+                            + grille.getValeurMin()
+                            + " et "
+                            + grille.getValeurMax()
+                            + "."
+            );
+        }
+
+        besoin.setSalaireEstime(salaire);
+        besoinRepository.save(besoin);
     }
 
     @Transactional(readOnly = true)
@@ -176,11 +250,16 @@ public class ValidationBesoinService {
         return new BesoinValidationDTO(
                 besoin.getId(),
                 besoin.getPoste().getNom(),
-                besoin.getPoste().getDepartement().getNom(),
-                besoin.getDemandeur().getPrenom() + " " + besoin.getDemandeur().getNom(),
+                departement.getNom(),
+                departement.getId(),
+                besoin.getDemandeur().getPrenom() + " "
+                        + besoin.getDemandeur().getNom(),
                 besoin.getTypeBesoin().getLibelle(),
                 besoin.getEffectif(),
-                (int) employeRepository.countByDepartement_IdAndStatut(departement.getId(), StatutEmploye.ACTIF),
+                (int) employeRepository.countByDepartement_IdAndStatut(
+                        departement.getId(),
+                        StatutEmploye.ACTIF
+                ),
                 departement.getEffectifMax(),
                 besoin.getPriorite().name(),
                 besoin.getLieuTravail(),
@@ -197,7 +276,8 @@ public class ValidationBesoinService {
                 decision(courantes, "DIRECTION"),
                 peutDecider,
                 !peutDecider,
-                !peutDecider);
+                !peutDecider
+        );
     }
 
     private boolean peutDecider(String role, Map<String, ValidationBesoin> validationsCourantes) {

@@ -5,8 +5,9 @@ import {
   statutLabel,
   formatSalaire,
 } from "@/utils/demandeUtils";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import api from "@/services/api";
+import ValidationSalaire from "@/components/demande/ValidationSalaire.vue";
 
 const props = defineProps({
   demande: {
@@ -28,29 +29,90 @@ console.log(props.demande);
 const remarque = ref("");
 const envoiEnCours = ref(false);
 const departementEstSature = props.demande.effectifTotal >= props.demande.effectifMax;
+const afficherValidationSalaire = ref(false);
 
-const sendDecision = async (idBesoin, decision) => {
+const accepterDemande = () => {
+  const estEtapeRH =
+    props.demande.peutDecider &&
+    String(props.demande.decisionRh ?? "EN_ATTENTE").toUpperCase() ===
+      "EN_ATTENTE";
+
+  if (estEtapeRH) {
+    ouvrirValidationSalaire();
+  } else {
+    sendDecision(props.demande.id, "ACCEPTE");
+  }
+};
+
+const sendDecision = async (
+  idBesoin,
+  decision,
+  informationsSalaire = null
+) => {
   envoiEnCours.value = true;
+
   try {
-    const response = await api.post("/rh/besoins/decision", {
+    const payload = {
       idBesoin,
       decisionCode: decision,
       remarque: remarque.value,
-    });
+      ...(informationsSalaire && decision === "ACCEPTE"
+        ? {
+            idGrilleSalaire: informationsSalaire.idGrilleSalaire,
+            salaire: informationsSalaire.salaire,
+          }
+        : {}),
+    };
+
+    const response = await api.post(
+      "/rh/besoins/decision",
+      payload
+    );
+
     if (response.status === 201) {
+      afficherValidationSalaire.value = false;
+
       await props.reloadBesoin();
-      props.showNotification("Décision prise", "succes")
+
+      props.showNotification(
+        "Décision prise avec succès.",
+        "succes"
+      );
     }
   } catch (error) {
     const message =
       error.response?.data?.detail ??
       error.response?.data?.message ??
-      (typeof error.response?.data === "string" ? error.response.data : null) ??
+      (typeof error.response?.data === "string"
+        ? error.response.data
+        : null) ??
+      error.message ??
       "La décision n'a pas pu être enregistrée.";
+
     props.showNotification(message, "erreur");
   } finally {
     envoiEnCours.value = false;
   }
+};
+
+function ouvrirValidationSalaire() {
+  if (departementEstSature) {
+    props.showNotification(
+      "Le département a atteint son effectif maximal.",
+      "erreur"
+    );
+    return;
+  }
+
+  afficherValidationSalaire.value = true;
+}
+
+const confirmerAcceptation = (informationsSalaire) => {
+  sendDecision(
+    props.demande.id,
+    "ACCEPTE",
+    informationsSalaire
+  );
 };
 </script>
 
@@ -174,12 +236,18 @@ const sendDecision = async (idBesoin, decision) => {
         </button>
         <button
           class="approve-button"
-          :disabled="!demande.peutDecider || envoiEnCours"
-          @click="sendDecision(demande.id, 'ACCEPTE')"
+          @click="accepterDemande"
+          :disabled="envoiEnCours || !demande.peutDecider"
         >
-          {{ envoiEnCours ? "Envoi..." : "Accepter" }}
+          Accepter
         </button>
       </template>
+      <ValidationSalaire
+          v-if="afficherValidationSalaire"
+          :demande="demande"
+          @fermer="afficherValidationSalaire = false"
+          @confirmer="confirmerAcceptation"
+        />
     </div>
   </div>
 </template>

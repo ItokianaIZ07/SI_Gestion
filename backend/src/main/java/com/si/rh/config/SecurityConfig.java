@@ -132,7 +132,7 @@ public class SecurityConfig {
                         .hasAnyRole("FINANCE", "DIRECTION")
 
                         .requestMatchers("/api/manager/**")
-                        .hasAnyRole("MANAGER", "DIRECTION")
+                        .hasAnyRole("MANAGER", "DIRECTION", "RH")
 
                         .anyRequest().authenticated()
                 )

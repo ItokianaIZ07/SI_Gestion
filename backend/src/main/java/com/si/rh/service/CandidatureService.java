@@ -3,6 +3,7 @@ package com.si.rh.service;
 import com.si.rh.dto.candidature.*;
 import com.si.rh.exception.*;
 import com.si.rh.model.*;
+import com.si.rh.model.enums.StatutCandidature;
 import com.si.rh.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,39 @@ public class CandidatureService {
         Candidature c = new Candidature();
         appliquer(c, d);
         return dto(repo.save(c));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CandidatureDTO> parRecrutement(Integer recrutementId) {
+        if (!recrutementRepo.existsById(recrutementId)) {
+            throw new RessourceIntrouvableException(
+                    "Recrutement introuvable : " + recrutementId
+            );
+        }
+
+        return repo.findByRecrutement_IdOrderByDateCandidatureDesc(recrutementId)
+                .stream()
+                .map(this::dto)
+                .toList();
+    }
+
+    public CandidatureDTO changerStatut(
+            Integer id,
+            StatutCandidature nouveauStatut
+    ) {
+        Candidature candidature = trouver(id);
+
+        if (nouveauStatut != StatutCandidature.PRESELECTIONNE
+                && nouveauStatut != StatutCandidature.REJETE) {
+            throw new RegleMetierException(
+                    HttpStatus.BAD_REQUEST,
+                    "Le statut doit être PRESELECTIONNE ou REJETE."
+            );
+        }
+
+        candidature.setStatut(nouveauStatut);
+
+        return dto(repo.save(candidature));
     }
 
     public CandidatureDTO modifier(Integer id, CandidatureEcritureDTO d) {

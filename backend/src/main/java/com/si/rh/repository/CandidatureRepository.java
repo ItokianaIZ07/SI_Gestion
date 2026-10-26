@@ -46,4 +46,8 @@ public interface CandidatureRepository extends JpaRepository<Candidature, Intege
         WHERE c.id = :id
     """)
     Optional<Candidature> findByIdAvecDetails(@Param("id") Integer id);
+
+    List<Candidature> findByRecrutement_IdOrderByDateCandidatureDesc(
+            Integer recrutementId
+    );
 }

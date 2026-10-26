@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface DepartementRepository extends JpaRepository<Departement, Integer> {
     List<Departement> findAllByOrderByNomAsc();
+
+    Optional<Departement> findFirstByManager_IdOrderByNomAsc(Integer managerId);
 }

@@ -50,8 +50,7 @@ const formulaire = reactive({
   motif: '',
   experienceRequise: '',
   niveauEtude: '',
-  competencesRequises: '',
-  salaireEstime: ''
+  competencesRequises: ''
 })
 
 function libellePriorite(valeur) {
@@ -99,7 +98,6 @@ function nettoyerEmployeRemplaceSiNonRemplacement() {
 
 const champsEtape2 = [
   ['besoin-etude', () => Boolean(formulaire.niveauEtude.trim()), 'Renseignez le niveau d’étude.'],
-  ['besoin-salaire', () => Number.isFinite(Number(formulaire.salaireEstime)) && Number(formulaire.salaireEstime) >= 1.00, 'Le salaire estimé doit être supérieur ou égal à 1,00.'],
   ['besoin-experience', () => Boolean(formulaire.experienceRequise.trim()), 'Renseignez l’expérience requise.'],
   ['besoin-competences', () => Boolean(formulaire.competencesRequises.trim()), 'Renseignez les compétences requises.'],
 ]
@@ -190,8 +188,7 @@ async function envoyer() {
     motif: formulaire.motif.trim(),
     experienceRequise: formulaire.experienceRequise.trim(),
     niveauEtude: formulaire.niveauEtude.trim(),
-    competencesRequises: formulaire.competencesRequises.trim(),
-    salaireEstime: Number(formulaire.salaireEstime)
+    competencesRequises: formulaire.competencesRequises.trim()
   }
 
   envoiEnCours.value = true
@@ -358,13 +355,6 @@ async function envoyer() {
         <input id="besoin-etude" v-model="formulaire.niveauEtude" type="text" maxlength="100"
                placeholder="Ex. Licence, Master" required>
         <p v-if="erreurs['besoin-etude']" class="champ__erreur" role="alert">{{ erreurs['besoin-etude'] }}</p>
-      </div>
-
-      <div class="champ">
-        <label for="besoin-salaire">Salaire estimé <span class="requis" aria-hidden="true">*</span></label>
-        <input id="besoin-salaire" v-model="formulaire.salaireEstime" type="number" min="1.01" step="0.01"
-               inputmode="decimal" placeholder="Ex. 1500000" required>
-        <p v-if="erreurs['besoin-salaire']" class="champ__erreur" role="alert">{{ erreurs['besoin-salaire'] }}</p>
       </div>
 
       <div class="champ champ--large">

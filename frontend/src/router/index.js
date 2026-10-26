@@ -18,6 +18,7 @@ import EmbaucheView from '@/views/modules/gestion/rh/EmbaucheView.vue'
 import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 import DepartementFormView from "@/views/modules/gestion/Manager/DepartementFormView.vue";
+import ManagerDemandesView from "@/views/modules/gestion/Manager/ManagerDemandesView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
 
 import SignerContratView from '@/views/modules/client/SignerContratView.vue'
@@ -136,6 +137,12 @@ const router = createRouter({
         // },
 
         // Ajouter ici les routes RH, Manager et Direction.
+        {
+          path: 'manager/demandes',
+          name: 'ManagerDemandes',
+          component: ManagerDemandesView,
+          beforeEnter: exigerRole('MANAGER'),
+        },
         {
           path: 'manager/demandes/creation',
           name: 'DemandeManifestation',

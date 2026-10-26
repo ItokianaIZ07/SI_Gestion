@@ -82,9 +82,14 @@ onMounted(chargerDepartements)
         <h1>Liste des départements</h1>
         <p class="description">Sélectionnez un département pour consulter sa vision globale.</p>
       </div>
-      <button class="actualiser" type="button" :disabled="chargement" @click="chargerDepartements">
-        {{ chargement ? 'Chargement…' : 'Actualiser' }}
-      </button>
+      <div class="actions-entete">
+        <RouterLink class="creer" to="/si/app/manager/departements/creation">
+          Créer un département
+        </RouterLink>
+        <button class="actualiser" type="button" :disabled="chargement" @click="chargerDepartements">
+          {{ chargement ? 'Chargement…' : 'Actualiser' }}
+        </button>
+      </div>
     </header>
 
     <p v-if="erreur" class="message message--erreur" role="alert">{{ erreur }}</p>
@@ -212,6 +217,26 @@ onMounted(chargerDepartements)
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
+}
+
+.actions-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.creer {
+  padding: 10px 16px;
+  border: 1px solid var(--principale, #015f09);
+  border-radius: 9px;
+  background: var(--principale, #015f09);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.creer:hover {
+  filter: brightness(0.92);
 }
 
 .sur-titre {
@@ -415,7 +440,8 @@ tbody tr:hover {
 }
 
 @media (max-width: 620px) {
-  .entete {
+  .entete,
+  .actions-entete {
     flex-direction: column;
   }
 

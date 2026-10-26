@@ -122,6 +122,12 @@ const router = createRouter({
           component: () => import('@/views/modules/finance/BudgetView.vue'),
           beforeEnter: financeEtDirection,
         },
+
+        {
+        path: "finance/demandes/:id",
+        component: () => import('@/views/modules/finance/DemandeFinanceDetailView.vue'),
+        beforeEnter: financeEtDirection,
+        },
         // À décommenter quand la page Dépenses sera créée :
         // {
         //   path: "finance/depenses",
@@ -188,6 +194,20 @@ const router = createRouter({
           path: "rh/offres/:id/modifier",
           name: "rhOffreModification",
           component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
+        },
+        {
+          path: "rh/offres/:offreId/candidatures",
+          name: "CandidaturesOffre",
+          component: () =>
+            import("@/views/modules/gestion/rh/CandidaturesOffreView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/candidats/:candidatId/cv",
+          name: "CvCandidat",
+          component: () =>
+            import("@/views/modules/gestion/rh/CvCandidatView.vue"),
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/publications",

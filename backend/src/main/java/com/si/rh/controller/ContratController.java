@@ -6,6 +6,7 @@ import com.si.rh.dto.*;
 import com.si.rh.repository.UtilisateurRepository;
 import com.si.rh.service.ContratService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContratController {
 
+    @Autowired
     private final ContratService service;
+    @Autowired
     private final UtilisateurRepository utilisateurRepo;
 
     @GetMapping("/a-embaucher")

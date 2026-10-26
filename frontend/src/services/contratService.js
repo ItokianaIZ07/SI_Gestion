@@ -49,3 +49,35 @@ export async function signerContratParToken(token, signatureBase64) {
   });
   return data;
 }
+
+
+
+//Récupère la signature d'un contrat sous forme d'URL blob.
+ //Retourne "" si la signature n'existe pas (au lieu de planter).
+
+export async function getSignatureUrl(idContrat, partie) {
+  try {
+    const blob = await api.getBlob(`/rh/contrats/${idContrat}/signature/${partie}`);
+    if (!blob || blob.size === 0) return "";
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    return "";
+  }
+}
+
+
+ //Variante publique : récupère la signature côté candidat, via le token.
+
+ 
+ 
+ 
+// BY : Brandon
+export async function getSignatureUrlPublique(token, partie) {
+  try {
+    const blob = await api.getBlob(`/public/signature/${token}/signature/${partie}`);
+    if (!blob || blob.size === 0) return "";
+    return URL.createObjectURL(blob);
+  } catch (e) {
+    return "";
+  }
+}

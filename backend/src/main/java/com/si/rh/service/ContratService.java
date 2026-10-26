@@ -241,9 +241,26 @@ public class ContratService {
         return h;
     }
 
+    // BY : Brandon
     private ContratDTO toDTO(Contrat c) {
         Employe e = c.getEmploye();
         long nb = historiqueRepo.countByEvenementContainingAndContratId("SIGNATURE_", c.getId());
+
+        // Champs nullables : si l'employé n'a pas renseigné CIN/date naissance/adresse,
+        // on renvoie null et le front affichera une chaîne vide.
+        String cin        = e == null ? null : e.getNumeroCin();
+        LocalDate naiss   = e == null ? null : e.getDateNaissance();
+        String adresse    = e == null ? null : e.getAdresse();
+        String email      = e == null ? null : e.getEmail();
+        String telephone  = e == null ? null : e.getTelephone();
+
+        String posteNom   = (e == null || e.getPoste() == null) ? null : e.getPoste().getNom();
+        String deptNom    = (e == null || e.getDepartement() == null) ? null : e.getDepartement().getNom();
+
+        String duree      = c.getTypeContrat() == null || c.getTypeContrat().getDuree() == null
+                            ? null
+                            : c.getTypeContrat().getDuree() + " jours";
+
         return new ContratDTO(
             c.getId(),
             c.getReference(),
@@ -257,7 +274,16 @@ public class ContratService {
             c.getDateSignature(),
             c.getSalaire(),
             c.getDateCreation(),
-            (int) nb
+            (int) nb,
+            cin,
+            naiss,
+            adresse,
+            email,
+            telephone,
+            posteNom,
+            deptNom,
+            duree,
+            c.getPeriodeEssaiJours()
         );
     }
 

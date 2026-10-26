@@ -8,6 +8,12 @@ import {
 import { ref, computed } from "vue";
 import api from "@/services/api";
 import ValidationSalaire from "@/components/demande/ValidationSalaire.vue";
+import ModalRecrutement from "@/components/demande/ModalRecrutement.vue";
+import { STATUTS_RECRUTEMENT } from "@/config/libelles";
+import { besoinsApi, recrutementsApi } from "@/services/ressources";
+import { useAuthStore } from "@/stores/authStore";
+
+const authStore = useAuthStore();
 
 const props = defineProps({
   demande: {
@@ -26,6 +32,7 @@ const props = defineProps({
 
 console.log(props.demande);
 
+const modalOuvert = ref(false);
 const remarque = ref("");
 const envoiEnCours = ref(false);
 const departementEstSature = props.demande.effectifTotal >= props.demande.effectifMax;
@@ -41,6 +48,48 @@ const accepterDemande = () => {
     ouvrirValidationSalaire();
   } else {
     sendDecision(props.demande.id, "ACCEPTE");
+  }
+};
+
+const ouvrirModalRecrutement = () => {
+  modalOuvert.value = true;
+};
+
+const fermerModalRecrutement = () => {
+  modalOuvert.value = false;
+};
+
+const validerCreationRecrutement = async (donnees) => {
+  if (donnees.dateCloture && donnees.dateOuverture && donnees.dateCloture < donnees.dateOuverture) {
+    erreur.value = "La date de clôture ne peut pas précéder la date d'ouverture.";
+    return;
+  }
+
+  if(authStore.user.role != "RH"){
+    props.showNotification("Vous devez être un RH pour faire cette action", "erreur");
+    return;
+  }
+
+  const user = await api.get(`/manager/utilisateurs/${authStore.user.role}`);
+  const responsableId = user.id;
+
+  const charge = {
+    besoinId: Number(donnees.demandeId),
+    reference: donnees.reference.trim(),
+    titre: donnees.titre.trim(),
+    description: donnees.description.trim() || null,
+    dateOuverture: donnees.dateOuverture || null,
+    dateCloture: donnees.dateCloture || null,
+    statut: donnees.statut,
+    responsableId
+  };
+
+  try {
+    const r = await recrutementsApi.creer(charge);
+    router.push({ path: "/si/app/rh/offres/creation", query: { recrutementId: r.id } });
+  } catch (e) {
+    console.error(e);
+    props.showNotification(e.message, "erreur");
   }
 };
 
@@ -223,9 +272,20 @@ const confirmerAcceptation = (informationsSalaire) => {
         />
       </div>
 
-      <button v-if="demande.statut == 'ACCEPTE'" class="approve-button">
-        Envoyer recrutement
-      </button>
+      <template v-if="demande.statut == 'ACCEPTE'">
+        <button @click="ouvrirModalRecrutement(demande)" class="approve-button"> // mila vérifiena hoe ef associé @nah recrutement v 
+          Envoyer recrutement
+        </button>
+  
+        <ModalRecrutement
+          v-if="modalOuvert && demande"
+          :demande="demande"
+          :statuts-recrutement="STATUTS_RECRUTEMENT"
+          @fermer="fermerModalRecrutement"
+          @valider="validerCreationRecrutement"
+        />
+      </template>
+
       <template v-else-if="demande.statut !== 'REFUSE'">
         <button
           class="reject-button"

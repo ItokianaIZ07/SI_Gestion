@@ -142,7 +142,7 @@ async function soumettre(creerOffreEnsuite = false) {
         <select v-if="besoinsDisponibles" id="besoin" v-model="form.besoinId" class="g-input" :disabled="edition" required>
           <option value="" disabled>Sélectionner un besoin accepté…</option>
           <option v-for="b in besoinsDisponibles" :key="b.id" :value="b.id">{{ libelleBesoin(b) }}</option>
-        </select>
+        </select> 
         <input v-else id="besoin" v-model.number="form.besoinId" class="g-input" type="number" min="1" :disabled="edition" required placeholder="Identifiant du besoin" />
         <small v-if="besoinsDisponibles && !besoinsDisponibles.length && !edition">
           Aucun besoin accepté sans recrutement pour le moment.

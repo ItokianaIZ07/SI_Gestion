@@ -4,22 +4,20 @@ package com.si.rh.dto;
 
 import java.math.BigDecimal;
 
-/** Une ligne du tableau « Demandes » du module Finance. */
+/**
+ * Une ligne de la LISTE des demandes (volontairement légère).
+ * Le détail complet est dans {@link DemandeFinanceDetailResponse}.
+ * coutTotal vaut null tant que les RH n'ont pas défini de salaire estimé.
+ */
 public record DemandeFinanceResponse(
         Integer id,
         String poste,
         String departement,
         Integer effectif,
-        BigDecimal salaireEstime,
-        int nbMois,
         BigDecimal coutTotal,
-        BigDecimal budgetRestant,
         boolean couvert,
         Etapes etapes,
-        String statut,
-        boolean peutValider,
-        boolean peutRefuser,
-        String motifBlocage
+        String statut
 ) {
     /** Décision de chaque étape : EN_ATTENTE, ACCEPTE ou REFUSE. */
     public record Etapes(String rh, String finance, String direction) {}

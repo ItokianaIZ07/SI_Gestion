@@ -89,4 +89,8 @@ public class RecrutementService {
                 r.getResponsable() == null ? null : r.getResponsable().getId(), r.getDateCreation(),
                 r.getDateModification());
     }
+
+    public boolean containsBesoin(int idBesoin){
+        return repo.existsByBesoin_Id(idBesoin);
+    }
 }

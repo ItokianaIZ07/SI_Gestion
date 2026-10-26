@@ -29,5 +29,6 @@ public record BesoinValidationDTO(
         String decisionDirection,
         boolean peutDecider,
         boolean accepterDesactive,
-        boolean refuserDesactive
+        boolean refuserDesactive,
+        boolean estAssigneRecrutement
 ) {}

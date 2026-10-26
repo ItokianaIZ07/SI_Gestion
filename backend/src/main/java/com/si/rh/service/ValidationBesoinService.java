@@ -4,11 +4,7 @@ import com.si.rh.dto.BesoinValidationDTO;
 import com.si.rh.model.*;
 import com.si.rh.model.enums.StatutEmploye;
 import com.si.rh.model.enums.StatutGlobalBesoin;
-import com.si.rh.repository.BesoinRepository;
-import com.si.rh.repository.DepartementRepository;
-import com.si.rh.repository.EmployeRepository;
-import com.si.rh.repository.ValidationBesoinRepository;
-import com.si.rh.repository.GrilleSalaireRepository;
+import com.si.rh.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +34,7 @@ public class ValidationBesoinService {
     private final UtilisateurDetailsService utilisateurDetailsService;
     private final EmployeRepository employeRepository;
     private final GrilleSalaireRepository grilleSalaireRepository;
+    private final RecrutementRepository recrutementRepository;
 
     public ValidationBesoinService(
             ValidationBesoinRepository validationBesoinRepository,
@@ -47,7 +44,8 @@ public class ValidationBesoinService {
             UtilisateurDetailsService utilisateurDetailsService,
             DepartementRepository departementRepository,
             EmployeRepository employeRepository,
-            GrilleSalaireRepository grilleSalaireRepository) {
+            GrilleSalaireRepository grilleSalaireRepository,
+            RecrutementRepository recrutementRepository) {
         this.validationBesoinRepository = validationBesoinRepository;
         this.besoinRepository = besoinRepository;
         this.decisionService = decisionService;
@@ -55,6 +53,7 @@ public class ValidationBesoinService {
         this.utilisateurDetailsService = utilisateurDetailsService;
         this.employeRepository = employeRepository;
         this.grilleSalaireRepository = grilleSalaireRepository;
+        this.recrutementRepository = recrutementRepository;
     }
 
     @Transactional(readOnly = true)
@@ -276,7 +275,8 @@ public class ValidationBesoinService {
                 decision(courantes, "DIRECTION"),
                 peutDecider,
                 !peutDecider,
-                !peutDecider
+                !peutDecider,
+                recrutementRepository.existsByBesoin_Id(besoin.getId())
         );
     }
 

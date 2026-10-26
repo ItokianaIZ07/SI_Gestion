@@ -57,6 +57,10 @@ public class HistoriqueContrat {
     @Column(name = "nouvelle_date_fin")
     private LocalDate nouvelleDateFin;
 
+    //image signature
+    @Column(name = "signature_image")
+    private byte[] signatureImage;
+
     // ----- Constructeurs -----
 
     public HistoriqueContrat() {
@@ -174,4 +178,8 @@ public class HistoriqueContrat {
     public void setNouvelleDateFin(LocalDate nouvelleDateFin) {
         this.nouvelleDateFin = nouvelleDateFin;
     }
+
+
+    public byte[] getSignatureImage() { return signatureImage; }
+public void setSignatureImage(byte[] signatureImage) { this.signatureImage = signatureImage; }
 }

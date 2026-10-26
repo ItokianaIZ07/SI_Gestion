@@ -2,6 +2,7 @@
 defineProps({
   message: { type: String, default: "" },
   type: { type: String, default: "erreur" }, // 'erreur' | 'succes'
+  temporaire: { type: Boolean, default: false, required: false}
 });
 </script>
 

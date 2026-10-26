@@ -21,11 +21,13 @@ http.interceptors.request.use(async (config) => {
   return config
 })
 
-// Toutes les routes sont sous /api/finance/** : protégées pour FINANCE et DIRECTION (SecurityConfig).
+// Toutes les routes sont sous /api/finance/** : lecture pour FINANCE et DIRECTION (SecurityConfig).
+// Valider / refuser une demande : réservé au rôle FINANCE (vérifié par le backend).
 export const financeApi = {
   // Demandes
   getDemandes: () => http.get('/finance/demandes').then(r => r.data),
-  valider: (id) => http.post(`/finance/demandes/${id}/valider`),
+  getDemande: (id) => http.get(`/finance/demandes/${id}`).then(r => r.data),
+  valider: (id, remarque) => http.post(`/finance/demandes/${id}/valider`, { remarque }),
   refuser: (id, remarque) => http.post(`/finance/demandes/${id}/refuser`, { remarque }),
 
   // Grille salariale

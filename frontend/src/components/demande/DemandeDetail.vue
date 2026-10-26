@@ -1,46 +1,168 @@
 <script setup>
-import { formatDate, prioriteLabel, statutLabel, formatSalaire } from '@/utils/demandeUtils';
-import { ref } from 'vue';
-import api from '@/services/api';
+import {
+  formatDate,
+  prioriteLabel,
+  statutLabel,
+  formatSalaire,
+} from "@/utils/demandeUtils";
+import { ref, computed } from "vue";
+import api from "@/services/api";
+import ValidationSalaire from "@/components/demande/ValidationSalaire.vue";
+import ModalRecrutement from "@/components/demande/ModalRecrutement.vue";
+import { STATUTS_RECRUTEMENT } from "@/config/libelles";
+import { besoinsApi, recrutementsApi } from "@/services/ressources";
+import { useAuthStore } from "@/stores/authStore";
+
+const authStore = useAuthStore();
 
 const props = defineProps({
-    demande: {
-        type: Object,
-        required: true
-    },
-    reloadBesoin: {
-        type: Function,
-        required: true
-    }
-})
+  demande: {
+    type: Object,
+    required: true,
+  },
+  reloadBesoin: {
+    type: Function,
+    required: true,
+  },
+  showNotification: {
+    type: Function,
+    required: true
+  }
+});
 
-console.log(props.demande)
+console.log(props.demande);
 
+const modalOuvert = ref(false);
 const remarque = ref("");
 const envoiEnCours = ref(false);
+const departementEstSature = props.demande.effectifTotal >= props.demande.effectifMax;
+const afficherValidationSalaire = ref(false);
 
-const sendDecision = async (idBesoin, decision) => {
-    envoiEnCours.value = true;
-    try{
-        const response = await api.post('/rh/besoins/decision', {
-            idBesoin,
-            decisionCode: decision,
-            remarque: remarque.value
-        });
-        if(response.status === 201){
-            await props.reloadBesoin();
-        }
-    }catch(error){
-        const message = error.response?.data?.detail ??
-          error.response?.data?.message ??
-          (typeof error.response?.data === "string" ? error.response.data : null) ??
-          "La décision n'a pas pu être enregistrée.";
-        alert(message);
-    } finally {
-        envoiEnCours.value = false;
+const accepterDemande = () => {
+  const estEtapeRH =
+    props.demande.peutDecider &&
+    String(props.demande.decisionRh ?? "EN_ATTENTE").toUpperCase() ===
+      "EN_ATTENTE";
+
+  if (estEtapeRH) {
+    ouvrirValidationSalaire();
+  } else {
+    sendDecision(props.demande.id, "ACCEPTE");
+  }
+};
+
+const ouvrirModalRecrutement = () => {
+  modalOuvert.value = true;
+};
+
+const fermerModalRecrutement = () => {
+  modalOuvert.value = false;
+};
+
+const validerCreationRecrutement = async (donnees) => {
+  if (donnees.dateCloture && donnees.dateOuverture && donnees.dateCloture < donnees.dateOuverture) {
+    erreur.value = "La date de clôture ne peut pas précéder la date d'ouverture.";
+    return;
+  }
+
+  if(authStore.user.role != "RH"){
+    props.showNotification("Vous devez être un RH pour faire cette action", "erreur");
+    return;
+  }
+
+  const user = await api.get(`/manager/utilisateurs/${authStore.user.role}`);
+  const responsableId = user.id;
+
+  const charge = {
+    besoinId: Number(donnees.demandeId),
+    reference: donnees.reference.trim(),
+    titre: donnees.titre.trim(),
+    description: donnees.description.trim() || null,
+    dateOuverture: donnees.dateOuverture || null,
+    dateCloture: donnees.dateCloture || null,
+    statut: donnees.statut,
+    responsableId
+  };
+
+  try {
+    const r = await recrutementsApi.creer(charge);
+    router.push({ path: "/si/app/rh/offres/creation", query: { recrutementId: r.id } });
+  } catch (e) {
+    console.error(e);
+    props.showNotification(e.message, "erreur");
+  }
+};
+
+const sendDecision = async (
+  idBesoin,
+  decision,
+  informationsSalaire = null
+) => {
+  envoiEnCours.value = true;
+
+  try {
+    const payload = {
+      idBesoin,
+      decisionCode: decision,
+      remarque: remarque.value,
+      ...(informationsSalaire && decision === "ACCEPTE"
+        ? {
+            idGrilleSalaire: informationsSalaire.idGrilleSalaire,
+            salaire: informationsSalaire.salaire,
+          }
+        : {}),
+    };
+
+    const response = await api.post(
+      "/rh/besoins/decision",
+      payload
+    );
+
+    if (response.status === 201) {
+      afficherValidationSalaire.value = false;
+
+      await props.reloadBesoin();
+
+      props.showNotification(
+        "Décision prise avec succès.",
+        "succes"
+      );
     }
+  } catch (error) {
+    const message =
+      error.response?.data?.detail ??
+      error.response?.data?.message ??
+      (typeof error.response?.data === "string"
+        ? error.response.data
+        : null) ??
+      error.message ??
+      "La décision n'a pas pu être enregistrée.";
+
+    props.showNotification(message, "erreur");
+  } finally {
+    envoiEnCours.value = false;
+  }
+};
+
+function ouvrirValidationSalaire() {
+  if (departementEstSature) {
+    props.showNotification(
+      "Le département a atteint son effectif maximal.",
+      "erreur"
+    );
+    return;
+  }
+
+  afficherValidationSalaire.value = true;
 }
 
+const confirmerAcceptation = (informationsSalaire) => {
+  sendDecision(
+    props.demande.id,
+    "ACCEPTE",
+    informationsSalaire
+  );
+};
 </script>
 
 <template>
@@ -50,10 +172,7 @@ const sendDecision = async (idBesoin, decision) => {
       <h2>{{ demande.poste }}</h2>
       <p>{{ demande.departement }}</p>
     </div>
-    <span
-      class="priority"
-      :class="String(demande.priorite).toLowerCase()"
-    >
+    <span class="priority" :class="String(demande.priorite).toLowerCase()">
       {{ prioriteLabel(demande.priorite) }}
     </span>
   </header>
@@ -66,9 +185,16 @@ const sendDecision = async (idBesoin, decision) => {
 
     <h3 class="section-title">Décisions de validation</h3>
     <div class="validation-grid">
-      <div><span>Ressources humaines</span><strong>{{ demande.decisionRh }}</strong></div>
-      <div><span>Finance</span><strong>{{ demande.decisionFinance }}</strong></div>
-      <div><span>Direction</span><strong>{{ demande.decisionDirection }}</strong></div>
+      <div>
+        <span>Ressources humaines</span
+        ><strong>{{ demande.decisionRh }}</strong>
+      </div>
+      <div>
+        <span>Finance</span><strong>{{ demande.decisionFinance }}</strong>
+      </div>
+      <div>
+        <span>Direction</span><strong>{{ demande.decisionDirection }}</strong>
+      </div>
     </div>
 
     <h3 class="section-title">Informations générales</h3>
@@ -99,6 +225,18 @@ const sendDecision = async (idBesoin, decision) => {
       </div>
     </div>
 
+    <h3 class="section-title">Département {{ demande.departement }}</h3>
+    <div class="detail-grid">
+      <div class="detail-field">
+        <span>Effectif présent dans le département</span>
+        <strong>{{ demande.effectifTotal }} <span style="color: var(--color-danger)">{{ departementEstSature ? "(Saturé)":"" }}</span></strong>
+      </div>
+      <div class="detail-field">
+        <span>Effectif max du département</span>
+        <strong>{{ demande.effectifMax }}</strong>
+      </div>
+    </div>
+
     <h3 class="section-title">Motif de la demande</h3>
     <p class="motif">{{ demande.motif }}</p>
 
@@ -125,25 +263,51 @@ const sendDecision = async (idBesoin, decision) => {
     </div>
 
     <div class="decision-actions">
+      <div class="remarque-container" v-if="demande.statut === 'EN_ATTENTE'">
+        <label>Remarque de décision</label>
+        <input
+          type="text"
+          v-model="remarque"
+          placeholder="remarque s'il y en a"
+        />
+      </div>
 
-        <div class="remarque-container" v-if="demande.statut === 'EN_ATTENTE'">
-            <label>Remarque de décision</label>
-            <input type="text" v-model="remarque" placeholder="remarque s'il y en a">
-        </div>
+      <template v-if="demande.statut == 'ACCEPTE' && !demande.estAssigneRecrutement">
+        <button @click="ouvrirModalRecrutement(demande)" class="approve-button">
+          Envoyer recrutement
+        </button>
+  
+        <ModalRecrutement
+          v-if="modalOuvert && demande"
+          :demande="demande"
+          :statuts-recrutement="STATUTS_RECRUTEMENT"
+          @fermer="fermerModalRecrutement"
+          @valider="validerCreationRecrutement"
+        />
+      </template>
 
-        <button v-if="demande.statut == 'ACCEPTE'" class="approve-button">Envoyer recrutement</button>
-        <template v-else-if="demande.statut !== 'REFUSE'">
-            <button
-              class="reject-button"
-              :disabled="!demande.peutDecider || envoiEnCours"
-              @click="sendDecision(demande.id, 'REFUSE')"
-            >Refuser</button>
-            <button
-              class="approve-button"
-              :disabled="!demande.peutDecider || envoiEnCours"
-              @click="sendDecision(demande.id, 'ACCEPTE')"
-            >{{ envoiEnCours ? "Envoi..." : "Accepter" }}</button>
-        </template>
+      <template v-else-if="demande.statut === 'EN_ATTENTE'">
+        <button
+          class="reject-button"
+          :disabled="!demande.peutDecider || envoiEnCours"
+          @click="sendDecision(demande.id, 'REFUSE')"
+        >
+          Refuser
+        </button>
+        <button
+          class="approve-button"
+          @click="accepterDemande"
+          :disabled="envoiEnCours || !demande.peutDecider"
+        >
+          Accepter
+        </button>
+      </template>
+      <ValidationSalaire
+          v-if="afficherValidationSalaire"
+          :demande="demande"
+          @fermer="afficherValidationSalaire = false"
+          @confirmer="confirmerAcceptation"
+        />
     </div>
   </div>
 </template>
@@ -161,29 +325,29 @@ const sendDecision = async (idBesoin, decision) => {
 }
 
 .priority {
-    display: inline-block;
-    padding: 5px 8px;
-    border-radius: 5px;
-    background: #f0f1ef;
-    color: #6d746d;
-    font-size: 10px;
-    font-weight: 700;
+  display: inline-block;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: #f0f1ef;
+  color: #6d746d;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .priority.urgente {
-    background: #fff0ed;
-    color: #b74736;
+  background: #fff0ed;
+  color: #b74736;
 }
 
 .priority.haute {
-    background: #fff5e7;
-    color: #98621b;
+  background: #fff5e7;
+  color: #98621b;
 }
 
 .priority.normale,
 .priority.basse {
-    background: #f0f1ef;
-    color: #697169;
+  background: #f0f1ef;
+  color: #697169;
 }
 
 /* En-tête de la demande */
@@ -441,25 +605,24 @@ const sendDecision = async (idBesoin, decision) => {
   line-height: 1.6;
 }
 
-.remarque-container{
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.remarque-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.remarque-container label{
-    color: var(--color-text);
-    font-style: italic;
+.remarque-container label {
+  color: var(--color-text);
+  font-style: italic;
 }
 
-.remarque-container input{
-    outline: none;
-    border-radius: 4px;
-    border: 1px solid var(--color-text);
-    height: 24px;
-    padding: 0 4px;
+.remarque-container input {
+  outline: none;
+  border-radius: 4px;
+  border: 1px solid var(--color-text);
+  height: 24px;
+  padding: 0 4px;
 }
-
 
 /* Adaptation aux tablettes et petits écrans */
 @media (max-width: 760px) {
@@ -492,5 +655,4 @@ const sendDecision = async (idBesoin, decision) => {
     font-size: 17px;
   }
 }
-
 </style>

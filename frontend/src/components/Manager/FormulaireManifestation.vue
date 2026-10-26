@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, reactive, ref } from 'vue'
 import api from '@/services/api.js'
+import Notification from '@/components/ui/Notification.vue'
 
 // Chaque liste est un tableau d'objets { id, libelle }
 const props = defineProps({
@@ -393,9 +394,26 @@ async function envoyer() {
           {{ envoiEnCours ? 'Envoi en cours…' : 'Envoyer la demande' }}
         </button>
       </div>
-      <p v-if="erreurEnvoi" class="champ--large" role="alert">{{ erreurEnvoi }}</p>
-      <p v-if="envoiReussi" class="champ--large" role="status">La demande a bien été envoyée.</p>
+      <Notification 
+        v-if="envoiReussi"
+        :message="'La demande a bien été envoyée.'"
+        :type="'succes'"
+      />
+      <Notification
+        v-else-if="erreurEnvoi"
+        :message="erreurEnvoi"
+        :type="'erreur'"
+      />
+      <!-- <p v-if="erreurEnvoi" class="champ--large" role="alert">{{ erreurEnvoi }}</p> -->
+      <!-- <p v-if="envoiReussi" class="champ--large" role="status">La demande a bien été envoyée.</p> -->
     </section>
 
   </form>
 </template>
+
+<style scoped>
+  .etapes__item--actif {
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
+  }
+</style>

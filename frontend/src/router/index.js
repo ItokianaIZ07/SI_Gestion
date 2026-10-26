@@ -14,11 +14,15 @@ import DemandeView from '@/views/modules/gestion/DemandeView.vue'
 
 import EntretienView from "@/views/modules/gestion/rh/EntretienView.vue";
 import ContratView from "@/views/modules/gestion/rh/ContratView.vue";
+import EmbaucheView from '@/views/modules/gestion/rh/EmbaucheView.vue'
 import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartementsView.vue";
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 import DepartementFormView from "@/views/modules/gestion/Manager/DepartementFormView.vue";
 import ManagerDemandesView from "@/views/modules/gestion/Manager/ManagerDemandesView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
+
+import SignerContratView from '@/views/modules/client/SignerContratView.vue'
+
 
 // Autorise la route seulement si le rôle de l'utilisateur est dans la liste.
 const exigerRole = (...rolesAutorises) => () => {
@@ -29,6 +33,8 @@ const exigerRole = (...rolesAutorises) => () => {
   }
 }
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
+const rhEtDirection = exigerRole('RH', 'DIRECTION')
+const rhUniquement = exigerRole('RH')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -79,6 +85,11 @@ const router = createRouter({
           component: ChoiceUploadView
           // component: () => import('@/views/modules/client/PostulerView.vue')
         },
+        {
+          path: 'signer-contrat/:token',
+          name: 'signerContrat',
+          component: SignerContratView
+        },
       ]
     },
 
@@ -111,6 +122,12 @@ const router = createRouter({
           path: "finance/budget",
           component: () => import('@/views/modules/finance/BudgetView.vue'),
           beforeEnter: financeEtDirection,
+        },
+
+        {
+        path: "finance/demandes/:id",
+        component: () => import('@/views/modules/finance/DemandeFinanceDetailView.vue'),
+        beforeEnter: financeEtDirection,
         },
         // À décommenter quand la page Dépenses sera créée :
         // {
@@ -186,6 +203,20 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
         },
         {
+          path: "rh/offres/:offreId/candidatures",
+          name: "CandidaturesOffre",
+          component: () =>
+            import("@/views/modules/gestion/rh/CandidaturesOffreView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/candidats/:candidatId/cv",
+          name: "CvCandidat",
+          component: () =>
+            import("@/views/modules/gestion/rh/CvCandidatView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
           path: "rh/publications",
           name: "rhPublications",
           component: () => import("@/views/modules/gestion/rh/PublicationsView.vue"),
@@ -202,11 +233,21 @@ const router = createRouter({
         },
         {
           path: "rh/entretiens",
+          name: "rhEntretiens",
           component: EntretienView,
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/embauche",
+          name: "rhEmbauche",
+          component: EmbaucheView,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/contrats",
+          name: "rhContrats",
           component: ContratView,
+          beforeEnter: rhEtDirection,
         },
         {
           path: "rh/recrutements",

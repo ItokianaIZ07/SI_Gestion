@@ -17,5 +17,9 @@ public class UtilisateurService {
     public List<Utilisateur> getAll() {
         return UtilisateurRepository.findAll();
     }
+
+    public List<Utilisateur> getByRole(String role){
+        return UtilisateurRepository.findByRole_Code(role);
+    }
     
 }

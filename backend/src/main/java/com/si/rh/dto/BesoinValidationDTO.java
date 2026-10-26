@@ -8,9 +8,12 @@ public record BesoinValidationDTO(
         Integer id,
         String poste,
         String departement,
+        Integer idDepartement,
         String demandeur,
         String type,
         Integer effectif,
+        Integer effectifTotal,
+        Integer effectifMax,
         String priorite,
         String lieuTravail,
         String motif,
@@ -26,5 +29,6 @@ public record BesoinValidationDTO(
         String decisionDirection,
         boolean peutDecider,
         boolean accepterDesactive,
-        boolean refuserDesactive
+        boolean refuserDesactive,
+        boolean estAssigneRecrutement
 ) {}

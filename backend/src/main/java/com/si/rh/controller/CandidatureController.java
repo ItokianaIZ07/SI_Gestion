@@ -3,6 +3,7 @@ package com.si.rh.controller;
 import com.si.rh.dto.ApiResponse;
 import com.si.rh.dto.candidature.CandidatureDTO;
 import com.si.rh.dto.candidature.CandidatureEcritureDTO;
+import com.si.rh.dto.candidature.CandidatureStatutDTO;
 import com.si.rh.service.CandidatureService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -45,5 +46,20 @@ public class CandidatureController {
     public ResponseEntity<ApiResponse<Void>> supprimer(@PathVariable Integer id) {
         service.supprimer(id);
         return ResponseEntity.ok(ApiResponse.success("Candidature supprimé(e) avec succès", null));
+    }
+
+    @GetMapping("/recrutement/{recrutementId}")
+    public List<CandidatureDTO> parRecrutement(
+            @PathVariable Integer recrutementId
+    ) {
+        return service.parRecrutement(recrutementId);
+    }
+
+    @PatchMapping("/{id}/statut")
+    public CandidatureDTO changerStatut(
+            @PathVariable Integer id,
+            @Valid @RequestBody CandidatureStatutDTO dto
+    ) {
+        return service.changerStatut(id, dto.statut());
     }
 }

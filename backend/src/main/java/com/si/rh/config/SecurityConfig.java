@@ -21,6 +21,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -85,6 +86,7 @@ public class SecurityConfig {
                         .ignoringRequestMatchers("/api/auth/login")
                         .ignoringRequestMatchers("/api/auth/logout")
                         .ignoringRequestMatchers("/api/auth/csrf")
+                        .ignoringRequestMatchers("/api/public/**")
                 )
 
                 // 401 au lieu de 403 quand l'utilisateur n'est pas connecté.
@@ -108,10 +110,17 @@ public class SecurityConfig {
                                 "/api/client/**",
                                 "/api/auth/csrf"
                         ).permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
 
                         // La Direction a accès à toutes les zones.
                         .requestMatchers("/api/direction/**")
                         .hasRole("DIRECTION")
+
+                        .requestMatchers(HttpMethod.GET, "/api/rh/contrats/a-embaucher").hasRole("RH")
+                        .requestMatchers(HttpMethod.GET, "/api/rh/contrats").hasAnyRole("RH", "DIRECTION")
+                        .requestMatchers(HttpMethod.GET, "/api/rh/contrats/*").hasAnyRole("RH", "DIRECTION")
+                        .requestMatchers("/api/rh/contrats/**").hasRole("RH")
+                        .requestMatchers("/api/rh/entretiens/**").hasRole("RH")
 
                         .requestMatchers("/api/rh/besoins/**")
                         .hasAnyRole("RH", "FINANCE", "DIRECTION", "MANAGER")
@@ -120,10 +129,10 @@ public class SecurityConfig {
                         .hasAnyRole("RH", "DIRECTION")
 
                         .requestMatchers("/api/finance/**")
-                        .hasAnyRole("FINANCE", "DIRECTION")
+                        .hasAnyRole("FINANCE", "DIRECTION", "RH")
 
                         .requestMatchers("/api/manager/**")
-                        .hasAnyRole("MANAGER", "DIRECTION")
+                        .hasAnyRole("MANAGER", "DIRECTION", "RH")
 
                         .anyRequest().authenticated()
                 )

@@ -122,6 +122,12 @@ const router = createRouter({
           component: () => import('@/views/modules/finance/BudgetView.vue'),
           beforeEnter: financeEtDirection,
         },
+
+        {
+        path: "finance/demandes/:id",
+        component: () => import('@/views/modules/finance/DemandeFinanceDetailView.vue'),
+        beforeEnter: financeEtDirection,
+        },
         // À décommenter quand la page Dépenses sera créée :
         // {
         //   path: "finance/depenses",

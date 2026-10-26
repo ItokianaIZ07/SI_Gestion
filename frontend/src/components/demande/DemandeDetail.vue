@@ -272,8 +272,8 @@ const confirmerAcceptation = (informationsSalaire) => {
         />
       </div>
 
-      <template v-if="demande.statut == 'ACCEPTE'">
-        <button @click="ouvrirModalRecrutement(demande)" class="approve-button"> // mila vérifiena hoe ef associé @nah recrutement v 
+      <template v-if="demande.statut == 'ACCEPTE' && !demande.estAssigneRecrutement">
+        <button @click="ouvrirModalRecrutement(demande)" class="approve-button">
           Envoyer recrutement
         </button>
   
@@ -286,7 +286,7 @@ const confirmerAcceptation = (informationsSalaire) => {
         />
       </template>
 
-      <template v-else-if="demande.statut !== 'REFUSE'">
+      <template v-else-if="demande.statut === 'EN_ATTENTE'">
         <button
           class="reject-button"
           :disabled="!demande.peutDecider || envoiEnCours"

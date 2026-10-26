@@ -21,6 +21,7 @@ public interface GrilleSalaireRepository extends JpaRepository<GrilleSalaire, In
     /** Toutes les grilles d'un poste (pour vérifier le chevauchement des périodes). */
     List<GrilleSalaire> findByPosteId(Integer idPoste);
 
+    List<GrilleSalaire> findByPosteDepartementId(Integer idDepartement);
     /** Grille d'un poste valable à une date donnée (les périodes ne se chevauchent pas : au plus une). */
     @Query("select g from GrilleSalaire g where g.poste.id = :idPoste "
             + "and g.dateDebutValidite <= :date "

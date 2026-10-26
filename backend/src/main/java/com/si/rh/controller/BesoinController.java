@@ -42,6 +42,8 @@ public class BesoinController {
                 demandeDecision.idBesoin(),
                 demandeDecision.decisionCode(),
                 demandeDecision.remarque(),
+                demandeDecision.salaire(),
+                demandeDecision.idGrilleSalaire(),
                 authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body("Décision enregistrée.");
     }

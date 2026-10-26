@@ -37,6 +37,13 @@ public class GrilleSalaireService {
     }
 
     @Transactional(readOnly = true)
+    public List<GrilleSalaireResponse> listerGrillesParDepartement(Integer idDepartement) {
+        return grilleRepository.findByPosteDepartementId(idDepartement).stream()
+                .map(this::versReponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<PosteResponse> listerPostes() {
         return posteRepository.findActifsAvecDepartement().stream()
                 .map(p -> new PosteResponse(p.getId(), p.getNom(), p.getDepartement().getNom()))

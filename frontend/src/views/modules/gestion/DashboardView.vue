@@ -3,89 +3,30 @@ import { computed } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import HeroBanner from "@/components/ui/HeroBanner.vue";
 import { getSidebarLinks } from "@/config/sidebar";
+import ManagerDashboardView from "@/views/modules/gestion/Manager/ManagerDashboardView.vue";
 
 const authStore = useAuthStore();
-/* Aplatit les liens avec `children` en une liste plate pour les raccourcis */
-const raccourcis = computed(() => {
-  const liens = getSidebarLinks(authStore.user?.role);
-  return liens.slice(0, 8);
-});
+const raccourcis = getSidebarLinks(authStore.user.role).slice(0, 6);
+const estManager = authStore.user.role?.toUpperCase() === "MANAGER";
 </script>
 
 <template>
-  <div class="dashboard">
-    <HeroBanner
-      eyebrow="Tableau de bord"
-      titre="Bienvenue sur votre espace de gestion"
-      texte="Accédez rapidement à vos espaces de travail depuis les raccourcis ci-dessous."
-    />
+  <!-- Le tableau générique ne donne pas au manager ses indicateurs ni son budget départemental. -->
+  <ManagerDashboardView v-if="estManager" />
 
-    <ul class="dashboard__grille">
-      <li v-for="lien in raccourcis" :key="lien.to ?? lien.label">
-        <!-- Lien simple -->
-        <RouterLink v-if="lien.to" class="dashboard__carte" :to="lien.to">
-          <span>{{ lien.label }}</span>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </RouterLink>
+  <!-- Tableau de bord d'origine conservé pour les rôles non-manager, qui gardent leurs raccourcis. -->
+  <div v-else class="dashboard">
+    <HeroBanner eyebrow="Tableau de bord" titre="Bienvenue sur votre espace de gestion"
+      texte="Accédez rapidement à vos espaces de travail depuis les raccourcis ci-dessous." />
 
-        <!-- Groupe avec sous-liens (ex. Contrats → Embaucher / Liste des contrats) -->
-        <details v-else class="dashboard__groupe">
-          <summary class="dashboard__carte">
+      <ul class="dashboard__grille">
+        <li v-for="lien in raccourcis" :key="lien.to">
+          <RouterLink class="dashboard__carte" :to="lien.to">
             <span>{{ lien.label }}</span>
-            <svg
-              class="dashboard__chevron"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </summary>
-
-          <div class="dashboard__sous-liens">
-            <RouterLink
-              v-for="child in lien.children"
-              :key="child.to"
-              class="dashboard__sous-lien"
-              :to="child.to"
-            >
-              {{ child.label }}
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </RouterLink>
-          </div>
-        </details>
-      </li>
-    </ul>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </RouterLink>
+        </li>
+      </ul>
   </div>
 </template>
 

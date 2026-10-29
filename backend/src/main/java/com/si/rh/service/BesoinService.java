@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -120,7 +119,7 @@ public class BesoinService {
         besoin.setExperienceRequise(request.experienceRequise().trim());
         besoin.setNiveauEtude(request.niveauEtude().trim());
         besoin.setCompetencesRequises(request.competencesRequises().trim());
-        besoin.setSalaireEstime(request.salaireEstime());
+        besoin.setSalaireEstime(null);
         besoin.setStatutGlobal(StatutGlobalBesoin.EN_ATTENTE_RH);
 
         if (request.employeRemplaceId() != null && request.employeRemplaceId() > 0) {
@@ -157,9 +156,6 @@ public class BesoinService {
         exiger(texteRenseigne(request.experienceRequise()), "experienceRequise");
         exiger(texteRenseigne(request.niveauEtude()), "niveauEtude");
         exiger(texteRenseigne(request.competencesRequises()), "competencesRequises");
-        exiger(request.salaireEstime() != null
-                && request.salaireEstime().compareTo(BigDecimal.ONE) > 0, "salaireEstime");
-
         var typeBesoin = typeBesoinRepository.findById(request.typeBesoinId());
         if (typeBesoin.isPresent() && estTypeRemplacement(typeBesoin.get())
                 && (request.employeRemplaceId() == null || request.employeRemplaceId() <= 0)) {

@@ -230,7 +230,7 @@ async function decider(valider) {
               <div class="fd-bornes"><span>{{ ariary(d.grille.min) }}</span><span>{{ ariary(d.grille.max) }}</span></div>
               <div v-if="!salaireDefini" class="fd-notice fd-n-info">Le salaire estimé n’a pas encore été défini par les RH.</div>
               <div v-else class="fd-notice" :class="d.grille.dansGrille ? 'fd-n-ok' : 'fd-n-err'">
-                {{ d.grille.dansGrille ? 'Le salaire estimé est dans la grille en vigueur.' : 'Le salaire estimé est hors de la grille en vigueur.' }}
+                {{ d.grille.dansGrille ? 'Le salaire estimé ne dépasse pas le maximum de la grille.' : 'Le salaire estimé dépasse le maximum de la grille.' }}
               </div>
             </template>
             <div v-else class="fd-notice fd-n-warn">Aucune grille salariale en vigueur pour ce poste.</div>

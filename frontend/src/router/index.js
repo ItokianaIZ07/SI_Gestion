@@ -164,10 +164,6 @@ const router = createRouter({
           component: DepartementFormView
         },
         {
-          path: "rh/cv",
-          component: CVView
-        },
-        {
           path: "rh/demandes",
           component: DemandeView
           //           component: () => DemandeView,
@@ -249,50 +245,25 @@ const router = createRouter({
           component: ContratView,
           beforeEnter: rhEtDirection,
         },
+
+        // ----- Onboarding des nouveaux employés -----
         {
-          path: "rh/recrutements",
-          name: "rhRecrutements",
-          component: () => import("@/views/modules/gestion/rh/RecrutementsView.vue"),
+          path: "rh/onboarding",
+          name: "rhOnboardings",
+          component: () => import("@/views/modules/gestion/rh/OnboardingsView.vue"),
+          beforeEnter: rhEtDirection,
         },
         {
-          path: "rh/recrutements/creation",
-          name: "rhRecrutementCreation",
-          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
+          path: "rh/onboarding/modeles",
+          name: "rhOnboardingModeles",
+          component: () => import("@/views/modules/gestion/rh/ModelesOnboardingView.vue"),
+          beforeEnter: rhEtDirection,
         },
         {
-          path: "rh/recrutements/:id/modifier",
-          name: "rhRecrutementModification",
-          component: () => import("@/views/modules/gestion/rh/RecrutementFormView.vue"),
-        },
-        {
-          path: "rh/offres",
-          name: "rhOffres",
-          component: () => import("@/views/modules/gestion/rh/OffresView.vue"),
-        },
-        {
-          path: "rh/offres/creation",
-          name: "rhOffreCreation",
-          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
-        },
-        {
-          path: "rh/offres/:id/modifier",
-          name: "rhOffreModification",
-          component: () => import("@/views/modules/gestion/rh/OffreFormView.vue"),
-        },
-        {
-          path: "rh/publications",
-          name: "rhPublications",
-          component: () => import("@/views/modules/gestion/rh/PublicationsView.vue"),
-        },
-        {
-          path: "rh/publications/creation",
-          name: "rhPublicationCreation",
-          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
-        },
-        {
-          path: "rh/publications/:id/modifier",
-          name: "rhPublicationModification",
-          component: () => import("@/views/modules/gestion/rh/PublicationFormView.vue"),
+          path: "rh/onboarding/:id(\\d+)",
+          name: "rhOnboardingDetail",
+          component: () => import("@/views/modules/gestion/rh/OnboardingDetailView.vue"),
+          beforeEnter: rhEtDirection,
         },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.

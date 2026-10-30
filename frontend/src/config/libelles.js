@@ -25,6 +25,35 @@ export const LIBELLES = {
   PUBLIEE: "Publiée",
   EXPIREE: "Expirée",
   RETIREE: "Retirée",
+  // StatutCandidature
+  EN_ATTENTE: "En attente",
+  PRESELECTIONNE: "Présélectionnée",
+  RETENU: "Retenue",
+  REJETE: "Rejetée",
+  RETIRE: "Retirée",
+  // StatutOnboarding / StatutTache
+  A_FAIRE: "À faire",
+  EN_COURS: "En cours",
+  FAIT: "Fait",
+  // Statuts de contrat (codes de statut_contract)
+  ACTIF: "Actif",
+  EN_ATTENTE_SIGNATURE: "En attente de signature",
+  // StatutDocument
+  FOURNI: "Fourni",
+  VALIDE: "Validé",
+  // CategorieOnboarding
+  ADMINISTRATIF: "Administratif",
+  INFORMATIQUE: "Informatique",
+  ACCUEIL: "Accueil",
+  FORMATION: "Formation",
+  AUTRE: "Autre",
+  // TypeDocument
+  CIN: "CIN",
+  DIPLOME: "Diplôme",
+  RIB: "RIB",
+  CV: "CV",
+  CERTIFICAT_MEDICAL: "Certificat médical",
+  PHOTO: "Photo",
 };
 
 export const TONS = {
@@ -34,6 +63,10 @@ export const TONS = {
   REFUSE: "danger", ANNULE: "danger", URGENTE: "danger",
   BROUILLON: "neutral", BASSE: "neutral", NORMALE: "neutral",
   TERMINE: "neutral", ARCHIVEE: "neutral", EXPIREE: "neutral", RETIREE: "neutral",
+  EN_ATTENTE: "warning", PRESELECTIONNE: "success", RETENU: "success", REJETE: "danger", RETIRE: "neutral",
+  A_FAIRE: "neutral", EN_COURS: "warning", FAIT: "success",
+  FOURNI: "warning", VALIDE: "success",
+  ACTIF: "success", EN_ATTENTE_SIGNATURE: "warning",
 };
 
 export const libelle = (code) => LIBELLES[code] ?? code ?? "—";
@@ -48,6 +81,11 @@ export const PRIORITES = enOptions(["BASSE", "NORMALE", "HAUTE", "URGENTE"]);
 export const STATUTS_RECRUTEMENT = enOptions(["BROUILLON", "OUVERT", "SUSPENDU", "TERMINE", "ANNULE"]);
 export const STATUTS_OFFRE = enOptions(["BROUILLON", "VALIDEE", "ARCHIVEE"]);
 export const STATUTS_PUBLICATION = enOptions(["BROUILLON", "PUBLIEE", "EXPIREE", "RETIREE"]);
+
+export const STATUTS_CANDIDATURE = enOptions(["EN_ATTENTE", "PRESELECTIONNE", "RETENU", "REJETE"]);
+export const STATUTS_ONBOARDING = enOptions(["A_FAIRE", "EN_COURS", "TERMINE"]);
+export const CATEGORIES_ONBOARDING = enOptions(["ADMINISTRATIF", "INFORMATIQUE", "ACCUEIL", "FORMATION", "AUTRE"]);
+export const TYPES_DOCUMENT = enOptions(["CIN", "DIPLOME", "RIB", "CERTIFICAT_MEDICAL", "PHOTO", "CV", "AUTRE"]);
 
 // ---------- Besoin : lecture tolérante du DTO (plat ou imbriqué) ----------
 export const posteDe = (b) => b?.posteNom ?? b?.poste?.nom ?? "—";

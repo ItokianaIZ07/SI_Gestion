@@ -12,8 +12,7 @@ import com.si.rh.model.Utilisateur;
 import com.si.rh.model.ValidationBesoin;
 import com.si.rh.model.enums.Priorite;
 import com.si.rh.model.enums.StatutGlobalBesoin;
-import com.si.rh.repository.BesoinRepository;
-import com.si.rh.repository.ValidationBesoinRepository;
+import com.si.rh.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +51,12 @@ class ValidationBesoinServiceTest {
     private EtatValidationService etatValidationService;
     @Mock
     private UtilisateurDetailsService utilisateurDetailsService;
+    @Mock
+    private EmployeRepository employeRepository;
+    @Mock
+    private GrilleSalaireRepository grilleSalaireRepository;
+    @Mock
+    private RecrutementRepository recrutementRepository;
 
     private ValidationBesoinService service;
 
@@ -63,7 +68,10 @@ class ValidationBesoinServiceTest {
                 decisionService,
                 etatValidationService,
                 utilisateurDetailsService,
-                );
+                employeRepository,
+                grilleSalaireRepository,
+                recrutementRepository
+        );
     }
 
     @Test

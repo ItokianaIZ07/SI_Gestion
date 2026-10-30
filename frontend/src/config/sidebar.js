@@ -8,6 +8,13 @@ const sidebarByRole = {
                 { label: "Liste des contrats", to: "/si/app/rh/contrats" },
             ],
         },
+        {
+            label: "Onboarding",
+            children: [
+                { label: "Nouveaux employés", to: "/si/app/rh/onboarding" },
+                { label: "Modèles de tâches", to: "/si/app/rh/onboarding/modeles" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
@@ -32,6 +39,7 @@ const sidebarByRole = {
     direction: [
         // Tous les liens du système
         { label: "Contrats", to: "/si/app/rh/contrats" },
+        { label: "Onboarding", to: "/si/app/rh/onboarding" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },

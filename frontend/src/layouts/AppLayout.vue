@@ -1,8 +1,12 @@
 <script setup>
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import { getSidebarLinks } from "@/config/sidebar";
 import { useRouter } from "vue-router";
+import {
+  chargerNotifications,
+  nombreNotificationsNonLues,
+} from "@/services/notificationStore.js";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -10,6 +14,12 @@ const router = useRouter();
 const role = authStore.user.role; // rôle reçu du serveur, utilisé pour choisir les liens
 const email = authStore.user.email ?? "";
 const links = getSidebarLinks(role);
+
+onMounted(() => {
+  chargerNotifications().catch((error) => {
+    console.error("Impossible de charger le compteur de notifications.", error);
+  });
+});
 
 /* Regroupe les liens par domaine (rh / manager / finance) d'après leur URL */
 const SECTIONS = {
@@ -60,6 +70,13 @@ const logout = async () => {
             <!-- Lien simple -->
             <RouterLink v-if="link.to" :to="link.to">
               {{ link.label }}
+              <span
+                v-if="link.to?.endsWith('/notifications') && nombreNotificationsNonLues > 0"
+                class="nav-notification-badge"
+                :aria-label="`${nombreNotificationsNonLues} notification(s) non lue(s)`"
+              >
+                {{ nombreNotificationsNonLues > 99 ? "99+" : nombreNotificationsNonLues }}
+              </span>
             </RouterLink>
 
             <!-- Sous-menu (children) -->
@@ -208,6 +225,21 @@ nav a {
   line-height: 1.35;
   color: var(--color-muted);
   transition: background-color 0.15s, color 0.15s;
+}
+
+.nav-notification-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-left: auto;
+  padding: 0 5px;
+  color: #fff;
+  background: #d93025;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 nav a:hover {

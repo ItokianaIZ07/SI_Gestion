@@ -75,6 +75,7 @@ public class DemandeFinanceService {
     private final UtilisateurRepository utilisateurRepository;
     private final GrilleSalaireRepository grilleRepository;
     private final BudgetService budgetService;
+    private final NotificationService notificationService;
 
     public DemandeFinanceService(BesoinRepository besoinRepository,
                                  ValidationBesoinRepository validationRepository,
@@ -82,7 +83,8 @@ public class DemandeFinanceService {
                                  DecisionRepository decisionRepository,
                                  UtilisateurRepository utilisateurRepository,
                                  GrilleSalaireRepository grilleRepository,
-                                 BudgetService budgetService) {
+                                 BudgetService budgetService,
+                                 NotificationService notificationService) {
         this.besoinRepository = besoinRepository;
         this.validationRepository = validationRepository;
         this.etatRepository = etatRepository;
@@ -90,6 +92,7 @@ public class DemandeFinanceService {
         this.utilisateurRepository = utilisateurRepository;
         this.grilleRepository = grilleRepository;
         this.budgetService = budgetService;
+        this.notificationService = notificationService;
     }
 
     // =====================================================================
@@ -209,6 +212,8 @@ public class DemandeFinanceService {
         enregistrer(besoin, FINANCE, ACCEPTE, utilisateur, texteOuNull(remarque));
         besoin.setStatutGlobal(StatutGlobalBesoin.EN_ATTENTE_DIRECTION);
         besoinRepository.save(besoin);
+        notificationService.notifierChangementEtatBesoin(besoin, FINANCE, ACCEPTE);
+        notificationService.notifierEtapeSuivante(besoin, FINANCE);
     }
 
     @Transactional
@@ -229,6 +234,7 @@ public class DemandeFinanceService {
         enregistrer(besoin, DIRECTION, REFUSE, utilisateur, "Refus automatique suite au refus de Finance");
         besoin.setStatutGlobal(StatutGlobalBesoin.REFUSE);
         besoinRepository.save(besoin);
+        notificationService.notifierChangementEtatBesoin(besoin, FINANCE, REFUSE);
     }
 
     // =====================================================================

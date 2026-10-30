@@ -19,6 +19,7 @@ import ListeDepartementsView from "@/views/modules/gestion/Manager/ListeDepartem
 import VisionDepartementView from "@/views/modules/gestion/Manager/VisionDepartementView.vue";
 import DepartementFormView from "@/views/modules/gestion/Manager/DepartementFormView.vue";
 import ManagerDemandesView from "@/views/modules/gestion/Manager/ManagerDemandesView.vue";
+import NotificationsManagerView from "@/views/modules/gestion/Manager/NotificationsManagerView.vue";
 import PostulerView from '@/views/modules/client/PostulerView.vue'
 
 import SignerContratView from '@/views/modules/client/SignerContratView.vue'
@@ -137,6 +138,24 @@ const router = createRouter({
         // },
 
         // Ajouter ici les routes RH, Manager et Direction.
+        {
+          path: 'manager/notifications',
+          name: 'ManagerNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('MANAGER'),
+        },
+        {
+          path: 'finance/notifications',
+          name: 'FinanceNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('FINANCE'),
+        },
+        {
+          path: 'direction/notifications',
+          name: 'DirectionNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('DIRECTION'),
+        },
         {
           path: 'manager/demandes',
           name: 'ManagerDemandes',

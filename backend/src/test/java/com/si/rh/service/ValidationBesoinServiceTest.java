@@ -13,6 +13,8 @@ import com.si.rh.model.ValidationBesoin;
 import com.si.rh.model.enums.Priorite;
 import com.si.rh.model.enums.StatutGlobalBesoin;
 import com.si.rh.repository.BesoinRepository;
+import com.si.rh.repository.EmployeRepository;
+import com.si.rh.repository.RecrutementRepository;
 import com.si.rh.repository.ValidationBesoinRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,11 +49,17 @@ class ValidationBesoinServiceTest {
     @Mock
     private BesoinRepository besoinRepository;
     @Mock
+    private EmployeRepository employeRepository;
+    @Mock
+    private RecrutementRepository recrutementRepository;
+    @Mock
     private DecisionService decisionService;
     @Mock
     private EtatValidationService etatValidationService;
     @Mock
     private UtilisateurDetailsService utilisateurDetailsService;
+    @Mock
+    private NotificationService notificationService;
 
     private ValidationBesoinService service;
 
@@ -63,7 +71,11 @@ class ValidationBesoinServiceTest {
                 decisionService,
                 etatValidationService,
                 utilisateurDetailsService,
-                );
+                null,
+                employeRepository,
+                null,
+                recrutementRepository,
+                notificationService);
     }
 
     @Test
@@ -146,7 +158,7 @@ class ValidationBesoinServiceTest {
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,
-                () -> service.prendreDecision(ID_BESOIN, "ACCEPTE", null, EMAIL));
+                () -> service.prendreDecision(ID_BESOIN, "ACCEPTE", null, null, null, EMAIL));
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
         verify(validationBesoinRepository, times(0)).saveAndFlush(any(ValidationBesoin.class));
@@ -168,13 +180,15 @@ class ValidationBesoinServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(besoinRepository.save(any(Besoin.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ValidationBesoin saved = service.prendreDecision(ID_BESOIN, "accepte", "Budget validé", EMAIL);
+        ValidationBesoin saved = service.prendreDecision(ID_BESOIN, "accepte", "Budget validé", null, null, EMAIL);
 
         assertEquals(validateur, saved.getValidateur());
         assertEquals("FINANCE", saved.getEtatValidation().getCode());
         assertEquals("ACCEPTE", saved.getDecision().getCode());
         assertEquals(StatutGlobalBesoin.EN_ATTENTE_DIRECTION, besoin.getStatutGlobal());
         verify(validationBesoinRepository).saveAndFlush(saved);
+        verify(notificationService).notifierChangementEtatBesoin(besoin, "FINANCE", "ACCEPTE");
+        verify(notificationService).notifierEtapeSuivante(besoin, "FINANCE");
     }
 
     @Test

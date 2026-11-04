@@ -19,14 +19,16 @@ const sidebarByRole = {
         { label: "Liste des départements", to: "/si/app/manager/departements" },
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
-        { label: "Créer une demande", to: "/si/app/manager/demandes/creation" }
+        { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
+        { label: "Notifications", to: "/si/app/manager/notifications" }
     ],
 
     finance: [
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes", to: "/si/app/finance/demandes" },
-        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Notifications", to: "/si/app/finance/notifications" }
     ],
 
     direction: [
@@ -46,7 +48,8 @@ const sidebarByRole = {
         { label: "Dépenses", to: "/si/app/finance/depenses" },
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes Finance", to: "/si/app/finance/demandes" },
-        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" }
+        { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Notifications", to: "/si/app/direction/notifications" }
     ]
 };
 

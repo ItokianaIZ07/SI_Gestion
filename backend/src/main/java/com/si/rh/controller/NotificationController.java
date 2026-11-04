@@ -4,6 +4,8 @@ import com.si.rh.dto.NotificationResponse;
 import com.si.rh.service.NotificationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +24,13 @@ public class NotificationController {
     @GetMapping
     public List<NotificationResponse> getPourUtilisateur(Authentication authentication) {
         return notificationService.getPourUtilisateur(authentication.getName());
+    }
+
+    @PatchMapping("/{id}/lecture")
+    public NotificationResponse marquerCommeLue(
+            @PathVariable Integer id,
+            Authentication authentication
+    ) {
+        return notificationService.marquerCommeLue(id, authentication.getName());
     }
 }

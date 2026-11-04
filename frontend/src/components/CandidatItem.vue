@@ -1,240 +1,62 @@
 <script setup>
+// Une ligne du tableau des candidatures d'une offre.
+//  - candidature EN_ATTENTE : boutons Présélectionner / Rejeter
+//  - déjà décidée           : uniquement son statut (aucun bouton)
 import { computed } from "vue";
+import CandidatureActions from "@/components/gestion/CandidatureActions.vue";
+import { formatDate } from "@/config/libelles";
 
 const props = defineProps({
-    selectCandidat: {
-        type: Function,
-        required: true,
-    },
-    candidat: {
-        type: Object,
-        required: true,
-    },
-    candidature: {
-        type: Object,
-        required: true,
-    },
-    changerStatut: {
-        type: Function,
-        required: true,
-    },
-    actionEnCours: {
-        type: Boolean,
-        default: false,
-    },
+  ligne: { type: Object, required: true }, // une ligne de /api/rh/candidatures
 });
+const emit = defineEmits(["statut-change", "erreur"]);
 
-const prenom = computed(() => props.candidat?.prenom ?? "");
-const nom = computed(() => props.candidat?.nom ?? "");
-const statut = computed(() => props.candidature?.statut ?? "EN_ATTENTE");
-
-const nomComplet = computed(() => {
-    return `${prenom.value} ${nom.value}`.trim() || "Nom inconnu";
-});
-
-const initialesCandidat = computed(() => {
-    const initiales = `${prenom.value.charAt(0)}${nom.value.charAt(0)}`;
-    return initiales.toUpperCase() || "?";
-});
-
-function dateLisible(date) {
-    if (!date) return "Date non disponible";
-
-    const valeur = new Date(date);
-
-    if (Number.isNaN(valeur.getTime())) {
-        return String(date);
-    }
-
-    return new Intl.DateTimeFormat("fr-FR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    }).format(valeur);
-}
-
-function ouvrirCandidat() {
-    props.selectCandidat(props.candidat, props.candidature);
-}
-
-function appliquerStatut(nouveauStatut) {
-    props.changerStatut(props.candidature, nouveauStatut);
-}
-
-const selectionDesactivee = computed(() =>
-    props.actionEnCours ||
-    ["PRESELECTIONNE", "REJETE", "RETIRE"].includes(statut.value)
-);
-
-const rejetDesactive = computed(() =>
-    props.actionEnCours ||
-    ["REJETE", "RETIRE"].includes(statut.value)
+const initiales = computed(
+  () => `${props.ligne.prenom?.charAt(0) ?? ""}${props.ligne.nom?.charAt(0) ?? ""}`.toUpperCase() || "?",
 );
 </script>
 
 <template>
-    <article class="cv-item">
-        <button type="button" class="cv-main" @click="ouvrirCandidat">
-            <div class="cv-avatar">
-                {{ initialesCandidat }}
-            </div>
-
-            <div class="cv-info">
-                <div class="cv-name-row">
-                    <h3>{{ nomComplet }}</h3>
-
-                    <span class="cv-status">
-                        {{ statut }}
-                    </span>
-                </div>
-
-                <p v-if="candidat.email" class="cv-detail">
-                    {{ candidat.email }}
-                </p>
-
-                <p v-if="candidat.telephone" class="cv-detail">
-                    {{ candidat.telephone }}
-                </p>
-
-                <span class="cv-date">
-                    Candidat créé le {{ dateLisible(candidat.dateCreation) }}
-                </span>
-            </div>
-        </button>
-
-        <div class="cv-actions">
-            <button type="button" class="cv-action cv-action--selection" :disabled="selectionDesactivee"
-                @click.stop="appliquerStatut('PRESELECTIONNE')">
-                {{
-                    statut === "PRESELECTIONNE"
-                        ? "Présélectionné"
-                        : "Présélectionner"
-                }}
-            </button>
-
-            <button type="button" class="cv-action cv-action--rejet" :disabled="rejetDesactive"
-                @click.stop="appliquerStatut('REJETE')">
-                {{ statut === "REJETE" ? "Rejeté" : "Rejeter" }}
-            </button>
+  <tr>
+    <td>
+      <div class="candidat">
+        <span class="candidat__avatar" aria-hidden="true">{{ initiales }}</span>
+        <div>
+          <span class="g-principal">
+            {{ ligne.prenom }} {{ ligne.nom }}
+            <span v-if="ligne.statutLecture === 'NON_LU'" class="candidat__nouveau">Nouveau</span>
+          </span>
+          <span class="g-secondaire">{{ ligne.email }}</span>
+          <span v-if="ligne.telephone" class="g-secondaire">{{ ligne.telephone }}</span>
         </div>
-    </article>
+      </div>
+    </td>
+    <td>
+      <template v-if="ligne.experience !== null && ligne.experience !== undefined">{{ ligne.experience }} an(s)</template>
+      <template v-else>—</template>
+    </td>
+    <td>{{ formatDate(ligne.dateCandidature ?? ligne.dateDepot) }}</td>
+    <td>
+      <CandidatureActions :ligne="ligne" @statut-change="emit('statut-change', $event)" @erreur="emit('erreur', $event)" />
+    </td>
+    <td>
+      <div class="g-actions-cellule">
+        <RouterLink
+          class="g-btn g-btn--petit"
+          :to="{ name: 'CvCandidat', params: { candidatId: ligne.candidatId }, query: { cvId: ligne.cvId } }"
+          :aria-label="`Voir le CV de ${ligne.prenom} ${ligne.nom}`"
+        >Voir le CV</RouterLink>
+      </div>
+    </td>
+  </tr>
 </template>
 
 <style scoped>
-.cv-item {
-    padding: 14px;
-    border: 1px solid #e1e6e1;
-    border-radius: 10px;
-    background: white;
+.candidat { display: flex; align-items: center; gap: 12px; }
+.candidat__avatar {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 40px; height: 40px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  background: var(--color-primary-soft); color: var(--color-primary); border: 1px solid var(--color-primary-line);
 }
-
-.cv-item:hover {
-    border-color: var(--color-primary-line);
-}
-
-.cv-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    width: 100%;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-    font: inherit;
-}
-
-.cv-main:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 3px;
-}
-
-.cv-avatar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: var(--color-primary-soft);
-    color: var(--color-primary);
-    font-size: 13px;
-    font-weight: 700;
-}
-
-.cv-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.cv-name-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.cv-name-row h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 650;
-    overflow-wrap: anywhere;
-}
-
-.cv-detail {
-    margin: 6px 0 0;
-    color: #777e78;
-    font-size: 12px;
-    overflow-wrap: anywhere;
-}
-
-.cv-date {
-    display: block;
-    margin-top: 8px;
-    color: #989e98;
-    font-size: 11px;
-}
-
-.cv-status {
-    padding: 4px 7px;
-    border-radius: 5px;
-    background: #f0f1ef;
-    color: #555d56;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.cv-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-}
-
-.cv-action {
-    padding: 7px 10px;
-    border: 1px solid #e1e6e1;
-    border-radius: 7px;
-    background: white;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.cv-action--selection {
-    color: #216b35;
-}
-
-.cv-action--rejet {
-    color: #a52a22;
-}
-
-.cv-action:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
+.candidat__nouveau { margin-left: 8px; padding: 2px 7px; border-radius: 5px; background: var(--color-success-background); color: var(--color-success); font-size: 10px; font-weight: 700; }
 </style>

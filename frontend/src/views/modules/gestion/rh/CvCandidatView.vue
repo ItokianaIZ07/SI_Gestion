@@ -1,246 +1,138 @@
-
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+// CV d'un candidat : /si/app/rh/candidats/:candidatId/cv?cvId=…
+// Permet de lire le CV puis de décider (si la candidature est EN_ATTENTE).
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
-import { candidatsApi, cvsApi } from "@/services/ressources";
+import "@/assets/gestion.css";
+import PageEntete from "@/components/gestion/PageEntete.vue";
+import MessageAlerte from "@/components/gestion/MessageAlerte.vue";
+import CandidatureActions from "@/components/gestion/CandidatureActions.vue";
+import { cvsApi } from "@/services/ressources";
+import { candidaturesRhApi } from "@/services/candidaturesRh";
+import { formatDate } from "@/config/libelles";
 
 const route = useRoute();
 const router = useRouter();
 
-const candidat = ref(null);
-const cv = ref(null);
+const ligne = ref(null);
 const urlPdf = ref("");
 const chargement = ref(true);
 const erreur = ref("");
 
-function extraireDonnees(reponse) {
-    return reponse?.data ?? reponse;
+let candidatId = Number(route.params.candidatId);
+let cvId = Number(route.query.cvId);
+
+function libererUrl() {
+  if (urlPdf.value) URL.revokeObjectURL(urlPdf.value);
+  urlPdf.value = "";
 }
 
-function extraireListe(reponse) {
-    const donnees = extraireDonnees(reponse);
+async function charger() {
+  chargement.value = true;
+  erreur.value = "";
+  libererUrl();
+  try {
+    if (!cvId) throw new Error("L'identifiant du CV est absent de l'adresse.");
+    const toutes = (await candidaturesRhApi.liste()) ?? [];
+    ligne.value = toutes.find((l) => l.cvId === cvId && l.candidatId === candidatId) ?? null;
+    if (!ligne.value) throw new Error("CV introuvable pour ce candidat.");
 
-    if (Array.isArray(donnees)) {
-        return donnees;
+    const blob = await cvsApi.fichier(cvId);
+    if (!blob || blob.size === 0) throw new Error("Le fichier CV reçu est vide.");
+    urlPdf.value = URL.createObjectURL(blob);
+
+    if (ligne.value.statutLecture === "NON_LU") {
+      candidaturesRhApi.marquerLu(cvId).catch(() => {}); // non bloquant
+      ligne.value = { ...ligne.value, statutLecture: "LU" };
     }
-
-    // Certaines API renvoient une liste dans un objet paginé.
-    if (Array.isArray(donnees?.content)) {
-        return donnees.content;
-    }
-
-    return donnees ? [donnees] : [];
+  } catch (e) {
+    erreur.value = e.message ?? "Impossible de charger le CV.";
+  } finally {
+    chargement.value = false;
+  }
 }
 
-function libererUrlPdf() {
-    if (urlPdf.value) {
-        URL.revokeObjectURL(urlPdf.value);
-        urlPdf.value = "";
-    }
+function majStatut({ statut, remarque }) {
+  erreur.value = "";
+  ligne.value = { ...ligne.value, statut, remarque };
 }
 
-async function chargerCv() {
-    chargement.value = true;
-    erreur.value = "";
-
-    candidat.value = null;
-    cv.value = null;
-    libererUrlPdf();
-
+async function surErreur({ message, status }) {
+  if (status === 409 || status === 404) {
     try {
-        const candidatId = route.params.candidatId;
-        const cvId = route.query.cvId;
-
-        if (!candidatId) {
-            throw new Error("L'identifiant du candidat est absent de l'URL.");
-        }
-
-        if (!cvId) {
-            throw new Error("L'identifiant du CV est absent de l'URL.");
-        }
-
-        const [candidatsRep, cvsRep] = await Promise.all([
-            candidatsApi.liste(),
-            cvsApi.parCandidat(candidatId),
-        ]);
-
-        const listeCandidats = extraireListe(candidatsRep);
-        const listeCvs = extraireListe(cvsRep);
-
-        candidat.value = listeCandidats.find(
-            (item) => String(item.id ?? item.candidatId) === String(candidatId)
-        );
-
-        if (!candidat.value) {
-            throw new Error("Candidat introuvable.");
-        }
-
-        cv.value = listeCvs.find(
-            (item) => String(item.id ?? item.cvId) === String(cvId)
-        );
-
-        if (!cv.value) {
-            throw new Error("CV introuvable pour ce candidat.");
-        }
-
-        // Vérification supplémentaire si l'API expose l'identifiant du candidat
-        // sur l'objet CV.
-        const proprietaireId =
-            cv.value.candidatId ??
-            cv.value.idCandidat ??
-            cv.value.candidat?.id;
-
-        if (
-            proprietaireId != null &&
-            String(proprietaireId) !== String(candidatId)
-        ) {
-            throw new Error("Ce CV n'appartient pas au candidat sélectionné.");
-        }
-
-        const fichierRep = await cvsApi.fichier(cv.value.id ?? cv.value.cvId);
-        const fichier = extraireDonnees(fichierRep);
-
-        if (!(fichier instanceof Blob)) {
-            throw new Error(
-                "Le fichier reçu n'est pas un Blob. Vérifie que cvsApi.fichier utilise responseType: 'blob'."
-            );
-        }
-
-        if (fichier.size === 0) {
-            throw new Error("Le fichier CV reçu est vide.");
-        }
-
-        urlPdf.value = URL.createObjectURL(fichier);
-    } catch (e) {
-        console.error("Erreur lors du chargement du CV :", e);
-
-        erreur.value =
-            e.response?.data?.message ??
-            e.message ??
-            "Impossible de charger le CV.";
-    } finally {
-        chargement.value = false;
+      const toutes = (await candidaturesRhApi.liste()) ?? [];
+      ligne.value = toutes.find((l) => l.cvId === cvId && l.candidatId === candidatId) ?? ligne.value;
+    } catch {
+      /* on garde l'affichage actuel */
     }
+  }
+  erreur.value = message;
 }
 
-onMounted(chargerCv);
-onBeforeUnmount(libererUrlPdf);
+const complet = computed(() => (ligne.value ? `${ligne.value.prenom} ${ligne.value.nom}` : "Candidat"));
+
+onMounted(charger);
+
+// Même composant réutilisé pour un autre CV : on recharge.
+watch(
+  () => [route.params.candidatId, route.query.cvId],
+  ([nouveauCandidat, nouveauCv]) => {
+    if (nouveauCandidat === undefined) return;
+    candidatId = Number(nouveauCandidat);
+    cvId = Number(nouveauCv);
+    charger();
+  },
+);
+onBeforeUnmount(libererUrl);
 </script>
 
 <template>
-    <main class="page-cv">
-        <button class="retour" type="button" @click="router.back()">
-            ← Retour aux candidatures
-        </button>
+  <div class="g-page">
+    <PageEntete :titre="complet" :sous-titre="ligne?.candidatureId ? `${ligne.poste} · ${ligne.recrutementReference}` : 'Candidature spontanée'">
+      <button class="g-btn" type="button" @click="router.back()">← Retour aux candidatures</button>
+    </PageEntete>
 
-        <p v-if="chargement">Chargement du CV...</p>
+    <MessageAlerte :message="erreur" />
+    <p v-if="chargement" class="g-vide">Chargement du CV…</p>
 
-        <p v-else-if="erreur" class="erreur">
-            {{ erreur }}
-        </p>
+    <div v-if="ligne" class="cv-page">
+      <aside class="g-carte fiche">
+        <h2>Candidat</h2>
+        <dl>
+          <div><dt>E-mail</dt><dd>{{ ligne.email }}</dd></div>
+          <div><dt>Téléphone</dt><dd>{{ ligne.telephone || "—" }}</dd></div>
+          <div><dt>Expérience</dt><dd>{{ ligne.experience ?? "—" }}<template v-if="ligne.experience !== null && ligne.experience !== undefined"> an(s)</template></dd></div>
+          <div><dt>Reçu le</dt><dd>{{ formatDate(ligne.dateCandidature ?? ligne.dateDepot) }}</dd></div>
+          <div><dt>Fichier</dt><dd>{{ ligne.nomFichier }}</dd></div>
+        </dl>
 
-        <template v-else-if="candidat && cv">
-            <header class="cv-header">
-                <div>
-                    <h1>
-                        {{ candidat.prenom ?? "" }}
-                        {{ candidat.nom ?? "" }}
-                    </h1>
+        <div class="fiche__decision">
+          <h3>Décision</h3>
+          <CandidatureActions :ligne="ligne" @statut-change="majStatut" @erreur="surErreur" />
+          <p v-if="ligne.candidatureId && ligne.statut === 'EN_ATTENTE'" class="aide">Cette candidature attend votre décision.</p>
+        </div>
 
-                    <p v-if="candidat.email">{{ candidat.email }}</p>
-                    <p v-if="candidat.telephone">{{ candidat.telephone }}</p>
+        <a v-if="urlPdf" class="g-btn" :href="urlPdf" target="_blank" rel="noopener noreferrer">Ouvrir le PDF dans un onglet</a>
+      </aside>
 
-                    <p class="nom-fichier">
-                        {{ cv.nomFichier ?? cv.nom ?? "CV du candidat" }}
-                    </p>
-                </div>
-
-                <a
-                    v-if="urlPdf"
-                    :href="urlPdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="ouvrir-pdf"
-                >
-                    Ouvrir le PDF
-                </a>
-            </header>
-
-            <section class="lecteur-pdf">
-                <iframe
-                    v-if="urlPdf"
-                    :src="urlPdf"
-                    title="CV du candidat"
-                    class="pdf-frame"
-                />
-            </section>
-        </template>
-    </main>
+      <section class="g-carte lecteur" aria-label="CV du candidat">
+        <iframe v-if="urlPdf" :src="urlPdf" title="CV du candidat" class="pdf"></iframe>
+      </section>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.page-cv {
-    padding: 24px;
-}
-
-.retour {
-    margin-bottom: 20px;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-}
-
-.cv-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 20px;
-}
-
-.cv-header h1 {
-    margin: 0 0 8px;
-}
-
-.cv-header p {
-    margin: 5px 0;
-    color: #707770;
-}
-
-.nom-fichier {
-    font-size: 13px;
-}
-
-.ouvrir-pdf {
-    padding: 10px 14px;
-    border-radius: 8px;
-    background: var(--color-primary);
-    color: white;
-    text-decoration: none;
-}
-
-.lecteur-pdf {
-    overflow: hidden;
-    width: 100%;
-    min-height: 70vh;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    background: #f5f5f5;
-}
-
-.pdf-frame {
-    display: block;
-    width: 100%;
-    height: 75vh;
-    min-height: 500px;
-    border: 0;
-}
-
-.erreur {
-    color: #a52a22;
-}
+.cv-page { display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.fiche { display: flex; flex-direction: column; gap: 16px; padding: 20px; }
+.fiche h2 { margin: 0; font-size: 1.05rem; color: var(--color-ink); }
+.fiche h3 { margin: 0 0 8px; font-size: .95rem; color: var(--color-ink); }
+.fiche dl { display: flex; flex-direction: column; gap: 12px; margin: 0; }
+.fiche dt { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted); }
+.fiche dd { margin: 2px 0 0; color: var(--color-ink); overflow-wrap: anywhere; }
+.fiche__decision { padding-top: 14px; border-top: 1px solid var(--color-border); }
+.aide { margin: 8px 0 0; font-size: 12.5px; color: var(--color-muted); }
+.lecteur { min-height: 70vh; background: var(--color-subtle); }
+.pdf { display: block; width: 100%; height: 78vh; min-height: 500px; border: 0; }
+@media (max-width: 900px) { .cv-page { grid-template-columns: 1fr; } }
 </style>

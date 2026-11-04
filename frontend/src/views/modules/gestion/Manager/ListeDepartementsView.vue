@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import api from '@/services/api.js'
+import Pagination from '@/components/ui/Pagination.vue'
+import { usePagination } from '@/composable/usePagination'
 
 const departements = ref([])
 const chargement = ref(true)
@@ -36,6 +38,9 @@ const departementsFiltres = computed(() => {
     return nomCorrespond && correspondEffectif && correspondPostes && correspondDemandes
   })
 })
+
+// Pagination du tableau (revient à la page 1 quand les filtres changent)
+const pg = usePagination(departementsFiltres, 10)
 
 const filtresActifs = computed(
   () =>
@@ -164,7 +169,7 @@ onMounted(chargerDepartements)
             </tr>
           </thead>
           <tbody>
-            <tr v-for="departement in departementsFiltres" :key="departement.id">
+            <tr v-for="departement in pg.items" :key="departement.id">
               <td>
                 <RouterLink
                   class="lien-departement"
@@ -199,6 +204,8 @@ onMounted(chargerDepartements)
           </tbody>
         </table>
       </div>
+
+      <Pagination v-bind="pg.barre" @update:page="pg.aller" />
     </section>
   </div>
 </template>

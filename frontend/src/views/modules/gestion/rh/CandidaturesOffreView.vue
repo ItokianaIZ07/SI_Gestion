@@ -1,230 +1,168 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-
+// Candidatures reçues pour une offre : /si/app/rh/offres/:offreId/candidatures
+// Présélectionner / Rejeter uniquement pour les candidatures EN_ATTENTE ; sinon on affiche le statut.
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import "@/assets/gestion.css";
+import Pagination from "@/components/ui/Pagination.vue";
+import { usePagination } from "@/composable/usePagination";
+import PageEntete from "@/components/gestion/PageEntete.vue";
+import MessageAlerte from "@/components/gestion/MessageAlerte.vue";
 import CandidatItem from "@/components/CandidatItem.vue";
-import {
-    offresApi,
-    candidaturesApi,
-    candidatsApi,
-} from "@/services/ressources";
+import { offresApi } from "@/services/ressources";
+import { candidaturesRhApi } from "@/services/candidaturesRh";
+import { STATUTS_CANDIDATURE } from "@/config/libelles";
 
 const route = useRoute();
-const router = useRouter();
+let offreId = Number(route.params.offreId);
 
 const offre = ref(null);
-const candidatures = ref([]);
-const candidats = ref([]);
+const lignes = ref([]);
 const chargement = ref(true);
 const erreur = ref("");
-const message = ref("");
-const actionEnCours = ref(null);
 
-function candidatDe(candidature) {
-    return candidats.value.find(
-        (c) => String(c.id) === String(candidature.candidatId)
-    ) ?? null;
+const recherche = ref("");
+const filtreStatut = ref("");
+const ordre = ref("desc");
+
+async function charger() {
+  chargement.value = true;
+  erreur.value = "";
+  try {
+    offre.value = offre.value ?? (await offresApi.parId(offreId));
+    if (!offre.value?.recrutementId) throw new Error("Cette offre n'est associée à aucun recrutement.");
+    lignes.value = (await candidaturesRhApi.liste(offre.value.recrutementId)) ?? [];
+  } catch (e) {
+    erreur.value = e.message ?? "Impossible de charger les candidatures.";
+  } finally {
+    chargement.value = false;
+  }
 }
 
-function extraireListe(reponse) {
-    const donnees = reponse?.data ?? reponse;
-    return Array.isArray(donnees) ? donnees : [];
+const compter = (statut) => lignes.value.filter((l) => l.statut === statut).length;
+const synthese = computed(() => [
+  { cle: "", libelle: "Total", nombre: lignes.value.length },
+  { cle: "EN_ATTENTE", libelle: "En attente", nombre: compter("EN_ATTENTE") },
+  { cle: "PRESELECTIONNE", libelle: "Présélectionnées", nombre: compter("PRESELECTIONNE") },
+  { cle: "RETENU", libelle: "Retenues", nombre: compter("RETENU") },
+  { cle: "REJETE", libelle: "Rejetées", nombre: compter("REJETE") },
+]);
+
+const date = (l) => new Date(l.dateCandidature ?? l.dateDepot ?? 0).getTime();
+const filtrees = computed(() => {
+  const q = recherche.value.trim().toLowerCase();
+  return lignes.value
+    .filter((l) => {
+      if (filtreStatut.value && l.statut !== filtreStatut.value) return false;
+      return !q || [l.prenom, l.nom, l.email, l.telephone].join(" ").toLowerCase().includes(q);
+    })
+    .sort((a, b) => (ordre.value === "asc" ? date(a) - date(b) : date(b) - date(a)));
+});
+const pg = usePagination(filtrees, 10);
+
+function majStatut({ candidatureId, statut, remarque }) {
+  erreur.value = "";
+  lignes.value = lignes.value.map((l) => (l.candidatureId === candidatureId ? { ...l, statut, remarque } : l));
 }
 
-async function chargerDonnees() {
-    chargement.value = true;
-    erreur.value = "";
-
-    try {
-        const [offresRep, candidatsRep] = await Promise.all([
-            offresApi.liste(),
-            candidatsApi.liste(),
-        ]);
-
-        const offres = extraireListe(offresRep);
-        candidats.value = extraireListe(candidatsRep);
-
-        offre.value = offres.find(
-            (o) => String(o.id) === String(route.params.offreId)
-        );
-
-        if (!offre.value) {
-            throw new Error(
-                `Offre ${route.params.offreId} introuvable.`
-            );
-        }
-
-        if (!offre.value.recrutementId) {
-            throw new Error(
-                "Cette offre n'est associée à aucun recrutement."
-            );
-        }
-
-        const candidaturesRep =
-            await candidaturesApi.parRecrutement(
-                offre.value.recrutementId
-            );
-
-        candidatures.value = extraireListe(candidaturesRep);
-    } catch (e) {
-        console.error("Erreur de chargement :", e);
-        erreur.value =
-            e.response?.data?.message ??
-            e.message ??
-            "Impossible de charger les candidatures.";
-    } finally {
-        chargement.value = false;
-    }
+// Déjà traitée ailleurs (409) : on recharge pour afficher son vrai statut.
+async function surErreur({ message, status }) {
+  if (status === 409 || status === 404) await charger();
+  erreur.value = message;
 }
 
-function ouvrirCvCandidat(candidat, candidature) {
-    if (!candidat || !candidature) {
-        erreur.value = "Candidat ou candidature introuvable.";
-        return;
-    }
+onMounted(charger);
 
-    if (!candidature.cvId) {
-        erreur.value = "Aucun CV n'est associé à cette candidature.";
-        return;
-    }
-
-    router.push({
-        name: "CvCandidat",
-        params: { candidatId: candidat.id },
-        query: {
-            cvId: candidature.cvId,
-            candidatureId: candidature.id,
-        },
-    });
-}
-
-async function changerStatut(candidature, nouveauStatut) {
-    if (!candidature?.id || actionEnCours.value !== null) return;
-
-    const statutInitial = candidature.statut;
-    actionEnCours.value = candidature.id;
-    erreur.value = "";
-    message.value = "";
-
-    try {
-        const reponse = await candidaturesApi.changerStatut(
-            candidature.id,
-            nouveauStatut
-        );
-
-        // Si l'API renvoie la candidature mise à jour, on utilise sa réponse.
-        const candidatureMiseAJour = reponse.data;
-
-        const index = candidatures.value.findIndex(
-            (c) => String(c.id) === String(candidature.id)
-        );
-
-        if (index !== -1) {
-            candidatures.value[index] = {
-                ...candidatures.value[index],
-                ...(candidatureMiseAJour &&
-                    typeof candidatureMiseAJour === "object"
-                    ? candidatureMiseAJour
-                    : {}),
-                statut:
-                    candidatureMiseAJour?.statut ??
-                    nouveauStatut,
-            };
-        }
-
-        message.value = `Statut modifié : ${statutInitial ?? "inconnu"} → ${nouveauStatut}.`;
-    } catch (e) {
-        console.error(e);
-        erreur.value =
-            e.response?.data?.message ??
-            "Échec du changement de statut.";
-    } finally {
-        actionEnCours.value = null;
-    }
-}
-
-onMounted(chargerDonnees);
+// Même composant réutilisé avec une autre offre dans l'adresse : on recharge.
+watch(
+  () => route.params.offreId,
+  (nouveau) => {
+    if (nouveau === undefined) return;
+    offreId = Number(nouveau);
+    offre.value = null;
+    recherche.value = "";
+    filtreStatut.value = "";
+    charger();
+  },
+);
 </script>
 
 <template>
-    <main class="page-candidatures">
-        <button class="retour" type="button" @click="router.back()">
-            ← Retour aux offres
+  <div class="g-page">
+    <PageEntete
+      :titre="offre ? `Candidatures — ${offre.titre}` : 'Candidatures'"
+      sous-titre="Lisez les CV reçus pour cette offre, puis présélectionnez ou rejetez les candidatures en attente."
+    >
+      <RouterLink class="g-btn" to="/si/app/rh/offres">← Retour aux offres</RouterLink>
+    </PageEntete>
+
+    <MessageAlerte :message="erreur" />
+
+    <ul class="synthese" aria-label="Répartition des candidatures">
+      <li v-for="s in synthese" :key="s.libelle">
+        <button type="button" :class="{ actif: filtreStatut === s.cle }" @click="filtreStatut = s.cle">
+          <strong>{{ s.nombre }}</strong><span>{{ s.libelle }}</span>
         </button>
+      </li>
+    </ul>
 
-        <header class="page-header">
-            <h1>Candidatures de l'offre</h1>
-            <p v-if="offre">{{ offre.titre ?? offre.intitule ?? offre.nom }}</p>
-        </header>
+    <section class="g-carte">
+      <div class="g-filtres">
+        <input v-model="recherche" class="g-input g-input--recherche" type="search" placeholder="Rechercher un nom, un e-mail, un téléphone…" aria-label="Rechercher un candidat" />
+        <select v-model="filtreStatut" class="g-input" aria-label="Filtrer par statut">
+          <option value="">Tous les statuts</option>
+          <option v-for="o in STATUTS_CANDIDATURE" :key="o.value" :value="o.value">{{ o.label }}</option>
+        </select>
+        <button type="button" class="g-btn" @click="ordre = ordre === 'asc' ? 'desc' : 'asc'">
+          {{ ordre === "asc" ? "↑ Plus ancien" : "↓ Plus récent" }}
+        </button>
+        <span class="g-compteur">{{ filtrees.length }} candidature(s)</span>
+      </div>
 
-        <p v-if="chargement">Chargement des candidatures...</p>
+      <p v-if="chargement" class="g-vide">Chargement des candidatures…</p>
+      <div v-else-if="!filtrees.length" class="g-vide">
+        <strong>{{ lignes.length ? "Aucun résultat" : "Aucune candidature" }}</strong>
+        {{ lignes.length ? "Modifiez vos filtres." : "Aucun candidat n'a encore postulé à cette offre." }}
+      </div>
 
-        <p v-else-if="erreur" class="message erreur">
-            {{ erreur }}
-        </p>
+      <div v-else class="g-table-wrap">
+        <table class="g-table">
+          <thead>
+            <tr>
+              <th>Candidat</th>
+              <th>Expérience</th>
+              <th>Reçue le</th>
+              <th>Décision</th>
+              <th class="g-droite">CV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <CandidatItem
+              v-for="l in pg.items"
+              :key="l.candidatureId"
+              :ligne="l"
+              @statut-change="majStatut"
+              @erreur="surErreur"
+            />
+          </tbody>
+        </table>
+      </div>
 
-        <p v-if="message" class="message succes">
-            {{ message }}
-        </p>
-
-        <section v-if="!chargement" class="liste-candidats">
-            <p v-if="candidatures.length === 0">
-                Aucune candidature pour cette offre.
-            </p>
-
-            <p v-else-if="candidatures.every((c) => !candidatDe(c))" class="message erreur">
-                Les candidatures ont été chargées, mais aucun candidat correspondant
-                n'a été retrouvé. Vérifie les identifiants renvoyés par l'API.
-            </p>
-
-            <CandidatItem v-for="c in candidatures.filter((c) => candidatDe(c))" :key="c.id" :candidat="candidatDe(c)"
-                :candidature="c" :select-candidat="ouvrirCvCandidat" :changer-statut="changerStatut"
-                :action-en-cours="actionEnCours === c.id" />
-        </section>
-    </main>
+      <Pagination v-bind="pg.barre" @update:page="pg.aller" />
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.page-candidatures {
-    padding: 24px;
+.synthese { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.synthese button {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;
+  padding: 14px 16px; text-align: left; font: inherit; cursor: pointer;
+  background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  transition: border-color .15s, background-color .15s;
 }
-
-.retour {
-    margin-bottom: 18px;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
-    cursor: pointer;
-}
-
-.page-header {
-    margin-bottom: 22px;
-}
-
-.page-header h1 {
-    margin-bottom: 6px;
-}
-
-.page-header p {
-    color: #707770;
-}
-
-.liste-candidats {
-    display: grid;
-    gap: 12px;
-}
-
-.message {
-    margin: 12px 0;
-    font-size: 14px;
-}
-
-.erreur {
-    color: #a52a22;
-}
-
-.succes {
-    color: #216b35;
-}
+.synthese button:hover { border-color: var(--color-primary-line); background: var(--color-primary-soft); }
+.synthese button.actif { border-color: var(--color-primary); background: var(--color-primary-soft); }
+.synthese strong { font-size: 1.5rem; line-height: 1.1; color: var(--color-ink); }
+.synthese span { font-size: 12.5px; color: var(--color-muted); }
 </style>

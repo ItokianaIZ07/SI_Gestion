@@ -43,7 +43,6 @@ public class ValidationBesoinService {
             DecisionService decisionService,
             EtatValidationService etatValidationService,
             UtilisateurDetailsService utilisateurDetailsService,
-            DepartementRepository departementRepository,
             EmployeRepository employeRepository,
             GrilleSalaireRepository grilleSalaireRepository,
             RecrutementRepository recrutementRepository,

@@ -89,7 +89,21 @@ async function embaucher() {
 
 onMounted(charger);
 
-const pg = usePagination(aEmbaucher, 8);
+// Recherche et filtre par département
+const recherche = ref("");
+const filtreDepartement = ref("");
+const departements = computed(() =>
+  [...new Set(aEmbaucher.value.map((c) => c.departement).filter(Boolean))].sort(),
+);
+const candidatsFiltres = computed(() => {
+  const q = recherche.value.trim().toLowerCase();
+  return aEmbaucher.value.filter((c) => {
+    if (filtreDepartement.value && c.departement !== filtreDepartement.value) return false;
+    return !q || [c.candidatNom, c.candidatPrenom, c.candidatEmail, c.poste].join(" ").toLowerCase().includes(q);
+  });
+});
+
+const pg = usePagination(candidatsFiltres, 8);
 </script>
 
 <template>
@@ -125,6 +139,21 @@ const pg = usePagination(aEmbaucher, 8);
             <p>{{ aEmbaucher.length }} candidat(s) RETENU sans employé</p>
           </div>
         </header>
+
+        <div class="embauche-filtres">
+          <input
+            v-model="recherche"
+            type="search"
+            placeholder="Rechercher un candidat ou un poste…"
+            aria-label="Rechercher un candidat à embaucher"
+          />
+          <select v-model="filtreDepartement" aria-label="Filtrer par département">
+            <option value="">Tous les départements</option>
+            <option v-for="d in departements" :key="d" :value="d">{{ d }}</option>
+          </select>
+        </div>
+
+        <p v-if="aEmbaucher.length && !candidatsFiltres.length" class="embauche-aucun">Aucun candidat ne correspond à vos filtres.</p>
 
         <div class="request-list" style="max-height: 720px">
           <transition-group name="list" tag="div">
@@ -616,4 +645,15 @@ button.request-item:disabled {
   .detail-grid { grid-template-columns: minmax(0, 1fr); }
   .decision-actions { flex-direction: column; }
 }
+</style>
+
+<style scoped>
+.embauche-filtres { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #f0f1ef; }
+.embauche-filtres input, .embauche-filtres select {
+  padding: 9px 11px; border: 1px solid var(--color-border, #e6ebe6); border-radius: 8px;
+  background: #fff; font: inherit; font-size: 13px; color: #343a35;
+}
+.embauche-filtres input { flex: 1 1 180px; min-width: 0; }
+.embauche-filtres input:focus, .embauche-filtres select:focus { outline: none; border-color: var(--color-primary, #015f09); box-shadow: 0 0 0 3px rgba(1, 95, 9, .12); }
+.embauche-aucun { margin: 0; padding: 18px 16px; text-align: center; font-size: 13px; color: #858b86; }
 </style>

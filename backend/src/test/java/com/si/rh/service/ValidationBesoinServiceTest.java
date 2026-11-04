@@ -59,6 +59,11 @@ class ValidationBesoinServiceTest {
     @Mock
     private UtilisateurDetailsService utilisateurDetailsService;
     @Mock
+    private EmployeRepository employeRepository;
+    @Mock
+    private GrilleSalaireRepository grilleSalaireRepository;
+    @Mock
+    private RecrutementRepository recrutementRepository;
     private NotificationService notificationService;
 
     private ValidationBesoinService service;
@@ -71,11 +76,10 @@ class ValidationBesoinServiceTest {
                 decisionService,
                 etatValidationService,
                 utilisateurDetailsService,
-                null,
                 employeRepository,
-                null,
-                recrutementRepository,
-                notificationService);
+                grilleSalaireRepository,
+                recrutementRepository
+        );
     }
 
     @Test

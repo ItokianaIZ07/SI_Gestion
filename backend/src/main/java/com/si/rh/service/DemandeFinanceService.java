@@ -75,6 +75,7 @@ public class DemandeFinanceService {
     private final UtilisateurRepository utilisateurRepository;
     private final GrilleSalaireRepository grilleRepository;
     private final BudgetService budgetService;
+    private final NotificationService notificationService;
 
     public DemandeFinanceService(BesoinRepository besoinRepository,
                                  ValidationBesoinRepository validationRepository,
@@ -82,7 +83,8 @@ public class DemandeFinanceService {
                                  DecisionRepository decisionRepository,
                                  UtilisateurRepository utilisateurRepository,
                                  GrilleSalaireRepository grilleRepository,
-                                 BudgetService budgetService) {
+                                 BudgetService budgetService,
+                                 NotificationService notificationService) {
         this.besoinRepository = besoinRepository;
         this.validationRepository = validationRepository;
         this.etatRepository = etatRepository;
@@ -90,6 +92,7 @@ public class DemandeFinanceService {
         this.utilisateurRepository = utilisateurRepository;
         this.grilleRepository = grilleRepository;
         this.budgetService = budgetService;
+        this.notificationService = notificationService;
     }
 
     // =====================================================================
@@ -209,6 +212,8 @@ public class DemandeFinanceService {
         enregistrer(besoin, FINANCE, ACCEPTE, utilisateur, texteOuNull(remarque));
         besoin.setStatutGlobal(StatutGlobalBesoin.EN_ATTENTE_DIRECTION);
         besoinRepository.save(besoin);
+        notificationService.notifierChangementEtatBesoin(besoin, FINANCE, ACCEPTE);
+        notificationService.notifierEtapeSuivante(besoin, FINANCE);
     }
 
     @Transactional
@@ -229,6 +234,7 @@ public class DemandeFinanceService {
         enregistrer(besoin, DIRECTION, REFUSE, utilisateur, "Refus automatique suite au refus de Finance");
         besoin.setStatutGlobal(StatutGlobalBesoin.REFUSE);
         besoinRepository.save(besoin);
+        notificationService.notifierChangementEtatBesoin(besoin, FINANCE, REFUSE);
     }
 
     // =====================================================================
@@ -253,8 +259,8 @@ public class DemandeFinanceService {
         BigDecimal cout = coutTotal(b);
         BigDecimal restant = restantDe(budget);
         boolean couvert = cout != null && cout.compareTo(restant) <= 0;
+        // Seul un salaire SUPÉRIEUR au maximum de la grille est refusé ; un salaire sous le minimum passe.
         boolean dansGrille = grille != null && salaire != null
-                && salaire.compareTo(grille.getValeurMin()) >= 0
                 && salaire.compareTo(grille.getValeurMax()) <= 0;
 
         // 1) Le workflow autorise-t-il la Finance à agir ? 2) L'utilisateur est-il de la Finance ?
@@ -272,8 +278,7 @@ public class DemandeFinanceService {
             } else if (grille == null) {
                 blocage = "Aucune grille salariale en vigueur pour ce poste.";
             } else if (!dansGrille) {
-                blocage = "Salaire estimé hors de la grille (" + ariary(grille.getValeurMin())
-                        + " à " + ariary(grille.getValeurMax()) + ").";
+                blocage = "Salaire estimé supérieur au maximum de la grille (" + ariary(grille.getValeurMax()) + ").";
             } else if (!couvert) {
                 blocage = "Budget insuffisant : coût " + ariary(cout) + ", restant " + ariary(restant) + ".";
             }

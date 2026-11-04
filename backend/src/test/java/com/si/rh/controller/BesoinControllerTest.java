@@ -41,7 +41,7 @@ class BesoinControllerTest {
     void directDecisionRequestByUnauthorizedUserReturnsForbidden() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Rôle non autorisé"))
                 .when(validationBesoinService)
-                .prendreDecision(42, "ACCEPTE", null, EMAIL);
+                .prendreDecision(42, "ACCEPTE", null, null, null, EMAIL);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setUserPrincipal(new TestingAuthenticationToken(EMAIL, "unused"));
@@ -54,6 +54,6 @@ class BesoinControllerTest {
                                 """))
                 .andExpect(status().isForbidden());
 
-        verify(validationBesoinService).prendreDecision(42, "ACCEPTE", null, EMAIL);
+        verify(validationBesoinService).prendreDecision(42, "ACCEPTE", null, null, null, EMAIL);
     }
 }

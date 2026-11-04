@@ -35,6 +35,7 @@ public class ValidationBesoinService {
     private final EmployeRepository employeRepository;
     private final GrilleSalaireRepository grilleSalaireRepository;
     private final RecrutementRepository recrutementRepository;
+    private final NotificationService notificationService;
 
     public ValidationBesoinService(
             ValidationBesoinRepository validationBesoinRepository,
@@ -44,7 +45,8 @@ public class ValidationBesoinService {
             UtilisateurDetailsService utilisateurDetailsService,
             EmployeRepository employeRepository,
             GrilleSalaireRepository grilleSalaireRepository,
-            RecrutementRepository recrutementRepository) {
+            RecrutementRepository recrutementRepository,
+            NotificationService notificationService) {
         this.validationBesoinRepository = validationBesoinRepository;
         this.besoinRepository = besoinRepository;
         this.decisionService = decisionService;
@@ -53,6 +55,7 @@ public class ValidationBesoinService {
         this.employeRepository = employeRepository;
         this.grilleSalaireRepository = grilleSalaireRepository;
         this.recrutementRepository = recrutementRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -129,6 +132,10 @@ public class ValidationBesoinService {
         ValidationBesoin sauvegardee = validationBesoinRepository.saveAndFlush(nouvelleValidation);
         historique.add(sauvegardee);
         synchroniserStatutEnBase(besoin, decisionsCourantes(historique));
+        notificationService.notifierChangementEtatBesoin(besoin, role, decisionCode);
+        if ("ACCEPTE".equals(decisionCode)) {
+            notificationService.notifierEtapeSuivante(besoin, role);
+        }
         return sauvegardee;
     }
     private void appliquerGrilleSalaire(

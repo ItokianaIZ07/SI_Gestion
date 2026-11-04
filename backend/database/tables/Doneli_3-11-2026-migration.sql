@@ -1104,3 +1104,4 @@ ALTER TABLE tache_onboarding VALIDATE CONSTRAINT chk_tache_realisation;
 ALTER TABLE notification VALIDATE CONSTRAINT chk_notification_lecture;
 
 COMMIT;
+

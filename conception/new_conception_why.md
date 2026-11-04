@@ -252,3 +252,5 @@ Ces objets ne répondent pas à un bloc précis, mais sécurisent les données d
 - **Planning des départs** : il n'existe pas de vue dédiée ; il se lit dans `absence` + `remplacement_conge`. Une vue `v_planning_departs` serait un ajout simple si le cours l'exige explicitement.
 - **Alertes** : elles ne concernent que les documents ayant une `date_expiration`. Un document déposé sans date d'expiration ne génère pas d'alerte.
 - **Prérequis du schéma de base** : `UNIQUE (id, id_departement)` sur `poste` ; nom de la colonne mot de passe (`mdp`) à vérifier dans `auditer_modification`.
+
+

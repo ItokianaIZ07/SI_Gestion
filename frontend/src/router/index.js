@@ -282,6 +282,24 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/horaires-travail",
+          name: "rhHorairesTravail",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HorairesTravailView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/horaires-travail/formulaire",
+          name: "rhHoraireTravailCreation",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/horaires-travail/:id/modifier",
+          name: "rhHoraireTravailModification",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
+          beforeEnter: rhEtDirection,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

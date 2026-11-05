@@ -22,6 +22,13 @@ const sidebarByRole = {
                 { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
             ],
         },
+        {
+            label: "Horaires de travail",
+            children: [
+                { label: "Liste des horaires", to: "/si/app/rh/horaires-travail" },
+                { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
@@ -54,6 +61,13 @@ const sidebarByRole = {
             children: [
                 { label: "Liste des régimes", to: "/si/app/rh/regimes-travail" },
                 { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
+            ],
+        },
+        {
+            label: "Horaires de travail",
+            children: [
+                { label: "Liste des horaires", to: "/si/app/rh/horaires-travail" },
+                { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
             ],
         },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },

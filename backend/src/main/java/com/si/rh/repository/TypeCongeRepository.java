@@ -1,0 +1,7 @@
+package com.si.rh.repository;
+
+import com.si.rh.model.TypeConge;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TypeCongeRepository extends JpaRepository<TypeConge, Integer> {
+}

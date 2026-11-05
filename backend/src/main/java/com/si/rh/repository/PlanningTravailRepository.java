@@ -15,6 +15,8 @@ public interface PlanningTravailRepository extends JpaRepository<PlanningTravail
 
     long countByRegime_Id(Integer idRegime);
 
+    long countByHoraire_Id(Integer idHoraire);
+
     List<PlanningTravail> findByEmployeIdOrderByDateDebutDesc(Integer idEmploye);
 
     @Query("select p from PlanningTravail p where p.employe.id = :idEmploye "

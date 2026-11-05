@@ -264,6 +264,24 @@ const router = createRouter({
           component: ContratView,
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/regimes-travail",
+          name: "rhRegimesTravail",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/regimes-travail/formulaire",
+          name: "rhRegimeTravailCreation",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/regimes-travail/:id/modifier",
+          name: "rhRegimeTravailModification",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
+          beforeEnter: rhEtDirection,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

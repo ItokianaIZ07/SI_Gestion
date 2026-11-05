@@ -295,7 +295,7 @@ CREATE INDEX idx_demande_conge_dates
 # Rôle :
 # Conserve chaque étape de validation.
 #
-# Circuit :
+# Circuit (Ordre):
 # 1. MANAGER
 # 2. RH
 #
@@ -317,7 +317,6 @@ CREATE TABLE validation_conge (
     id_utilisateur INTEGER
         REFERENCES utilisateur(id),
 
-    etape VARCHAR(20) NOT NULL,
 
     ordre SMALLINT NOT NULL,
 
@@ -328,14 +327,8 @@ CREATE TABLE validation_conge (
 
     date_validation TIMESTAMP,
 
-    CONSTRAINT ck_validation_conge_etape
-        CHECK (etape IN ('MANAGER', 'RH')),
-
     CONSTRAINT ck_validation_conge_ordre
         CHECK (ordre IN (1, 2)),
-
-    CONSTRAINT uq_validation_conge_etape
-        UNIQUE (id_demande_conge, etape),
 
     CONSTRAINT uq_validation_conge_ordre
         UNIQUE (id_demande_conge, ordre)

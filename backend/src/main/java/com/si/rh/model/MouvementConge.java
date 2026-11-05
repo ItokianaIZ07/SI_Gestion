@@ -43,7 +43,7 @@ public class MouvementConge {
     @Column(name = "type_mouvement", nullable = false, length = 30)
     private String typeMouvement;
 
-    @Column(name = "nombre_jours", nullable = false, precision = 6, scale = 2)
+    @Column(name = "nombre_jours", nullable = false)
     private double nombreJours;
 
     @Column(name = "periode_debut")

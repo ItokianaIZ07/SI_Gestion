@@ -1,0 +1,167 @@
+Phase 1 — Préparation et conception
+Objectif : comprendre les données nécessaires et préparer les dépendances avant de programmer.
+- [ ] Tâche 1.1 — Étudier la structure RH existante
+  - [ ] Identifier la structure de la table employe.
+  - [ ] Identifier la structure de la table utilisateur.
+  - [ ] Identifier la structure de la table decision.
+  - [ ] Identifier les relations avec les autres modules RH.
+  - [ ] Vérifier les clés primaires et étrangères existantes.
+  - [ ] Identifier les éventuelles tables déjà disponibles et éviter les doublons.
+- [ ] Tâche 1.2 — Préparer le modèle de données
+  - [ ] Définir les relations entre les tables du module.
+  - [ ] Définir les clés primaires et étrangères.
+  - [ ] Définir les contraintes NOT NULL.
+  - [ ] Définir les contraintes UNIQUE.
+  - [ ] Définir les contraintes CHECK.
+  - [ ] Vérifier les règles de suppression et de mise à jour des relations.
+- [ ] Tâche 1.3 — Préparer les règles métier
+  - [ ] Définir les règles d'acquisition des congés.
+  - [ ] Définir les règles de calcul des jours ouvrables.
+  - [ ] Définir les règles de consommation du solde.
+  - [ ] Définir les règles de restitution du solde.
+  - [ ] Définir les règles de validation des demandes.
+  - [ ] Définir les règles de gestion des absences.
+  - [ ] Définir les règles de gestion des missions.
+Phase 2 — Développement de la base de données
+Objectif : créer toutes les structures nécessaires au fonctionnement du module.
+- [ ] Tâche 2.1 — Gestion des types et règles de congé
+  - [ ] Créer la table type_conge.
+  - [ ] Créer la table regle_conge.
+  - [ ] Ajouter les données initiales des types de congé.
+  - [ ] Ajouter les règles initiales d'acquisition.
+  - [ ] Vérifier les contraintes et les relations.
+- [ ] Tâche 2.2 — Gestion du calendrier
+  - [ ] Créer la table jour_ferie.
+  - [ ] Ajouter les jours fériés nécessaires.
+  - [ ] Préparer la gestion des jours ouvrables.
+  - [ ] Vérifier le traitement des week-ends et des jours fériés.
+- [ ] Tâche 2.3 — Gestion des demandes de congé
+  - [ ] Créer la table demande_conge.
+  - [ ] Créer la table validation_conge.
+  - [ ] Créer la table remplacement_conge.
+  - [ ] Créer la table mouvement_conge.
+  - [ ] Créer les relations avec les employés et les utilisateurs.
+  - [ ] Prévoir les différents états de validation.
+  - [ ] Prévoir l'historique des décisions.
+- [ ] Tâche 2.4 — Gestion des absences
+  - [ ] Créer la table type_absence.
+  - [ ] Créer la table absence.
+  - [ ] Créer la table justificatif_absence.
+  - [ ] Définir les relations entre absence, employé et justificatif.
+  - [ ] Prévoir le stockage des documents justificatifs.
+- [ ] Tâche 2.5 — Gestion des missions
+  - [ ] Créer la table mission.
+  - [ ] Créer la table mission_employe.
+  - [ ] Définir les relations entre mission et employés.
+  - [ ] Prévoir l'affectation de plusieurs employés à une mission.
+- [ ] Tâche 2.6 — Gestion des indemnités
+  - [ ] Créer la table indemnite_conge.
+  - [ ] Définir les informations financières nécessaires.
+  - [ ] Prévoir l'enregistrement de la méthode de calcul.
+  - [ ] Prévoir les différents états de traitement.
+Phase 3 — Fonctions, procédures et vues SQL
+- [ ] Tâche 3.1 — Calcul du solde
+  - [ ] Créer fn_solde_conge.
+  - [ ] Calculer le solde à partir des mouvements.
+  - [ ] Tester les acquisitions.
+  - [ ] Tester les consommations.
+  - [ ] Tester les restitutions.
+  - [ ] Tester les ajustements et expirations.
+- [ ] Tâche 3.2 — Calcul des jours de congé
+  - [ ] Créer fn_calculer_jours_conge.
+  - [ ] Exclure les samedis et dimanches.
+  - [ ] Exclure les jours fériés.
+  - [ ] Tester une période d'une journée.
+  - [ ] Tester une période de plusieurs semaines.
+  - [ ] Tester une période contenant un jour férié.
+- [ ] Tâche 3.3 — Acquisition automatique
+  - [ ] Créer sp_acquerir_conges_mensuels.
+  - [ ] Calculer les droits acquis chaque mois.
+  - [ ] Respecter le plafond d'acquisition.
+  - [ ] Éviter les acquisitions en double.
+  - [ ] Gérer les employés éligibles.
+  - [ ] Tester l'exécution sur plusieurs employés.
+  - [ ] Prévoir le mécanisme de déclenchement mensuel.
+- [ ] Tâche 3.4 — Création des vues
+  - [ ] Créer vue_solde_conge.
+  - [ ] Créer vue_historique_conge.
+  - [ ] Créer vue_demande_conge.
+  - [ ] Créer vue_validation_conge.
+  - [ ] Créer vue_absence.
+  - [ ] Créer vue_planning_rh.
+  - [ ] Vérifier les résultats de chaque vue.
+Phase 4 — Développement du backend Spring Boot
+- [ ] Tâche 4.1 — Préparation de l'architecture
+  - [ ] Créer les packages du module.
+  - [ ] Organiser les entités.
+  - [ ] Organiser les repositories.
+  - [ ] Organiser les services.
+  - [ ] Organiser les controllers.
+  - [ ] Organiser les DTO.
+  - [ ] Préparer la gestion des exceptions.
+- [ ] Tâche 4.2 — Développer les fonctionnalités de congé
+  - [ ] Créer les entités JPA.
+  - [ ] Créer les repositories.
+  - [ ] Développer le service de consultation du solde.
+  - [ ] Développer le service de création d'une demande.
+  - [ ] Développer le service de validation.
+  - [ ] Développer le service de refus.
+  - [ ] Développer le service d'annulation.
+  - [ ] Développer la consommation du solde.
+  - [ ] Développer la restitution du solde.
+  - [ ] Développer la consultation de l'historique.
+- [ ] Tâche 4.3 — Développer les fonctionnalités d'absence
+  - [ ] Créer les entités JPA.
+  - [ ] Créer les repositories.
+  - [ ] Développer la déclaration d'une absence.
+  - [ ] Développer la modification d'une absence.
+  - [ ] Développer la consultation des absences.
+  - [ ] Développer l'ajout d'un justificatif.
+  - [ ] Développer la consultation et le téléchargement du justificatif.
+- [ ] Tâche 4.4 — Développer les fonctionnalités de mission
+  - [ ] Créer les entités JPA.
+  - [ ] Créer les repositories.
+  - [ ] Développer la création d'une mission.
+  - [ ] Développer la modification d'une mission.
+  - [ ] Développer l'affectation des employés.
+  - [ ] Développer la suppression d'une affectation.
+  - [ ] Développer la consultation des missions.
+- [ ] Tâche 4.5 — Développer les indemnités
+  - [ ] Développer le service de calcul.
+  - [ ] Développer l'enregistrement de l'indemnité.
+  - [ ] Développer la consultation des indemnités.
+  - [ ] Développer la mise à jour du statut de traitement.
+- [ ] Tâche 4.6 — Développer les API du planning
+  - [ ] Développer l'API de consultation du planning.
+  - [ ] Ajouter le filtrage par employé.
+  - [ ] Ajouter le filtrage par période.
+  - [ ] Ajouter le filtrage par type d'événement.
+  - [ ] Retourner les congés validés.
+  - [ ] Retourner les absences.
+  - [ ] Retourner les missions.
+Phase 5 — Sécurité et tests
+- [ ] Tâche 5.1 — Sécuriser les API
+  - [ ] Vérifier l'authentification.
+  - [ ] Vérifier les rôles autorisés.
+  - [ ] Empêcher un employé de consulter les données non autorisées.
+  - [ ] Vérifier les droits de validation.
+  - [ ] Vérifier les droits de modification.
+  - [ ] Protéger les documents justificatifs.
+- [ ] Tâche 5.2 — Tester les règles métier
+  - [ ] Tester une demande avec un solde suffisant.
+  - [ ] Tester une demande avec un solde insuffisant.
+  - [ ] Tester une demande refusée.
+  - [ ] Tester une demande annulée.
+  - [ ] Tester la restitution du solde.
+  - [ ] Tester deux demandes concurrentes.
+  - [ ] Tester l'acquisition mensuelle.
+  - [ ] Tester les absences et justificatifs.
+  - [ ] Tester les missions avec plusieurs employés.
+- [ ] Tâche 5.3 — Documenter les API
+  - [ ] Documenter chaque endpoint.
+  - [ ] Documenter les paramètres.
+  - [ ] Documenter les formats JSON envoyés.
+  - [ ] Documenter les formats JSON retournés.
+  - [ ] Documenter les codes HTTP.
+  - [ ] Fournir des exemples de requêtes et de réponses.
+  - [ ] Transmettre la documentation à la personne 2.

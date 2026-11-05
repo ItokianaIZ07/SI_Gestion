@@ -16,8 +16,8 @@ public interface DocumentEmployeRepository extends JpaRepository<DocumentEmploye
             SELECT new com.si.rh.dto.onboarding.DocumentEmployeDTO(
                 d.id, d.typeDocument, d.nomFichier, d.mimeType, d.statut, d.dateDepot)
             FROM DocumentEmploye d
-            WHERE d.employe.id = :idEmploye
+            WHERE d.employe.id = :getIdEmploye
             ORDER BY d.dateDepot DESC, d.id DESC
             """)
-    List<DocumentEmployeDTO> findResumesParEmploye(@Param("idEmploye") Integer idEmploye);
+    List<DocumentEmployeDTO> findResumesParEmploye(@Param("getIdEmploye") Integer idEmploye);
 }

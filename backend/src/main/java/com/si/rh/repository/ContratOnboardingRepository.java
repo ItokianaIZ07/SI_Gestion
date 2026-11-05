@@ -16,8 +16,8 @@ public interface ContratOnboardingRepository extends Repository<Contrat, Integer
             FROM Contrat c
             JOIN c.typeContrat t
             JOIN c.StatutContract s
-            WHERE c.employe.id = :idEmploye
+            WHERE c.employe.id = :getIdEmploye
             ORDER BY c.dateDebut DESC, c.id DESC
             """)
-    List<ContratResumeDTO> parEmploye(@Param("idEmploye") Integer idEmploye);
+    List<ContratResumeDTO> parEmploye(@Param("getIdEmploye") Integer idEmploye);
 }

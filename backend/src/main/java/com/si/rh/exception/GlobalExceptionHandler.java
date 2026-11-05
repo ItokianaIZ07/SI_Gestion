@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> inattendue(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.failure("Une erreur interne est survenue."));
+                .body(ApiResponse.failure("Une erreur interne est survenue: \n"+e.getMessage()));
     }
     
 //  @ExceptionHandler(IllegalArgumentException.class)

@@ -1,0 +1,7 @@
+package com.si.rh.repository;
+
+import com.si.rh.model.ValidationConge;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ValidationCongeRepository extends JpaRepository<ValidationConge, Integer> {
+}

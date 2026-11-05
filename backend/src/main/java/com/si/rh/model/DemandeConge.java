@@ -41,9 +41,12 @@ public class DemandeConge {
     @Column(name = "date_decision_finale")
     private LocalDateTime dateDecisionFinale;
 
+    @Column(name = "nombre_jours")
+    private double nombreJours;
+
     public DemandeConge(){}
 
-    public DemandeConge(Integer id, Employe employe, TypeConge typeConge, LocalDate dateDebut, LocalDate dateFin, String motif, LocalDateTime dateDemande, StatutCongeGlobal statutGlobal, LocalDateTime dateDecisionFinale) {
+    public DemandeConge(Integer id, Employe employe, TypeConge typeConge, LocalDate dateDebut, LocalDate dateFin, String motif, LocalDateTime dateDemande, StatutCongeGlobal statutGlobal, LocalDateTime dateDecisionFinale, double nombreJours) {
         this.id = id;
         this.employe = employe;
         this.typeConge = typeConge;
@@ -53,6 +56,7 @@ public class DemandeConge {
         this.dateDemande = dateDemande;
         this.statutGlobal = statutGlobal;
         this.dateDecisionFinale = dateDecisionFinale;
+        this.nombreJours = nombreJours;
     }
 
     public Integer getId() {
@@ -125,5 +129,13 @@ public class DemandeConge {
 
     public void setDateDecisionFinale(LocalDateTime dateDecisionFinale) {
         this.dateDecisionFinale = dateDecisionFinale;
+    }
+
+    public double getNombreJours() {
+        return nombreJours;
+    }
+
+    public void setNombreJours(double nombreJours) {
+        this.nombreJours = nombreJours;
     }
 }

@@ -1,7 +1,9 @@
 package com.si.rh.controller;
 
 import com.si.rh.dto.conge.DemandeCongeDTO;
+import com.si.rh.dto.conge.DemandeCongeRequest;
 import com.si.rh.dto.conge.SoldeCongeEmployeDTO;
+import com.si.rh.model.DemandeConge;
 import com.si.rh.service.DemandeCongeService;
 import com.si.rh.service.SoldeCongeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,25 @@ public class CongeController {
     }
 
     @PostMapping("/demandes")
-    public DemandeCongeDTO saveDemandeConge(){
-        return null;
+    public DemandeCongeDTO saveDemandeConge(@RequestBody DemandeCongeRequest demande){
+        try{
+            DemandeConge demandeConge = demandeCongeService.save(demande);
+            return new DemandeCongeDTO(
+                    demandeConge.getId(),
+                    demandeConge.getEmploye().getId(),
+                    demandeConge.getEmploye().getNom(),
+                    demandeConge.getEmploye().getPrenom(),
+                    demandeConge.getEmploye().getMatricule(),
+                    demandeConge.getEmploye().getEmail(),
+                    demandeConge.getDateDebut(),
+                    demandeConge.getDateFin(),
+                    demandeConge.getTypeConge().getLibelle(),
+                    demandeConge.getNombreJours(),
+                    demandeConge.getMotif()
+            );
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

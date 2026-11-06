@@ -306,6 +306,24 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/JourFerie/JoursFeriesView.vue"),
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/plannings",
+          name: "rhPlannings",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/PlanningsView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/plannings/nouvelle-affectation",
+          name: "rhNouvelleAffectationPlanning",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/NouvelleAffectationView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/plannings/salarie/:id(\\d+)",
+          name: "rhHistoriquePlanningSalarie",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/HistoriquePlanningSalarieView.vue"),
+          beforeEnter: rhEtDirection,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

@@ -14,6 +14,12 @@ public interface EmployeRepository extends JpaRepository<Employe, Integer> {
 
     Optional<Employe> findByMatricule(String matricule);
 
+    Optional<Employe> findByMatriculeAndEmailAndNumeroCinAndStatut(
+            String matricule,
+            String email,
+            String numeroCin,
+            StatutEmploye statut);
+
     List<Employe> findByStatutOrderByNomAscPrenomAsc(StatutEmploye statut);
 
     @Query("SELECT e FROM Employe e WHERE e.candidature.id = :idCandidature")

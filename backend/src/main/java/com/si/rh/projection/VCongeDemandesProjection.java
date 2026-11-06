@@ -4,6 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 public interface VCongeDemandesProjection {
 
     Integer getIdDemande();

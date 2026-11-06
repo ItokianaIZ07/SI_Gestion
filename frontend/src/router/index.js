@@ -326,6 +326,29 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/OnboardingDetailView.vue"),
           beforeEnter: rhEtDirection,
         },
+
+
+        
+        {
+          path: "rh/pointage",
+          component: () => import("@/views/modules/gestion/rh/PointageView.vue"),
+          beforeEnter: exigerRole('RH')
+        },
+        {
+          path: "rh/heures-sup",
+          component: () => import("@/views/modules/gestion/rh/HeuresSupView.vue"),
+          beforeEnter: exigerRole('RH', 'MANAGER')
+        },
+        {
+          path: "rh/anomalies",
+          component: () => import("@/views/modules/gestion/rh/AnomaliesView.vue"),
+          beforeEnter: exigerRole('RH', 'MANAGER')
+        },
+        {
+          path: "rh/recap-mensuel",
+          component: () => import("@/views/modules/gestion/rh/RecapMensuelView.vue"),
+          beforeEnter: exigerRole('RH')
+        },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
       ],

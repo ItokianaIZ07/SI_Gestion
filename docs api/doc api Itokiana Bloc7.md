@@ -191,6 +191,7 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 | GET | `/api/conge/demandes/en-attente` | Lister les demandes à valider selon le rôle connecté |
 | POST | `/api/conge/demandes/{id}/validation` | Accepter ou refuser une demande à l'étape courante |
 | GET | `/api/conge/demandes/{id}/validations` | Consulter l'historique des décisions |
+| POST | `/api/conge/demandes/{id}/annulation` | Annuler une demande validée et journaliser l'annulation |
 
 ---
 
@@ -341,3 +342,79 @@ limité aux demandes des employés de son département.
 - `409 Conflict` : étape déjà terminée, règle de congé manquante ou solde
   insuffisant à l'approbation finale.
 - Une demande refusée ou définitivement validée ne peut plus être décidée.
+
+---
+
+## 9. Annuler une demande de congé validée
+
+**Endpoint :** `POST /api/conge/demandes/{id}/annulation`
+
+Le salarié concerné ou un utilisateur `RH` actif peut annuler une demande au
+statut `VALIDEE`. La requête requiert une session et le jeton CSRF obtenu avec
+`GET /api/auth/csrf` (en-tête `X-XSRF-TOKEN`).
+
+**Corps de la requête :**
+
+```json
+{
+  "motif": "Retour anticipé du congé."
+}
+```
+
+Le motif est obligatoire et limité à 2 000 caractères. La réponse contient le
+statut et le nombre de jours restitués :
+
+```json
+{
+  "idDemande": 1,
+  "statutGlobal": "ANNULEE",
+  "joursRestitues": 3.0,
+  "dateAnnulation": "2026-11-06T11:30:00",
+  "motif": "Retour anticipé du congé."
+}
+```
+
+L'annulation est transactionnelle et verrouille la demande. Elle ne modifie ni
+les validations du manager/RH, ni le mouvement initial `CONSOMMATION`. La
+demande passe à `ANNULEE`. Lorsqu'une règle applicable déduit le solde :
+
+- avant le début, tous les jours du mouvement de consommation sont restitués;
+- après la fin, aucun jour n'est restitué;
+- pendant la période, seuls les jours non encore consommés sont restitués, par
+  l'ajout d'un mouvement positif `RESTITUTION`.
+
+Le calcul des jours écoulés pendant une période en cours utilise la fonction
+SQL existante `fn_calculer_jours_conge` (jours du lundi au vendredi hors dates
+de `jour_ferie`). Le projet ne relie pas encore les pointages/présences aux
+demandes de congé; il s'agit donc d'une estimation en jours ouvrés, et non
+d'une mesure de présence réelle. Si la règle ne déduit pas le solde, ou si
+aucune consommation initiale n'existe, aucun mouvement de restitution n'est
+créé.
+
+Aucune table n'est ajoutée : chaque annulation crée aussi un mouvement
+`ANNULATION` dans `mouvement_conge`, avec `nombre_jours = 0`, le motif, l'auteur,
+la demande et la date générée par la base. La vue
+`v_conge_historique_mouvements` l'affiche, tandis que `v_conge_solde_employe`
+ne modifie pas le solde puisque la ligne d'annulation vaut zéro. Si des jours
+doivent être rendus, une deuxième ligne `RESTITUTION` positive est ajoutée. Le
+mouvement initial `CONSOMMATION` n'est jamais modifié ni supprimé.
+
+Le script
+`backend/database/tables/Suite Module Rh/Itokiana_06-11-2026-Bloc7_restitution_conge_unique_04.sql`
+ajoute uniquement un index partiel unique sur la table existante `mouvement_conge`
+afin d'empêcher plusieurs restitutions pour une demande. Il détecte les doublons
+existants et interrompt la migration s'il en trouve.
+La migration
+`backend/database/tables/Suite Module Rh/Itokiana_06-11-2026-Bloc7_annulation_mouvement_05.sql`
+autorise le type `ANNULATION` à zéro jour et garantit une seule trace
+d'annulation par demande. Exécuter cette migration avant de déployer le backend
+mis à jour.
+
+### Erreurs principales
+
+- `400 Bad Request` : motif absent ou trop long.
+- `401 Unauthorized` : session absente.
+- `403 Forbidden` : l'utilisateur n'est ni RH ni le salarié concerné.
+- `404 Not Found` : demande inexistante.
+- `409 Conflict` : statut différent de `VALIDEE`, règle manquante, mouvement de
+  consommation invalide ou restitution déjà enregistrée.

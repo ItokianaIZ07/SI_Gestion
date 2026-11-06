@@ -106,7 +106,7 @@ class ValidationCongeServiceTest {
     }
 
     @Test
-    void refusManagerTermineLaDemandeSansConsommerLeSolde() {
+    void refusManagerAnnuleLaDemandeSansConsommerLeSolde() {
         Utilisateur manager = utilisateur(7, "MANAGER");
         DemandeConge demande = demande(StatutCongeGlobal.EN_ATTENTE_MANAGER, manager);
         ValidationConge validation = validation(demande, 1);
@@ -121,8 +121,44 @@ class ValidationCongeServiceTest {
         DecisionCongeResponse response = service.decider(
                 DEMANDE_ID, new DecisionCongeRequest("REFUSE", "Période indisponible"), authentication);
 
-        assertEquals("REFUSEE", response.statutGlobal());
-        assertEquals(StatutCongeGlobal.REFUSEE, demande.getStatutGlobal());
+        assertEquals("ANNULEE", response.statutGlobal());
+        assertEquals(StatutCongeGlobal.ANNULEE, demande.getStatutGlobal());
+        assertEquals(manager, validation.getUtilisateur());
+        assertEquals("REFUSE", validation.getDecision().getCode());
+        assertEquals("Période indisponible", validation.getCommentaire());
+        verify(validationCongeRepository).save(validation);
+        verify(demandeCongeRepository).save(demande);
+        verify(mouvementCongeRepository, never()).save(any());
+    }
+
+    @Test
+    void refusRhAnnuleLaDemandeSansConsommerLeSolde() {
+        Utilisateur rh = utilisateur(11, "RH");
+        DemandeConge demande = demande(StatutCongeGlobal.EN_ATTENTE_RH, rh);
+        ValidationConge validation = validation(demande, 2);
+        when(authentication.getName()).thenReturn("rh@example.test");
+        when(utilisateurRepository.findByEmail("rh@example.test")).thenReturn(Optional.of(rh));
+        when(demandeCongeRepository.findByIdForUpdate(DEMANDE_ID))
+                .thenReturn(Optional.of(demande));
+        when(validationCongeRepository.findByDemandeConge_IdAndOrdre(DEMANDE_ID, 2))
+                .thenReturn(Optional.of(validation));
+        when(decisionRepository.findByCode("REFUSE"))
+                .thenReturn(Optional.of(new Decision(3, "REFUSE", "Refusé")));
+
+        DecisionCongeResponse response = service.decider(
+                DEMANDE_ID,
+                new DecisionCongeRequest("REFUSE", "Solde insuffisant"),
+                authentication);
+
+        assertEquals("RH", response.etapeValidee());
+        assertEquals("REFUSE", response.decision());
+        assertEquals("ANNULEE", response.statutGlobal());
+        assertEquals(StatutCongeGlobal.ANNULEE, demande.getStatutGlobal());
+        assertEquals(rh, validation.getUtilisateur());
+        assertEquals("REFUSE", validation.getDecision().getCode());
+        assertEquals("Solde insuffisant", validation.getCommentaire());
+        verify(validationCongeRepository).save(validation);
+        verify(demandeCongeRepository).save(demande);
         verify(mouvementCongeRepository, never()).save(any());
     }
 

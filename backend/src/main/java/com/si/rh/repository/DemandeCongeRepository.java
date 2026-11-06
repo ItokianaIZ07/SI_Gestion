@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 /**
  *
@@ -81,6 +82,11 @@ public interface DemandeCongeRepository extends JpaRepository<DemandeConge, Inte
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT d FROM DemandeConge d WHERE d.id = :id")
     Optional<DemandeConge> findByIdForUpdate(@Param("id") Integer id);
+
+    @Query(value = "SELECT fn_calculer_jours_conge(:dateDebut, :dateFin)", nativeQuery = true)
+    Integer compterJoursOuvres(
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
 
     @Query(value = """
         SELECT

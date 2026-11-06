@@ -2,6 +2,8 @@ package com.si.rh.controller;
 
 import com.si.rh.dto.conge.DemandeCongeDTO;
 import com.si.rh.dto.conge.DemandeCongeRequest;
+import com.si.rh.dto.conge.AnnulationCongeRequest;
+import com.si.rh.dto.conge.AnnulationCongeResponse;
 import com.si.rh.dto.conge.DecisionCongeRequest;
 import com.si.rh.dto.conge.DecisionCongeResponse;
 import com.si.rh.dto.conge.DemandeCongeEnAttenteDTO;
@@ -9,6 +11,7 @@ import com.si.rh.dto.conge.SoldeCongeEmployeDTO;
 import com.si.rh.dto.conge.ValidationCongeDTO;
 import com.si.rh.model.DemandeConge;
 import com.si.rh.service.DemandeCongeService;
+import com.si.rh.service.AnnulationCongeService;
 import com.si.rh.service.SoldeCongeService;
 import com.si.rh.service.ValidationCongeService;
 import jakarta.validation.Valid;
@@ -30,6 +33,9 @@ public class CongeController {
 
     @Autowired
     private ValidationCongeService validationCongeService;
+
+    @Autowired
+    private AnnulationCongeService annulationCongeService;
 
     @GetMapping("/soldes")
     public List<SoldeCongeEmployeDTO> getSoldesConge(){
@@ -103,5 +109,13 @@ public class CongeController {
             @PathVariable Integer id,
             Authentication authentication) {
         return validationCongeService.getHistorique(id, authentication);
+    }
+
+    @PostMapping("/demandes/{id}/annulation")
+    public AnnulationCongeResponse annulerDemande(
+            @PathVariable Integer id,
+            @Valid @RequestBody AnnulationCongeRequest request,
+            Authentication authentication) {
+        return annulationCongeService.annuler(id, request, authentication);
     }
 }

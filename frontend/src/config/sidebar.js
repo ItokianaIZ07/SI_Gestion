@@ -19,7 +19,16 @@ const sidebarByRole = {
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
-        { label: "CV des candidats", to: "/si/app/rh/cv" }
+        { label: "CV des candidats", to: "/si/app/rh/cv" },
+
+        {
+        label: "Congés",
+        children: [
+        { label: "Tableau de bord", to: "/si/app/rh/conges" },
+        { label: "Demandes de congé", to: "/si/app/rh/conges/demandes" },
+        { label: "Nouvelle demande", to: "/si/app/rh/conges/nouvelle" },
+    ],
+},
     ],
 
     manager: [

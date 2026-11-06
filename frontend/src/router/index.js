@@ -286,6 +286,11 @@ const router = createRouter({
         },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
+
+        // ----- Module Congés -----
+        { path: "rh/conges", component: () => import('@/views/modules/conge/CongeDashboardView.vue'), beforeEnter: rhEtDirection },
+        { path: "rh/conges/demandes", component: () => import('@/views/modules/conge/CongeDemandesView.vue'), beforeEnter: rhEtDirection },
+        { path: "rh/conges/nouvelle", component: () => import('@/views/modules/conge/CongeNouvelleDemandeView.vue'), beforeEnter: rhEtDirection },
       ],
     },
   ],

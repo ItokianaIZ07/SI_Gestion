@@ -15,6 +15,13 @@ const sidebarByRole = {
                 { label: "Modèles de tâches", to: "/si/app/rh/onboarding/modeles" },
             ],
         },
+        {
+            label: "Régimes de travail",
+            children: [
+                { label: "Liste des régimes", to: "/si/app/rh/regimes-travail" },
+                { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
@@ -42,6 +49,13 @@ const sidebarByRole = {
         // Tous les liens du système
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Onboarding", to: "/si/app/rh/onboarding" },
+        {
+            label: "Régimes de travail",
+            children: [
+                { label: "Liste des régimes", to: "/si/app/rh/regimes-travail" },
+                { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
+            ],
+        },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },

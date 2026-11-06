@@ -324,6 +324,12 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/PlanningTravail/HistoriquePlanningSalarieView.vue"),
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/variables-paie",
+          name: "rhVariablesPaie",
+          component: () => import("@/views/modules/gestion/rh/VariablesPaie/VariablesPaieView.vue"),
+          beforeEnter: rhEtDirection,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

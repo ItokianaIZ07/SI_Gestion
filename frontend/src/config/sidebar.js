@@ -29,6 +29,12 @@ const sidebarByRole = {
                 { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
             ],
         },
+        {
+            label: "Jours fériés",
+            children: [
+                { label: "Liste des jours fériés", to: "/si/app/rh/jours-feries" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
@@ -68,6 +74,12 @@ const sidebarByRole = {
             children: [
                 { label: "Liste des horaires", to: "/si/app/rh/horaires-travail" },
                 { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
+            ],
+        },
+        {
+            label: "Jours fériés",
+            children: [
+                { label: "Liste des jours fériés", to: "/si/app/rh/jours-feries" },
             ],
         },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },

@@ -35,6 +35,13 @@ const sidebarByRole = {
                 { label: "Liste des jours fériés", to: "/si/app/rh/jours-feries" },
             ],
         },
+        {
+            label: "Planning",
+            children: [
+                { label: "Liste des plannings", to: "/si/app/rh/plannings" },
+                { label: "Nouvelle affectation", to: "/si/app/rh/plannings/nouvelle-affectation" },
+            ],
+        },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
@@ -68,26 +75,6 @@ const sidebarByRole = {
         // Tous les liens du système
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Onboarding", to: "/si/app/rh/onboarding" },
-        {
-            label: "Régimes de travail",
-            children: [
-                { label: "Liste des régimes", to: "/si/app/rh/regimes-travail" },
-                { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
-            ],
-        },
-        {
-            label: "Horaires de travail",
-            children: [
-                { label: "Liste des horaires", to: "/si/app/rh/horaires-travail" },
-                { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
-            ],
-        },
-        {
-            label: "Jours fériés",
-            children: [
-                { label: "Liste des jours fériés", to: "/si/app/rh/jours-feries" },
-            ],
-        },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },

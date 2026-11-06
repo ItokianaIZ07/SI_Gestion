@@ -14,6 +14,7 @@ BEGIN;
 -- Consommation : negatif
 -- Restitution  : positif
 -- Expiration   : negatif
+-- Annulation   : zero (trace, sans effet sur le solde)
 --
 -- INTERET :
 -- Permet de consulter le nombre de jours disponibles
@@ -162,8 +163,8 @@ INNER JOIN decision dec
 -- 5. VUE : v_conge_historique_mouvements
 --
 -- ROLE :
--- Affiche tous les mouvements qui ont modifie le solde
--- de conge d'un employe.
+-- Affiche les mouvements de solde et les traces d'annulation
+-- d'un employe.
 --
 -- TYPES DE MOUVEMENTS :
 -- ACQUISITION
@@ -171,6 +172,7 @@ INNER JOIN decision dec
 -- AJUSTEMENT
 -- RESTITUTION
 -- EXPIRATION
+-- ANNULATION (nombre_jours = 0, trace sans impact sur le solde)
 --
 -- INFORMATIONS :
 -- - Employe concerne

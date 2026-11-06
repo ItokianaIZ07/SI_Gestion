@@ -2,6 +2,7 @@ package com.si.rh.exception;
 
 import com.si.rh.dto.ApiResponse;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -16,6 +17,12 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> accesRefuse(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure(e.getMessage()));
+    }
+
     @ExceptionHandler(RessourceIntrouvableException.class)
     public ResponseEntity<ApiResponse<Void>> introuvable(RessourceIntrouvableException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(e.getMessage()));

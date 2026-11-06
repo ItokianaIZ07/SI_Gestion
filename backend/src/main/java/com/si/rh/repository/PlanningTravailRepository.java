@@ -1,3 +1,4 @@
+// BY : Brandon
 package com.si.rh.repository;
 
 import com.si.rh.model.PlanningTravail;
@@ -17,9 +18,18 @@ public interface PlanningTravailRepository extends JpaRepository<PlanningTravail
 
     List<PlanningTravail> findByEmployeIdOrderByDateDebutDesc(Integer idEmploye);
 
-    @Query("select p from PlanningTravail p where p.employe.id = :idEmploye "
-            + "and p.dateDebut <= :date "
-            + "and (p.dateFin is null or p.dateFin >= :date)")
+    /**
+     * Retourne UN SEUL planning actif pour la date (évite les doublons et les
+     * temps prévus multipliés par le nombre de plannings existants).
+     */
+    @Query(value = """
+        SELECT * FROM planning_travail
+        WHERE id_employe = :idEmploye
+          AND date_debut <= :date
+          AND (date_fin IS NULL OR date_fin >= :date)
+        ORDER BY date_debut DESC
+        LIMIT 1
+        """, nativeQuery = true)
     Optional<PlanningTravail> findByEmployeAndDate(
             @Param("idEmploye") Integer idEmploye,
             @Param("date") LocalDate date);

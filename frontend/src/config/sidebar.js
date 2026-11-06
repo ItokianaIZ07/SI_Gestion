@@ -26,7 +26,11 @@ const sidebarByRole = {
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
-        { label: "CV des candidats", to: "/si/app/rh/cv" }
+        { label: "CV des candidats", to: "/si/app/rh/cv" },
+        { label: "Pointage", to: "/si/app/rh/pointage" },
+        { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
+        { label: "Anomalies", to: "/si/app/rh/anomalies" },
+        { label: "Récap Mensuel", to: "/si/app/rh/recap-mensuel" }
     ],
 
     manager: [
@@ -34,7 +38,9 @@ const sidebarByRole = {
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
-        { label: "Notifications", to: "/si/app/manager/notifications" }
+        { label: "Notifications", to: "/si/app/manager/notifications" },
+        { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
+        { label: "Anomalies", to: "/si/app/rh/anomalies" }
     ],
 
     finance: [

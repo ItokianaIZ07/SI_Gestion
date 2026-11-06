@@ -3,7 +3,9 @@ package com.si.rh.repository;
 
 import com.si.rh.model.Employe;
 import com.si.rh.model.enums.StatutEmploye;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +15,10 @@ import java.util.Optional;
 public interface EmployeRepository extends JpaRepository<Employe, Integer> {
 
     Optional<Employe> findByMatricule(String matricule);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT e FROM Employe e WHERE e.id = :id")
+    Optional<Employe> findByIdForUpdate(@Param("id") Integer id);
 
     Optional<Employe> findByMatriculeAndEmailAndNumeroCinAndStatut(
             String matricule,

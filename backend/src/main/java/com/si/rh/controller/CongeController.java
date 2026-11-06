@@ -2,11 +2,18 @@ package com.si.rh.controller;
 
 import com.si.rh.dto.conge.DemandeCongeDTO;
 import com.si.rh.dto.conge.DemandeCongeRequest;
+import com.si.rh.dto.conge.DecisionCongeRequest;
+import com.si.rh.dto.conge.DecisionCongeResponse;
+import com.si.rh.dto.conge.DemandeCongeEnAttenteDTO;
 import com.si.rh.dto.conge.SoldeCongeEmployeDTO;
+import com.si.rh.dto.conge.ValidationCongeDTO;
 import com.si.rh.model.DemandeConge;
 import com.si.rh.service.DemandeCongeService;
 import com.si.rh.service.SoldeCongeService;
+import com.si.rh.service.ValidationCongeService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +27,9 @@ public class CongeController {
 
     @Autowired
     private DemandeCongeService demandeCongeService;
+
+    @Autowired
+    private ValidationCongeService validationCongeService;
 
     @GetMapping("/soldes")
     public List<SoldeCongeEmployeDTO> getSoldesConge(){
@@ -72,5 +82,26 @@ public class CongeController {
             System.out.println(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping("/demandes/en-attente")
+    public List<DemandeCongeEnAttenteDTO> getDemandesEnAttente(
+            Authentication authentication) {
+        return validationCongeService.getDemandesEnAttente(authentication);
+    }
+
+    @PostMapping("/demandes/{id}/validation")
+    public DecisionCongeResponse deciderDemande(
+            @PathVariable Integer id,
+            @Valid @RequestBody DecisionCongeRequest request,
+            Authentication authentication) {
+        return validationCongeService.decider(id, request, authentication);
+    }
+
+    @GetMapping("/demandes/{id}/validations")
+    public List<ValidationCongeDTO> getHistoriqueValidations(
+            @PathVariable Integer id,
+            Authentication authentication) {
+        return validationCongeService.getHistorique(id, authentication);
     }
 }

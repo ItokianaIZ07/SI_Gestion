@@ -21,7 +21,7 @@ public class ValidationConge {
     private DemandeConge demandeConge;
 
     @ManyToOne
-    @JoinColumn(name = "id_utilisateur", nullable = false)
+    @JoinColumn(name = "id_utilisateur")
     private Utilisateur utilisateur;
 
     @Column(name = "ordre")

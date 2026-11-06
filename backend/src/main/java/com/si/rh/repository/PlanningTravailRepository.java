@@ -77,6 +77,48 @@ public interface PlanningTravailRepository extends JpaRepository<PlanningTravail
             @Param("dateDebut") LocalDate dateDebut,
             @Param("dateFin") LocalDate dateFin);
 
+    @Query(value = """
+        SELECT p.id AS "id",
+               e.id AS "idEmploye",
+               d.id AS "idDepartement",
+               e.matricule AS "matricule",
+               e.nom AS "nom",
+               e.prenom AS "prenom",
+               d.nom AS "departement",
+               h.libelle AS "horaire",
+               r.libelle AS "regime",
+               p.date_debut AS "dateDebut",
+               p.date_fin AS "dateFin",
+               (p.date_debut <= CURRENT_DATE
+                AND COALESCE(p.date_fin, DATE 'infinity') >= CURRENT_DATE) AS "enCours"
+        FROM planning_travail p
+        JOIN employe e ON e.id = p.id_employe
+        JOIN departement d ON d.id = e.id_departement
+        JOIN horaire_travail h ON h.id = p.id_horaire
+        LEFT JOIN regime_travail r ON r.id = p.id_regime
+        WHERE utilisateur_est_manager_de(:idUtilisateur, e.id)
+          AND (CAST(:idEmploye AS INTEGER) IS NULL OR p.id_employe = :idEmploye)
+          AND (CAST(:idDepartement AS INTEGER) IS NULL OR e.id_departement = :idDepartement)
+          AND (CAST(:idHoraire AS INTEGER) IS NULL OR p.id_horaire = :idHoraire)
+          AND (CAST(:dateDebut AS DATE) IS NULL OR COALESCE(p.date_fin, DATE 'infinity') >= :dateDebut)
+          AND (CAST(:dateFin AS DATE) IS NULL OR p.date_debut <= :dateFin)
+        ORDER BY e.nom, e.prenom, p.date_debut DESC
+        """, nativeQuery = true)
+    List<PlanningTravailAvecDetails> findAllAvecFiltresManager(
+            @Param("idUtilisateur") Integer idUtilisateur,
+            @Param("idEmploye") Integer idEmploye,
+            @Param("idDepartement") Integer idDepartement,
+            @Param("idHoraire") Integer idHoraire,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
+
+    @Query(value = """
+        SELECT utilisateur_est_manager_de(:idUtilisateur, :idEmploye)
+        """, nativeQuery = true)
+    boolean estEmployeDansEquipeManager(
+            @Param("idUtilisateur") Integer idUtilisateur,
+            @Param("idEmploye") Integer idEmploye);
+
     @Query("""
         select h from PlanningTravail p
         join p.horaire h

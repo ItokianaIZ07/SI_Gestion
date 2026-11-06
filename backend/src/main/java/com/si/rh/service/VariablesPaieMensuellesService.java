@@ -70,6 +70,23 @@ public class VariablesPaieMensuellesService {
                 variablesPaieRepository.findRecapitulatifManager(annee, mois, idDepartement, idUtilisateur));
     }
 
+    public VariablesPaieRecapitulatif getRecapitulatifPourUtilisateur(
+            Integer annee,
+            Integer mois,
+            Integer idDepartement,
+            String emailUtilisateur) {
+        validerPeriode(annee, mois);
+        Utilisateur utilisateur = getUtilisateurAutorise(emailUtilisateur);
+        if ("MANAGER".equals(utilisateur.getRole().getCode())) {
+            return construireRecapitulatif(
+                    annee, mois,
+                    variablesPaieRepository.findRecapitulatifManager(
+                            annee, mois, idDepartement, utilisateur.getId()));
+        }
+        return construireRecapitulatif(
+                annee, mois, variablesPaieRepository.findRecapitulatif(annee, mois, idDepartement));
+    }
+
     public byte[] exporterCsv(Integer annee, Integer mois, Integer idDepartement) {
         return encoderCsv(construireCsv(getRecapitulatif(annee, mois, idDepartement)));
     }
@@ -81,6 +98,15 @@ public class VariablesPaieMensuellesService {
             Integer idUtilisateur) {
         return encoderCsv(construireCsv(
                 getRecapitulatifManager(annee, mois, idDepartement, idUtilisateur)));
+    }
+
+    public byte[] exporterCsvPourUtilisateur(
+            Integer annee,
+            Integer mois,
+            Integer idDepartement,
+            String emailUtilisateur) {
+        return encoderCsv(construireCsv(
+                getRecapitulatifPourUtilisateur(annee, mois, idDepartement, emailUtilisateur)));
     }
 
     public String nomFichierCsv(Integer annee, Integer mois) {
@@ -227,6 +253,16 @@ public class VariablesPaieMensuellesService {
             throw new RegleMetierException(HttpStatus.FORBIDDEN,
                     "Le filtre d'équipe est réservé aux utilisateurs MANAGER.");
         }
+    }
+
+    private Utilisateur getUtilisateurAutorise(String emailUtilisateur) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(emailUtilisateur)
+                .orElseThrow(() -> new RegleMetierException(HttpStatus.FORBIDDEN, "Utilisateur introuvable."));
+        String role = utilisateur.getRole() == null ? "" : utilisateur.getRole().getCode();
+        if (!List.of("RH", "DIRECTION", "MANAGER", "FINANCE").contains(role)) {
+            throw new RegleMetierException(HttpStatus.FORBIDDEN, "Accès refusé.");
+        }
+        return utilisateur;
     }
 
     private void validerPeriode(Integer annee, Integer mois) {

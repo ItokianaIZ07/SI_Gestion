@@ -1,11 +1,14 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from "vue";
+import { useAuthStore } from "@/stores/authStore";
 import Notification from "@/components/ui/Notification.vue";
 import PageEntete from "@/components/gestion/PageEntete.vue";
 import { jourFerieApi } from "@/services/jourFerie";
 import "@/assets/gestion.css";
 
 const anneeCourante = new Date().getFullYear();
+const authStore = useAuthStore();
+const estRh = authStore.user?.role?.toUpperCase() === "RH";
 const annee = ref(anneeCourante);
 const annees = ref([]);
 const joursFeries = ref([]);
@@ -151,10 +154,12 @@ onMounted(async () => {
 
     <PageEntete
       titre="Jours fériés"
-      sous-titre="Gérez les jours fériés et repérez ceux qui tombent pendant le week-end."
+      :sous-titre="estRh
+        ? 'Gérez les jours fériés et repérez ceux qui tombent pendant le week-end.'
+        : 'Consultez les jours fériés et repérez ceux qui tombent pendant le week-end.'"
     />
 
-    <section class="g-carte jf-ajout">
+    <section v-if="estRh" class="g-carte jf-ajout">
       <h2>Ajouter un jour férié</h2>
       <form class="jf-formulaire" @submit.prevent="ajouter">
         <label class="g-champ">
@@ -195,7 +200,7 @@ onMounted(async () => {
               <th>Date</th>
               <th>Jour de la semaine</th>
               <th>Libellé</th>
-              <th class="g-droite">Actions</th>
+              <th v-if="estRh" class="g-droite">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -206,7 +211,7 @@ onMounted(async () => {
             >
               <td>
                 <input
-                  v-if="dateEdition === jourFerie.dateJour"
+                  v-if="estRh && dateEdition === jourFerie.dateJour"
                   v-model="brouillonDate"
                   class="g-input jf-date-edition"
                   type="date"
@@ -224,7 +229,7 @@ onMounted(async () => {
               </td>
               <td>
                 <input
-                  v-if="dateEdition === jourFerie.dateJour"
+                  v-if="estRh && dateEdition === jourFerie.dateJour"
                   v-model="brouillonLibelle"
                   class="g-input jf-libelle-edition"
                   type="text"
@@ -235,7 +240,7 @@ onMounted(async () => {
                 />
                 <span v-else class="g-principal">{{ jourFerie.libelle }}</span>
               </td>
-              <td>
+              <td v-if="estRh">
                 <div class="g-actions-cellule">
                   <template v-if="dateEdition === jourFerie.dateJour">
                     <button class="g-btn g-btn--petit g-btn--primaire" type="button" :disabled="envoi"
@@ -258,7 +263,7 @@ onMounted(async () => {
       </div>
       <p v-else class="g-vide">
         <strong>Aucun jour férié pour {{ annee }}</strong>
-        Ajoutez un jour férié à cette année à l’aide du formulaire ci-dessus.
+        {{ estRh ? "Ajoutez un jour férié à cette année à l’aide du formulaire ci-dessus." : "Aucun jour férié n'est enregistré pour cette année." }}
       </p>
     </section>
   </div>

@@ -7,7 +7,6 @@ import com.si.rh.dto.rh.planningTravail.PlanningApercu;
 import com.si.rh.dto.rh.planningTravail.PlanningOptions;
 import com.si.rh.exception.RegleMetierException;
 import com.si.rh.exception.RessourceIntrouvableException;
-import com.si.rh.model.Departement;
 import com.si.rh.model.Employe;
 import com.si.rh.model.HoraireTravail;
 import com.si.rh.model.PlanningTravail;
@@ -18,6 +17,7 @@ import com.si.rh.repository.EmployeRepository;
 import com.si.rh.repository.HoraireTravailRepository;
 import com.si.rh.repository.PlanningTravailRepository;
 import com.si.rh.repository.RegimeTravailRepository;
+import com.si.rh.repository.UtilisateurRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,18 +36,21 @@ public class PlanningTravailService {
     private final HoraireTravailRepository horaireTravailRepository;
     private final RegimeTravailRepository regimeTravailRepository;
     private final DepartementRepository departementRepository;
+    private final UtilisateurRepository utilisateurRepository;
 
     public PlanningTravailService(
             PlanningTravailRepository planningTravailRepository,
             EmployeRepository employeRepository,
             HoraireTravailRepository horaireTravailRepository,
             RegimeTravailRepository regimeTravailRepository,
-            DepartementRepository departementRepository) {
+            DepartementRepository departementRepository,
+            UtilisateurRepository utilisateurRepository) {
         this.planningTravailRepository = planningTravailRepository;
         this.employeRepository = employeRepository;
         this.horaireTravailRepository = horaireTravailRepository;
         this.regimeTravailRepository = regimeTravailRepository;
         this.departementRepository = departementRepository;
+        this.utilisateurRepository = utilisateurRepository;
     }
 
     @Transactional(readOnly = true)
@@ -63,8 +66,46 @@ public class PlanningTravailService {
     }
 
     @Transactional(readOnly = true)
+    public List<PlanningTravailAvecDetails> listerPourUtilisateur(
+            Integer idEmploye,
+            Integer idDepartement,
+            LocalDate dateDebut,
+            LocalDate dateFin,
+            Integer idHoraire,
+            String emailUtilisateur) {
+        validerFiltres(dateDebut, dateFin);
+        var utilisateur = utilisateurRepository.findByEmail(emailUtilisateur)
+                .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur introuvable."));
+        String role = utilisateur.getRole().getCode();
+        if ("MANAGER".equals(role)) {
+            return planningTravailRepository.findAllAvecFiltresManager(
+                    utilisateur.getId(), idEmploye, idDepartement, idHoraire, dateDebut, dateFin);
+        }
+        if ("RH".equals(role) || "DIRECTION".equals(role)) {
+            return planningTravailRepository.findAllAvecFiltres(
+                    idEmploye, idDepartement, idHoraire, dateDebut, dateFin);
+        }
+        throw new RegleMetierException(HttpStatus.FORBIDDEN, "Accès refusé.");
+    }
+
+    @Transactional(readOnly = true)
     public List<PlanningTravailAvecDetails> historique(Integer idEmploye) {
         return planningTravailRepository.findAllAvecFiltres(idEmploye, null, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanningTravailAvecDetails> historiquePourUtilisateur(Integer idEmploye, String emailUtilisateur) {
+        var utilisateur = utilisateurRepository.findByEmail(emailUtilisateur)
+                .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur introuvable."));
+        if ("MANAGER".equals(utilisateur.getRole().getCode())) {
+            verifierAccesEquipeManager(utilisateur.getId(), idEmploye);
+            return planningTravailRepository.findAllAvecFiltresManager(
+                    utilisateur.getId(), idEmploye, null, null, null, null);
+        }
+        if ("RH".equals(utilisateur.getRole().getCode()) || "DIRECTION".equals(utilisateur.getRole().getCode())) {
+            return historique(idEmploye);
+        }
+        throw new RegleMetierException(HttpStatus.FORBIDDEN, "Accès refusé.");
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +119,19 @@ public class PlanningTravailService {
                 employe.getPrenom(),
                 employe.getDepartement().getNom(),
                 employe.getStatut());
+    }
+
+    @Transactional(readOnly = true)
+    public EmployePlanningFiche ficheEmployePourUtilisateur(Integer idEmploye, String emailUtilisateur) {
+        var utilisateur = utilisateurRepository.findByEmail(emailUtilisateur)
+                .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur introuvable."));
+        if ("MANAGER".equals(utilisateur.getRole().getCode())) {
+            verifierAccesEquipeManager(utilisateur.getId(), idEmploye);
+        } else if (!"RH".equals(utilisateur.getRole().getCode())
+                && !"DIRECTION".equals(utilisateur.getRole().getCode())) {
+            throw new RegleMetierException(HttpStatus.FORBIDDEN, "Accès refusé.");
+        }
+        return ficheEmploye(idEmploye);
     }
 
     @Transactional(readOnly = true)
@@ -104,6 +158,14 @@ public class PlanningTravailService {
                                 regime.getId(), regime.getCode(), regime.getLibelle()))
                         .toList();
         return new PlanningOptions(employes, departements, horaires, regimes);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlanningOptions.DepartementOption> departements() {
+        return departementRepository.findAllByOrderByNomAsc().stream()
+                .map(departement -> new PlanningOptions.DepartementOption(
+                        departement.getId(), departement.getNom()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -280,6 +342,13 @@ public class PlanningTravailService {
         if (dateDebut != null && dateFin != null && dateFin.isBefore(dateDebut)) {
             throw new RegleMetierException(HttpStatus.BAD_REQUEST,
                     "La fin de période doit être égale ou postérieure au début.");
+        }
+    }
+
+    private void verifierAccesEquipeManager(Integer idUtilisateur, Integer idEmploye) {
+        if (!planningTravailRepository.estEmployeDansEquipeManager(idUtilisateur, idEmploye)) {
+            throw new RegleMetierException(HttpStatus.FORBIDDEN,
+                    "Vous ne pouvez consulter que les salariés de votre équipe.");
         }
     }
 }

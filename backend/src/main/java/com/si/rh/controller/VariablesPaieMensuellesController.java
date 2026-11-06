@@ -3,18 +3,17 @@ package com.si.rh.controller;
 import com.si.rh.dto.rh.variablesPaie.DepartementPaieOption;
 import com.si.rh.dto.rh.variablesPaie.VariablesPaieRecapitulatif;
 import com.si.rh.service.VariablesPaieMensuellesService;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -38,17 +37,21 @@ public class VariablesPaieMensuellesController {
     public VariablesPaieRecapitulatif recapitulatif(
             @RequestParam Integer annee,
             @RequestParam Integer mois,
-            @RequestParam(required = false) Integer idDepartement) {
-        return variablesPaieService.getRecapitulatif(annee, mois, idDepartement);
+            @RequestParam(required = false) Integer idDepartement,
+            Authentication authentication) {
+        return variablesPaieService.getRecapitulatifPourUtilisateur(
+                annee, mois, idDepartement, authentication.getName());
     }
 
     @GetMapping("/export.csv")
     public ResponseEntity<byte[]> exporterCsv(
             @RequestParam Integer annee,
             @RequestParam Integer mois,
-            @RequestParam(required = false) Integer idDepartement) {
+            @RequestParam(required = false) Integer idDepartement,
+            Authentication authentication) {
         String nomFichier = variablesPaieService.nomFichierCsv(annee, mois);
-        byte[] contenu = variablesPaieService.exporterCsv(annee, mois, idDepartement);
+        byte[] contenu = variablesPaieService.exporterCsvPourUtilisateur(
+                annee, mois, idDepartement, authentication.getName());
         return ResponseEntity.ok()
                 .contentType(CSV_UTF8)
                 .header(HttpHeaders.CONTENT_DISPOSITION,

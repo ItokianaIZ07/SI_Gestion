@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,5 +87,20 @@ class VariablesPaieMensuellesServiceTest {
         service.getRecapitulatifManager(2026, 11, 4, 18);
 
         verify(variablesPaieRepository).findRecapitulatifManager(2026, 11, 4, 18);
+    }
+
+    @Test
+    void determineLePerimetreDesVariablesDepuisLeRoleAuthentifie() {
+        Utilisateur manager = new Utilisateur();
+        manager.setId(18);
+        manager.setRole(new Role(1, "MANAGER", "Manager"));
+        when(utilisateurRepository.findByEmail("manager@example.test")).thenReturn(Optional.of(manager));
+        when(variablesPaieRepository.findRecapitulatifManager(2026, 11, null, 18))
+                .thenReturn(List.of());
+
+        service.getRecapitulatifPourUtilisateur(2026, 11, null, "manager@example.test");
+
+        verify(variablesPaieRepository).findRecapitulatifManager(2026, 11, null, 18);
+        verify(variablesPaieRepository, never()).findRecapitulatif(2026, 11, null);
     }
 }

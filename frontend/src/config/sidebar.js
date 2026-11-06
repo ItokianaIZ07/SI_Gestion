@@ -29,7 +29,7 @@ const sidebarByRole = {
                 { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
             ],
         },
-        { label: "Liste des jours fériés", to: "/si/app/rh/jours-feries"},
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
         {
             label: "Planning",
             children: [
@@ -56,7 +56,10 @@ const sidebarByRole = {
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
         { label: "Notifications", to: "/si/app/manager/notifications" },
         { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
-        { label: "Anomalies", to: "/si/app/rh/anomalies" }
+        { label: "Anomalies", to: "/si/app/rh/anomalies" },
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
+        { label: "Planning", to: "/si/app/rh/plannings" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
     ],
 
     finance: [
@@ -64,6 +67,7 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
         { label: "Notifications", to: "/si/app/finance/notifications" }
     ],
 
@@ -76,6 +80,11 @@ const sidebarByRole = {
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
+        { label: "Régimes de travail", to: "/si/app/rh/regimes-travail" },
+        { label: "Horaires de travail", to: "/si/app/rh/horaires-travail" },
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
+        { label: "Planning", to: "/si/app/rh/plannings" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
 
         { label: "Liste des départements", to: "/si/app/manager/departements" },
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },

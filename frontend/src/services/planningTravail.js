@@ -14,6 +14,7 @@ export const planningTravailApi = {
     return api.get(query ? `${BASE}?${query}` : BASE);
   },
   options: () => api.get(`${BASE}/options`),
+  departements: () => api.get(`${BASE}/departements`),
   apercu: (idEmploye, dateDebut) =>
     api.get(`${BASE}/apercu?idEmploye=${idEmploye}&dateDebut=${dateDebut}`),
   ficheEmploye: (idEmploye) => api.get(`${BASE}/employes/${idEmploye}`),

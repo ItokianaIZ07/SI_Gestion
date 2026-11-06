@@ -188,6 +188,9 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 | GET | `/api/conge/demandes` | Récupérer toutes les demandes |
 | GET | `/api/conge/demandes/{id}` | Récupérer les demandes d'un employé |
 | POST | `/api/conge/demandes` | Créer une demande |
+| GET | `/api/conge/demandes/en-attente` | Lister les demandes à valider selon le rôle connecté |
+| POST | `/api/conge/demandes/{id}/validation` | Accepter ou refuser une demande à l'étape courante |
+| GET | `/api/conge/demandes/{id}/validations` | Consulter l'historique des décisions |
 
 ---
 
@@ -254,3 +257,87 @@ session créée par celle-ci. Le script ajoutant le rôle se trouve dans
 > Le matricule, l'email et le numéro CIN sont des données d'identification, pas
 > des secrets. Ce mode sans mot de passe doit être considéré comme provisoire et
 > ne fournit pas à lui seul une authentification forte.
+
+---
+
+## 8. Accepter ou refuser une demande de congé
+
+Le circuit suit les étapes définies par `validation_conge` et les vues
+`v_conge_demandes_en_attente` et `v_conge_validations` :
+
+1. Le **MANAGER du département de l'employé** traite les demandes en
+   `EN_ATTENTE_MANAGER`.
+2. Si le manager accepte, le statut passe à `EN_ATTENTE_RH`.
+3. Le **RH** traite ensuite ces demandes. Une acceptation RH fait passer le
+   statut à `VALIDEE`; un refus à l'une ou l'autre étape le fait passer à
+   `REFUSEE`.
+
+### Lister les demandes à traiter
+
+**Endpoint :** `GET /api/conge/demandes/en-attente`
+
+Le manager ne reçoit que les demandes de son département en attente de son
+étape. Le RH reçoit les demandes en attente de l'étape RH. Cette route exige
+une session connectée avec le rôle `MANAGER` ou `RH`.
+
+### Enregistrer une décision
+
+**Endpoint :** `POST /api/conge/demandes/{id}/validation`
+
+**Corps de la requête :**
+
+```json
+{
+  "decision": "ACCEPTE",
+  "commentaire": "D'accord pour cette période."
+}
+```
+
+`decision` accepte uniquement `ACCEPTE` ou `REFUSE`; le commentaire est
+facultatif (2 000 caractères maximum). La requête nécessite une session avec le
+rôle correspondant à l'étape et un jeton CSRF valide.
+Le jeton peut être obtenu avec `GET /api/auth/csrf`, puis renvoyé dans l'en-tête
+`X-XSRF-TOKEN`.
+
+**Réponse — `200 OK`**
+
+```json
+{
+  "idDemande": 1,
+  "etapeValidee": "MANAGER",
+  "decision": "ACCEPTE",
+  "statutGlobal": "EN_ATTENTE_RH",
+  "commentaire": "D'accord pour cette période.",
+  "dateDecision": "2026-11-06T10:15:00"
+}
+```
+
+Chaque réponse est enregistrée avec l'utilisateur, l'étape, le commentaire et
+la date dans `validation_conge`. Après l'acceptation finale du RH, les congés
+dont la règle active prévoit la déduction génèrent un mouvement
+`CONSOMMATION` négatif dans `mouvement_conge`. Le solde est revérifié à cette
+étape afin d'éviter de valider une demande devenue insuffisamment provisionnée.
+Une seule consommation est autorisée par demande. La contrainte est créée par
+`backend/database/tables/Suite Module Rh/Itokiana_06-11-2026-Bloc7_mouvement_conge_unique_consommation_01.sql`
+après la création de `mouvement_conge`; ce script s'arrête explicitement si des
+consommations en double existent déjà. Les vues
+`v_conge_solde_employe` et `v_conge_historique_mouvements` reflètent ensuite le
+mouvement depuis la table, sans actualisation manuelle.
+
+### Consulter les décisions prises
+
+**Endpoint :** `GET /api/conge/demandes/{id}/validations`
+
+Renvoie l'historique des étapes et des décisions depuis la vue
+`v_conge_validations`. Le RH peut consulter tout l'historique; un manager est
+limité aux demandes des employés de son département.
+
+### Validations et erreurs
+
+- `400 Bad Request` : décision absente/invalide ou commentaire trop long.
+- `401 Unauthorized` : aucune session valide.
+- `403 Forbidden` : rôle inadapté à l'étape ou manager d'un autre département.
+- `404 Not Found` : demande inexistante.
+- `409 Conflict` : étape déjà terminée, règle de congé manquante ou solde
+  insuffisant à l'approbation finale.
+- Une demande refusée ou définitivement validée ne peut plus être décidée.

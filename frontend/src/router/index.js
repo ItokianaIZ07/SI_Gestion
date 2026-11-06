@@ -300,6 +300,12 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/jours-feries",
+          name: "rhJoursFeries",
+          component: () => import("@/views/modules/gestion/rh/JourFerie/JoursFeriesView.vue"),
+          beforeEnter: rhEtDirection,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

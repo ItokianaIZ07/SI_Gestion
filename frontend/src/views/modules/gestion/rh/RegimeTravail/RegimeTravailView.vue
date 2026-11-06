@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 import Notification from "@/components/ui/Notification.vue";
 import ConfirmationSuppressionRegime from "@/components/rh/RegimeTravail/ConfirmationSuppressionRegime.vue";
 import PageEntete from "@/components/gestion/PageEntete.vue";
@@ -9,6 +10,8 @@ import "@/assets/gestion.css";
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+const estRh = authStore.user?.role?.toUpperCase() === "RH";
 
 const regimes = ref([]);
 const chargement = ref(true);
@@ -76,9 +79,11 @@ onMounted(async () => {
 
     <PageEntete
       titre="Régimes de travail"
-      sous-titre="Consultez et gérez les régimes ainsi que leur utilisation dans les plannings."
+      :sous-titre="estRh
+        ? 'Consultez et gérez les régimes ainsi que leur utilisation dans les plannings.'
+        : 'Consultation des régimes de travail et de leur utilisation dans les plannings.'"
     >
-      <RouterLink class="g-btn g-btn--primaire" to="/si/app/rh/regimes-travail/formulaire">
+      <RouterLink v-if="estRh" class="g-btn g-btn--primaire" to="/si/app/rh/regimes-travail/formulaire">
         + Nouveau régime
       </RouterLink>
     </PageEntete>
@@ -93,7 +98,7 @@ onMounted(async () => {
               <th>Libellé</th>
               <th>Heures hebdomadaires</th>
               <th>Nombre de plannings</th>
-              <th class="g-droite">Actions</th>
+              <th v-if="estRh" class="g-droite">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -104,7 +109,7 @@ onMounted(async () => {
                 {{ regime.heuresHebdomadaires == null ? "—" : `${regime.heuresHebdomadaires} h` }}
               </td>
               <td>{{ regime.nbPlannings ?? 0 }}</td>
-              <td>
+              <td v-if="estRh">
                 <div class="g-actions-cellule">
                   <button class="g-btn g-btn--petit" type="button" @click="modifier(regime)">
                     Modifier
@@ -136,11 +141,12 @@ onMounted(async () => {
       </div>
       <p v-else class="g-vide rt-etat">
         <strong>Aucun régime de travail</strong>
-        Créez un régime pour pouvoir l'affecter aux plannings.
+          {{ estRh ? "Créez un régime pour pouvoir l'affecter aux plannings." : "Aucun régime de travail n'est enregistré." }}
       </p>
     </section>
 
     <ConfirmationSuppressionRegime
+      v-if="estRh"
       :regime="regimeASupprimer"
       :envoi="envoi"
       @confirmer="confirmerSuppression"

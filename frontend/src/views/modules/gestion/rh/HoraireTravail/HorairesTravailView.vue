@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/authStore";
 import Notification from "@/components/ui/Notification.vue";
 import PageEntete from "@/components/gestion/PageEntete.vue";
 import { horaireTravailApi } from "@/services/horaireTravail";
@@ -8,6 +9,8 @@ import "@/assets/gestion.css";
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+const estRh = authStore.user?.role?.toUpperCase() === "RH";
 const horaires = ref([]);
 const filtreStatut = ref("tous");
 const chargement = ref(true);
@@ -100,9 +103,11 @@ onMounted(async () => {
 
     <PageEntete
       titre="Horaires de travail"
-      sous-titre="Gérez les horaires journaliers, leur durée prévue et leur statut."
+      :sous-titre="estRh
+        ? 'Gérez les horaires journaliers, leur durée prévue et leur statut.'
+        : 'Consultation des horaires journaliers, de leur durée prévue et de leur statut.'"
     >
-      <RouterLink class="g-btn g-btn--primaire" to="/si/app/rh/horaires-travail/formulaire">
+      <RouterLink v-if="estRh" class="g-btn g-btn--primaire" to="/si/app/rh/horaires-travail/formulaire">
         + Nouvel horaire
       </RouterLink>
     </PageEntete>
@@ -132,7 +137,7 @@ onMounted(async () => {
               <th>Jours (L M M J V S D)</th>
               <th>Durée prévue</th>
               <th>Statut</th>
-              <th class="g-droite">Actions</th>
+              <th v-if="estRh" class="g-droite">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -154,7 +159,7 @@ onMounted(async () => {
                   {{ horaire.actif ? "Actif" : "Inactif" }}
                 </span>
               </td>
-              <td>
+              <td v-if="estRh">
                 <div class="g-actions-cellule">
                   <button class="g-btn g-btn--petit" type="button" @click="modifier(horaire)">
                     Modifier

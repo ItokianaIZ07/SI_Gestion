@@ -10,6 +10,7 @@ import com.si.rh.service.PlanningTravailService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,13 +40,20 @@ public class PlanningTravailController {
             @RequestParam(required = false) Integer idDepartement,
             @RequestParam(required = false) Integer idHoraire,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDebut,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin) {
-        return planningTravailService.lister(idEmploye, idDepartement, dateDebut, dateFin, idHoraire);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFin,
+            Authentication authentication) {
+        return planningTravailService.listerPourUtilisateur(
+                idEmploye, idDepartement, dateDebut, dateFin, idHoraire, authentication.getName());
     }
 
     @GetMapping("/options")
     public PlanningOptions options() {
         return planningTravailService.options();
+    }
+
+    @GetMapping("/departements")
+    public List<PlanningOptions.DepartementOption> departements() {
+        return planningTravailService.departements();
     }
 
     @GetMapping("/apercu")
@@ -56,13 +64,15 @@ public class PlanningTravailController {
     }
 
     @GetMapping("/employes/{idEmploye}")
-    public EmployePlanningFiche ficheEmploye(@PathVariable Integer idEmploye) {
-        return planningTravailService.ficheEmploye(idEmploye);
+    public EmployePlanningFiche ficheEmploye(@PathVariable Integer idEmploye, Authentication authentication) {
+        return planningTravailService.ficheEmployePourUtilisateur(idEmploye, authentication.getName());
     }
 
     @GetMapping("/employes/{idEmploye}/historique")
-    public List<PlanningTravailAvecDetails> historique(@PathVariable Integer idEmploye) {
-        return planningTravailService.historique(idEmploye);
+    public List<PlanningTravailAvecDetails> historique(
+            @PathVariable Integer idEmploye,
+            Authentication authentication) {
+        return planningTravailService.historiquePourUtilisateur(idEmploye, authentication.getName());
     }
 
     @PostMapping

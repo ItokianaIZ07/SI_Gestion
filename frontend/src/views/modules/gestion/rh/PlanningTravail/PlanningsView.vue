@@ -12,7 +12,9 @@ import "@/assets/gestion.css";
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const estRh = computed(() => authStore.user?.role?.toUpperCase() === "RH");
+const role = computed(() => authStore.user?.role?.toUpperCase() ?? "");
+const estRh = computed(() => role.value === "RH");
+const estManager = computed(() => role.value === "MANAGER");
 const plannings = ref([]);
 const options = ref({ departements: [] });
 const rechercheSalarie = ref("");
@@ -51,12 +53,12 @@ function dateFr(date) {
 async function charger() {
   chargement.value = true;
   try {
-    const [liste, donneesOptions] = await Promise.all([
+    const [liste, departements] = await Promise.all([
       planningTravailApi.liste(),
-      planningTravailApi.options(),
+      planningTravailApi.departements(),
     ]);
     plannings.value = liste ?? [];
-    options.value = donneesOptions ?? { departements: [] };
+    options.value = { departements: departements ?? [] };
   } catch (error) {
     notifier(error.message || "Impossible de charger les plannings.");
   } finally {
@@ -81,7 +83,9 @@ onMounted(async () => {
 
     <PageEntete
       titre="Plannings de travail"
-      sous-titre="Consultez les affectations et l’historique des horaires des salariés."
+      :sous-titre="estManager
+        ? 'Consultez les affectations et l’historique des salariés de votre équipe.'
+        : 'Consultez les affectations et l’historique des horaires des salariés.'"
     >
       <RouterLink
         v-if="estRh"

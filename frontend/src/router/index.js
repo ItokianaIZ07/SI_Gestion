@@ -36,6 +36,9 @@ const exigerRole = (...rolesAutorises) => () => {
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
 const rhEtDirection = exigerRole('RH', 'DIRECTION')
 const rhUniquement = exigerRole('RH')
+const variablesPaieAutorisees = exigerRole('RH', 'DIRECTION', 'MANAGER', 'FINANCE')
+const joursFeriesAutorises = exigerRole('RH', 'MANAGER', 'DIRECTION')
+const planningsAutorises = exigerRole('RH', 'MANAGER', 'DIRECTION')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -274,13 +277,13 @@ const router = createRouter({
           path: "rh/regimes-travail/formulaire",
           name: "rhRegimeTravailCreation",
           component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/regimes-travail/:id/modifier",
           name: "rhRegimeTravailModification",
           component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/horaires-travail",
@@ -292,25 +295,25 @@ const router = createRouter({
           path: "rh/horaires-travail/formulaire",
           name: "rhHoraireTravailCreation",
           component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/horaires-travail/:id/modifier",
           name: "rhHoraireTravailModification",
           component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: rhUniquement,
         },
         {
           path: "rh/jours-feries",
           name: "rhJoursFeries",
           component: () => import("@/views/modules/gestion/rh/JourFerie/JoursFeriesView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: joursFeriesAutorises,
         },
         {
           path: "rh/plannings",
           name: "rhPlannings",
           component: () => import("@/views/modules/gestion/rh/PlanningTravail/PlanningsView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: planningsAutorises,
         },
         {
           path: "rh/plannings/nouvelle-affectation",
@@ -322,7 +325,13 @@ const router = createRouter({
           path: "rh/plannings/salarie/:id(\\d+)",
           name: "rhHistoriquePlanningSalarie",
           component: () => import("@/views/modules/gestion/rh/PlanningTravail/HistoriquePlanningSalarieView.vue"),
-          beforeEnter: rhEtDirection,
+          beforeEnter: planningsAutorises,
+        },
+        {
+          path: "rh/variables-paie",
+          name: "rhVariablesPaie",
+          component: () => import("@/views/modules/gestion/rh/VariablesPaie/VariablesPaieView.vue"),
+          beforeEnter: variablesPaieAutorisees,
         },
 
         // ----- Onboarding des nouveaux employés -----

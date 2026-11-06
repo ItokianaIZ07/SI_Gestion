@@ -399,7 +399,7 @@ CREATE INDEX idx_remplacement_employe
 # TABLE : mouvement_conge
 #
 # Rôle :
-# Conserve tous les mouvements qui modifient le solde.
+# Conserve les mouvements de solde et les traces d'annulation.
 #
 # IMPORTANT :
 # Le nombre de jours est signé.
@@ -407,6 +407,7 @@ CREATE INDEX idx_remplacement_employe
 # +2.5 : acquisition
 # -5   : consommation
 # +5   : restitution
+#  0   : annulation (trace sans effet sur le solde)
 # +3   : ajustement positif
 # -2   : ajustement négatif
 #
@@ -448,12 +449,16 @@ CREATE TABLE mouvement_conge (
                 'CONSOMMATION',
                 'AJUSTEMENT',
                 'RESTITUTION',
-                'EXPIRATION'
+                'EXPIRATION',
+                'ANNULATION'
             )
         ),
 
     CONSTRAINT ck_mouvement_nombre
-        CHECK (nombre_jours <> 0),
+        CHECK (
+            (type_mouvement = 'ANNULATION' AND nombre_jours = 0)
+            OR (type_mouvement <> 'ANNULATION' AND nombre_jours <> 0)
+        ),
 
     CONSTRAINT ck_mouvement_signe
         CHECK (
@@ -464,6 +469,8 @@ CREATE TABLE mouvement_conge (
             (type_mouvement = 'RESTITUTION' AND nombre_jours > 0)
             OR
             (type_mouvement = 'AJUSTEMENT')
+            OR
+            (type_mouvement = 'ANNULATION' AND nombre_jours = 0)
             OR
             (type_mouvement = 'EXPIRATION' AND nombre_jours < 0)
         )

@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 @Entity
 @Table(name = "validation_conge")
 public class ValidationConge {

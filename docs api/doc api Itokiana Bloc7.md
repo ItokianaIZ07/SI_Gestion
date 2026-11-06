@@ -200,3 +200,57 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 | LocalDate | `YYYY-MM-DD` | `"2026-11-10"` |
 | double | Nombre décimal | `5.0` |
 | List | Tableau JSON | `[{...}, {...}]` |
+
+---
+
+## 7. Connexion d'un employé (sans mot de passe)
+
+**Endpoint :** `POST /api/auth/employe/login`
+
+Le compte est identifié par la combinaison du matricule, de l'email et du
+numéro CIN. La connexion est acceptée seulement si ces trois valeurs
+correspondent au même employé actif, associé à un utilisateur actif portant le
+rôle `EMPLOYE`. La connexion crée une session HTTP, comme le login existant.
+
+**Corps de la requête :**
+
+```json
+{
+  "email": "jean@example.com",
+  "matricule": "EMP001",
+  "numeroCin": "101010101010"
+}
+```
+
+**Réponse — `200 OK`**
+
+```json
+{
+  "success": true,
+  "message": "Authentification réussie",
+  "role": "EMPLOYE",
+  "employe": {
+    "id": 1,
+    "matricule": "EMP001",
+    "nom": "Rakoto",
+    "prenom": "Jean",
+    "email": "jean@example.com"
+  }
+}
+```
+
+La requête est rejetée avec `400 Bad Request` si un champ est absent ou mal
+formé, et avec `401 Unauthorized` si les informations ne correspondent pas, si
+l'employé ou l'utilisateur est inactif, si le compte utilisateur n'est pas lié,
+si l'email du compte utilisateur ne correspond pas à celui de l'employé, ou s'il
+ne possède pas le rôle `EMPLOYE`.
+
+**Récupérer l'employé de la session :** `GET /api/auth/employe/me`
+
+Cette route renvoie le même format de réponse que la connexion et nécessite la
+session créée par celle-ci. Le script ajoutant le rôle se trouve dans
+`backend/database/tables/Suite Module Rh/Itokiana_06-11-2026-Bloc7_role_employe_01.sql`.
+
+> Le matricule, l'email et le numéro CIN sont des données d'identification, pas
+> des secrets. Ce mode sans mot de passe doit être considéré comme provisoire et
+> ne fournit pas à lui seul une authentification forte.

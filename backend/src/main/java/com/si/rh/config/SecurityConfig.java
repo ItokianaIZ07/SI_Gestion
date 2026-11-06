@@ -84,6 +84,7 @@ public class SecurityConfig {
                                 new CsrfTokenRequestAttributeHandler()
                         )
                         .ignoringRequestMatchers("/api/auth/login")
+                        .ignoringRequestMatchers("/api/auth/employe/login")
                         .ignoringRequestMatchers("/api/auth/logout")
                         .ignoringRequestMatchers("/api/auth/csrf")
                         .ignoringRequestMatchers("/api/public/**")
@@ -108,6 +109,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/employe/login",
                                 "/api/client/**",
                                 "/api/auth/csrf",
                                 "/api/conge/**"

@@ -3,6 +3,11 @@ package com.si.rh.dto.conge;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 public class DemandeCongeRequest {
     private int idEmploye;
     private int idTypeConge;

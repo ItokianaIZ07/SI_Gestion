@@ -3,6 +3,11 @@ package com.si.rh.model;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 @Entity
 @Table(name = "remplacement_conge")
 public class RemplacementConge {

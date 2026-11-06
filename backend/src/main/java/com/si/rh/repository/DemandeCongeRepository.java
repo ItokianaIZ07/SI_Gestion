@@ -11,6 +11,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 public interface DemandeCongeRepository extends JpaRepository<DemandeConge, Integer> {
 
     @Query(

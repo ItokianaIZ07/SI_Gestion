@@ -5,6 +5,11 @@ import jakarta.persistence.*;
 import java.sql.Date;
 import java.time.LocalDate;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 @Entity
 @Table(name="regle_conge")
 public class RegleConge {

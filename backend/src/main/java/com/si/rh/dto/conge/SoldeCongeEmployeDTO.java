@@ -1,7 +1,10 @@
 package com.si.rh.dto.conge;
 
-import com.si.rh.model.Employe;
-import com.si.rh.model.TypeConge;
+
+/**
+ *
+ * @Author Itokiana
+ * */
 
 public record SoldeCongeEmployeDTO(
         Integer idEmploye,

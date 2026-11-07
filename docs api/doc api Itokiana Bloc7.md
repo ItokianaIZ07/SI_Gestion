@@ -6,6 +6,35 @@
 
 ---
 
+## Acquisition mensuelle automatique
+
+Le backend appelle la procédure PostgreSQL
+`sp_acquerir_conges_mensuels(date)` tous les premiers du mois à minuit, heure
+de Madagascar (`Indian/Antananarivo`), en lui passant le premier jour du mois.
+La procédure ajoute les mouvements
+`ACQUISITION` dans `mouvement_conge` pour les employés au statut `ACTIF` embauchés
+au plus tard le premier jour du mois.
+
+Pour chaque type de congé actif, seule la règle active la plus récente et
+applicable au premier du mois est retenue. L'acquisition n'a lieu que si
+`acquisition_autorisee` est vrai et `jours_acquis_mois` est supérieur à zéro.
+Le plafond `plafond_jours`, lorsqu'il existe, est respecté en calculant le
+solde à partir des mouvements déjà enregistrés. La période d'acquisition est
+stockée au premier du mois dans `periode_debut`; un index unique empêche une
+double acquisition pour un même employé, un type et une période.
+
+La migration
+`backend/database/tables/Suite Module Rh/Itokiana_07-11-2026-Bloc7_acquisition_conge_mensuelle_06.sql`
+doit être appliquée à la base existante avant activation de la tâche planifiée.
+Elle met à jour la procédure et garantit l'index d'idempotence. Un lancement
+manuel est possible avec :
+
+```sql
+CALL sp_acquerir_conges_mensuels(CURRENT_DATE);
+```
+
+---
+
 ## 1. Récupérer tous les soldes de congés
 
 **Endpoint :** `GET /api/conge/soldes`

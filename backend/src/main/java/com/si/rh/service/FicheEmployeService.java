@@ -37,7 +37,8 @@ public class FicheEmployeService {
     public List<EmployeResumeDTO> liste() {
         return employeRepository.findAllAvecPosteEtDepartement().stream()
                 .map(e -> new EmployeResumeDTO(e.getId(), e.getMatricule(), e.getNom(), e.getPrenom(), e.getEmail(),
-                        e.getPoste().getNom(), e.getDepartement().getNom(), e.getStatut(), e.getDateEmbauche()))
+                        e.getPoste().getNom(), e.getDepartement().getNom(), e.getStatut(), e.getDateEmbauche(),
+                        e.getDateDepart()))
                 .toList();
     }
 

@@ -3,6 +3,8 @@ import http, { api } from "./api";
 export const employeApi = {
   liste: () => api.get("/rh/employes"),
   fiche: (id) => api.get(`/rh/employes/${id}`),
+  controlesDepart: (id) => api.get(`/rh/employes/${id}/depart-controle`),
+  marquerParti: (id, dateDepart) => api.post(`/rh/employes/${id}/depart`, { dateDepart }),
   carriere: (id) => api.get(`/rh/employes/${id}/carriere`),
   referentiels: () => api.get("/rh/employes/referentiels-affectation"),
   changerAffectation: (id, demande) => api.post(`/rh/employes/${id}/affectations`, demande),

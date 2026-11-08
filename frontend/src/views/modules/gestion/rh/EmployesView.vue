@@ -17,12 +17,16 @@ const statut = ref("");
 
 const lignes = computed(() => {
   const q = recherche.value.trim().toLowerCase();
-  return employes.value.filter((e) => {
+  const resultat = employes.value.filter((e) => {
     if (statut.value && e.statut !== statut.value) return false;
     if (!q) return true;
     return [e.nom, e.prenom, e.matricule, e.email, e.poste, e.departement]
       .some((v) => (v ?? "").toLowerCase().includes(q));
   });
+  if (statut.value === "PARTI") {
+    resultat.sort((a, b) => (b.dateDepart ?? "").localeCompare(a.dateDepart ?? ""));
+  }
+  return resultat;
 });
 const pg = usePagination(lignes, 10);
 
@@ -62,6 +66,7 @@ onMounted(async () => {
               <th>Poste</th>
               <th>Département</th>
               <th>Embauché le</th>
+              <th>Date de départ</th>
               <th>Statut</th>
               <th class="g-droite">Fiche</th>
             </tr>
@@ -75,6 +80,7 @@ onMounted(async () => {
               <td>{{ e.poste }}</td>
               <td>{{ e.departement }}</td>
               <td>{{ formatDate(e.dateEmbauche) }}</td>
+              <td>{{ formatDate(e.dateDepart) }}</td>
               <td><StatutBadge :statut="e.statut" /></td>
               <td>
                 <div class="g-actions-cellule">

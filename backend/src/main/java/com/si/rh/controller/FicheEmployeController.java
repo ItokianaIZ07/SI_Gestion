@@ -2,6 +2,7 @@ package com.si.rh.controller;
 
 import com.si.rh.dto.ApiResponse;
 import com.si.rh.dto.fiche.*;
+import com.si.rh.service.DepartEmployeService;
 import com.si.rh.service.AffectationService;
 import com.si.rh.service.FicheEmployeService;
 import jakarta.validation.Valid;
@@ -17,10 +18,15 @@ public class FicheEmployeController {
 
     private final FicheEmployeService ficheService;
     private final AffectationService affectationService;
+    private final DepartEmployeService departEmployeService;
 
-    public FicheEmployeController(FicheEmployeService ficheService, AffectationService affectationService) {
+    public FicheEmployeController(
+            FicheEmployeService ficheService,
+            AffectationService affectationService,
+            DepartEmployeService departEmployeService) {
         this.ficheService = ficheService;
         this.affectationService = affectationService;
+        this.departEmployeService = departEmployeService;
     }
 
     @GetMapping
@@ -36,6 +42,21 @@ public class FicheEmployeController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FicheEmployeDTO>> fiche(@PathVariable Integer id) {
         return ResponseEntity.ok(ApiResponse.success("Fiche salarié récupérée", ficheService.fiche(id)));
+    }
+
+    @GetMapping("/{id}/depart-controle")
+    public ResponseEntity<ApiResponse<DepartEmployeControleDTO>> controleDepart(@PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Contrôles avant départ récupérés", departEmployeService.getControle(id)));
+    }
+
+    @PostMapping("/{id}/depart")
+    public ResponseEntity<ApiResponse<FicheEmployeDTO>> marquerParti(
+            @PathVariable Integer id,
+            @Valid @RequestBody DepartEmployeRequest demande) {
+        departEmployeService.marquerParti(id, demande);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Le salarié a été marqué comme parti.", ficheService.fiche(id)));
     }
 
     @GetMapping("/{id}/carriere")

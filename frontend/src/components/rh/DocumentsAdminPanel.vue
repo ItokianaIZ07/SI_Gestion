@@ -11,6 +11,7 @@ import { aujourdhui } from "@/config/libelles";
 const props = defineProps({
   employeId: { type: Number, required: true },
   documents: { type: Array, default: () => [] },
+  lectureSeule: { type: Boolean, default: false },
 });
 const emit = defineEmits(["modifie"]);
 
@@ -172,15 +173,15 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
             <td>
               <div class="g-actions-cellule">
                 <button type="button" class="g-btn g-btn--petit" @click="voir(d)">Voir</button>
-                <template v-if="d.statut === 'FOURNI'">
+                <template v-if="!lectureSeule && d.statut === 'FOURNI'">
                   <button type="button" class="g-btn g-btn--petit g-btn--primaire" :disabled="occupe"
                     :aria-label="`Valider ${d.nomFichier}`" @click="decider(d, 'VALIDE')">Valider</button>
                   <button type="button" class="g-btn g-btn--petit g-btn--danger" :disabled="occupe"
                     :aria-label="`Refuser ${d.nomFichier}`" @click="decider(d, 'REFUSE')">Refuser</button>
                 </template>
-                <button type="button" class="g-btn g-btn--petit" :disabled="occupe"
+                <button v-if="!lectureSeule" type="button" class="g-btn g-btn--petit" :disabled="occupe"
                   :aria-label="`Modifier la validité de ${d.nomFichier}`" @click="modifierValidite(d)">Validité</button>
-                <template v-if="d.dateExpiration && !d.dateRenouvellement">
+                <template v-if="!lectureSeule && d.dateExpiration && !d.dateRenouvellement">
                   <button type="button" class="g-btn g-btn--petit" :disabled="occupe"
                     :aria-label="`Renouveler ${d.nomFichier} avec un nouveau fichier`"
                     @click="demarrerRenouvellement(d)">Renouveler</button>
@@ -188,7 +189,7 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
                     :aria-label="`Marquer ${d.nomFichier} comme renouvelé`" @click="marquerRenouvele(d)">Déjà
                     renouvelé</button>
                 </template>
-                <button v-if="d.statut !== 'VALIDE'" type="button" class="g-btn g-btn--petit" :disabled="occupe"
+                <button v-if="!lectureSeule && d.statut !== 'VALIDE'" type="button" class="g-btn g-btn--petit" :disabled="occupe"
                   :aria-label="`Supprimer ${d.nomFichier}`" @click="supprimer(d)">Supprimer</button>
               </div>
             </td>
@@ -198,7 +199,7 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
     </div>
 
     <!-- Modification de la validité -->
-    <form v-if="edition" class="ajout ajout--edition" @submit.prevent="enregistrerValidite">
+    <form v-if="!lectureSeule && edition" class="ajout ajout--edition" @submit.prevent="enregistrerValidite">
       <strong class="ajout__titre">Validité de « {{ edition.nomFichier }} »</strong>
       <label class="g-champ">
         <span>Date d'expiration (vide = n'expire pas)</span>
@@ -213,7 +214,7 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
     </form>
 
     <!-- Dépôt / renouvellement -->
-    <form class="ajout" @submit.prevent="deposer">
+    <form v-if="!lectureSeule" class="ajout" @submit.prevent="deposer">
       <p v-if="remplace" class="ajout__titre ajout__titre--renouvellement">
         Renouvellement de « {{ remplace.nomFichier }} » : déposez le nouveau fichier.
         <button type="button" class="g-btn g-btn--petit" @click="annulerRenouvellement">Annuler</button>
@@ -235,7 +236,7 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
       <button class="g-btn g-btn--primaire" type="submit" :disabled="occupe">{{ remplace ? "Déposer et renouveler" :
         "Déposer le document" }}</button>
     </form>
-    <p class="aide">PDF, JPEG ou PNG — 5 Mo maximum. Sans date d'expiration, aucune alerte n'est envoyée. Un document
+    <p v-if="!lectureSeule" class="aide">PDF, JPEG ou PNG — 5 Mo maximum. Sans date d'expiration, aucune alerte n'est envoyée. Un document
       validé
       ne peut pas être supprimé.</p>
   </div>

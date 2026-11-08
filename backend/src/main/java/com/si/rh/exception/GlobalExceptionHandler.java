@@ -48,6 +48,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> integrite(DataIntegrityViolationException e) {
+        String message = MessageBase.regleMetier(e);
+        if (message != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(message));
+        }
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.failure("Opération impossible : une contrainte de la base de données est violée."));
     }

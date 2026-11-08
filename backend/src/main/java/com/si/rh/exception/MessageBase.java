@@ -12,6 +12,15 @@ public final class MessageBase {
     public static String regleMetier(Throwable erreur) {
         Throwable t = erreur;
         for (int i = 0; t != null && i < 20; i++) {
+            String message = t.getMessage();
+            if (message != null) {
+                if (message.contains("chk_employe_statut_depart")) {
+                    return "Une date de départ est obligatoire.";
+                }
+                if (message.contains("chk_employe_dates")) {
+                    return "La date de départ ne peut pas précéder la date d'embauche.";
+                }
+            }
             if (t instanceof SQLException sql && ETAT_RAISE_EXCEPTION.equals(sql.getSQLState())) {
                 return nettoyer(sql.getMessage());
             }

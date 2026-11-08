@@ -25,4 +25,15 @@ public interface EmployeRepository extends JpaRepository<Employe, Integer> {
     List<Employe> findByDepartement_Id(Integer departementId);
 
     long countByDepartement_IdAndStatut(Integer departementId, StatutEmploye statut);
+
+    @Query("SELECT e FROM Employe e JOIN FETCH e.poste JOIN FETCH e.departement ORDER BY e.nom, e.prenom")
+    List<Employe> findAllAvecPosteEtDepartement();
+
+    @Query("""
+            SELECT e FROM Employe e
+            JOIN FETCH e.poste JOIN FETCH e.departement
+            LEFT JOIN FETCH e.utilisateur
+            WHERE e.id = :id
+            """)
+    Optional<Employe> findByIdAvecDetails(@Param("id") Integer id);
 }

@@ -46,4 +46,12 @@ public interface ContratRepository extends JpaRepository<Contrat, Integer> {
         WHERE c.id = :id
     """)
     Optional<Contrat> findByIdAvecDetails(@Param("id") Integer id);
+
+    @Query("""
+        SELECT c FROM Contrat c
+        JOIN FETCH c.typeContrat t
+        JOIN FETCH c.StatutContract s
+        WHERE c.employe.id = :idEmploye AND s.code = 'ACTIF'
+    """)
+    Optional<Contrat> findActifParEmploye(@Param("idEmploye") Integer idEmploye);
 }

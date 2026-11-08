@@ -44,6 +44,18 @@ public class DocumentEmploye {
     @Column(name = "date_depot", nullable = false, updatable = false)
     private OffsetDateTime dateDepot;
 
+    /** Fin de validité du document (null = n'expire pas). */
+    @Column(name = "date_expiration")
+    private LocalDate dateExpiration;
+
+    /** Date à laquelle le document a été renouvelé (non null = plus d'alerte). */
+    @Column(name = "date_renouvellement")
+    private LocalDate dateRenouvellement;
+
+    /** Nombre de jours AVANT l'expiration où l'alerte est envoyée. */
+    @Column(name = "delai_alerte_jours", nullable = false)
+    private Integer delaiAlerteJours = 30;
+
     // ----- Constructeurs -----
 
     public DocumentEmploye() {
@@ -124,5 +136,29 @@ public class DocumentEmploye {
 
     public void setDateDepot(OffsetDateTime dateDepot) {
         this.dateDepot = dateDepot;
+    }
+
+    public LocalDate getDateExpiration() {
+        return dateExpiration;
+    }
+
+    public void setDateExpiration(LocalDate dateExpiration) {
+        this.dateExpiration = dateExpiration;
+    }
+
+    public LocalDate getDateRenouvellement() {
+        return dateRenouvellement;
+    }
+
+    public void setDateRenouvellement(LocalDate dateRenouvellement) {
+        this.dateRenouvellement = dateRenouvellement;
+    }
+
+    public Integer getDelaiAlerteJours() {
+        return delaiAlerteJours;
+    }
+
+    public void setDelaiAlerteJours(Integer delaiAlerteJours) {
+        this.delaiAlerteJours = delaiAlerteJours;
     }
 }

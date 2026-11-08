@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 import BoutonRetour from '@/components/BoutonRetour.vue';
 import NavBar from '@/components/NavBar.vue';
@@ -12,6 +12,12 @@ import html2pdf from 'html2pdf.js';
 import { clientApi } from '@/services/ressources';
 import { chargerAnnonces } from '@/services/annonces';
 import { useRoute } from 'vue-router';
+import Notification from '@/components/ui/Notification.vue';
+import router from '@/router';
+
+let timeout = null
+const responseMessage = ref("");
+const type = ref("succes")
 
 const { photo, photoUrl, choisirPhoto } = usePhoto()
 const route = useRoute();
@@ -126,7 +132,7 @@ const uploadCV =  async () => {
   
   try{
     const pdfBlob = await worker.outputPdf('blob'); 
-    await clientApi.deposerCv(
+    const response = await clientApi.deposerCv(
         {
           nom: name,
           prenom: firstName,
@@ -142,9 +148,26 @@ const uploadCV =  async () => {
         },
         pdfBlob,
       );
+    console.log(response);
+    if(response){
+      type.value = "succes";
+      responseMessage.value = "Votre déposition a bien été enregistré";
+      if(timeout)clearTimeout(timeout)
+      timeout = setTimeout(()=>{
+        router.replace({name: "offresPubliques"});
+      }, 1500);
+
+    }
   }catch(error){
     console.error(error.message);
+    type.value = "erreur"
+    responseMessage.value = error.message
   }
+}
+
+const clearNotification = () =>{
+  responseMessage.value = "";
+  type.value = "succes"
 }
 
 onMounted(async () => {
@@ -153,7 +176,12 @@ onMounted(async () => {
     annonce.value = annonces.find((a) => a.publication.id === publicationId) ?? null;
   } catch (e) {
     console.error(e.message);
+    responseMessage.value = e.message;
   }
+});
+
+onUnmounted(()=>{
+  if(timeout)clearTimeout(timeout);
 });
 
 </script>
@@ -162,6 +190,11 @@ onMounted(async () => {
   <NavBar />
 
   <BoutonRetour />
+  <Notification v-if="responseMessage.trim()!== ''"
+    :message="responseMessage"
+    :type="type"
+    @fermer="clearNotification"
+  />
 
   <!-- ===== Barre d'actions ===== -->
   <div class="ed-barre">

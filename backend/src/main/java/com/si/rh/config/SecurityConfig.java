@@ -125,6 +125,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/rh/besoins/**")
                         .hasAnyRole("RH", "FINANCE", "DIRECTION", "MANAGER")
 
+                        .requestMatchers(HttpMethod.GET, "/api/rh/organigramme", "/api/rh/organigramme/**")
+                        .hasAnyRole("RH", "DIRECTION", "MANAGER")
+                        .requestMatchers("/api/rh/organigramme", "/api/rh/organigramme/**").denyAll()
+
                         .requestMatchers("/api/rh/**")
                         .hasAnyRole("RH", "DIRECTION")
 

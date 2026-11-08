@@ -264,6 +264,18 @@ const router = createRouter({
           component: ContratView,
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/organigramme",
+          name: "rhOrganigramme",
+          component: () => import("@/views/modules/gestion/rh/OrganigrammeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
+        },
+        {
+          path: "rh/organigramme/employes/:idEmploye",
+          name: "rhOrganigrammeEmploye",
+          component: () => import("@/views/modules/gestion/rh/HierarchieEmployeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {

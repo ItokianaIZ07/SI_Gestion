@@ -12,11 +12,20 @@ public interface RegleCongeRepository extends JpaRepository<RegleConge, Integer>
 
     @Query("""
             SELECT r FROM RegleConge r
+            WHERE r.actif = true
+              AND r.dateDebutValidite <= :date
+              AND (r.dateFinValidite IS NULL OR r.dateFinValidite >= :date)
+            ORDER BY r.dateDebutValidite DESC, r.id DESC
+            """)
+    List<RegleConge> findAllApplicableRules(@Param("date") LocalDate date);
+
+    @Query("""
+            SELECT r FROM RegleConge r
             WHERE r.typeConge.id = :typeCongeId
               AND r.actif = true
               AND r.dateDebutValidite <= :date
               AND (r.dateFinValidite IS NULL OR r.dateFinValidite >= :date)
-            ORDER BY r.dateDebutValidite DESC
+            ORDER BY r.dateDebutValidite DESC, r.id DESC
             """)
     List<RegleConge> findApplicableRules(
             @Param("typeCongeId") Integer typeCongeId,

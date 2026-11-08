@@ -28,6 +28,10 @@ public interface EmployeRepository extends JpaRepository<Employe, Integer> {
 
     List<Employe> findByStatutOrderByNomAscPrenomAsc(StatutEmploye statut);
 
+    List<Employe> findByDepartement_IdAndStatutOrderByNomAscPrenomAsc(
+            Integer departementId,
+            StatutEmploye statut);
+
     @Query("SELECT e FROM Employe e WHERE e.candidature.id = :idCandidature")
     Optional<Employe> findByIdCandidature(@Param("idCandidature") Integer idCandidature);
 

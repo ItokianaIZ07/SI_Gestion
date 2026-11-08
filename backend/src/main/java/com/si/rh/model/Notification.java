@@ -31,6 +31,10 @@ public class Notification {
     @JoinColumn(name = "id_candidature")
     private Candidature candidature;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_document_employe")
+    private DocumentEmploye documentEmploye;
+
     @Column(name = "type_notification", nullable = false, length = 50)
     private String typeNotification = "INFORMATION";
 
@@ -136,5 +140,13 @@ public class Notification {
 
     public void setDateLecture(OffsetDateTime dateLecture) {
         this.dateLecture = dateLecture;
+    }
+
+    public DocumentEmploye getDocumentEmploye() {
+        return documentEmploye;
+    }
+
+    public void setDocumentEmploye(DocumentEmploye documentEmploye) {
+        this.documentEmploye = documentEmploye;
     }
 }

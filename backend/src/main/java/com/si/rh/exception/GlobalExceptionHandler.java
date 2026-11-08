@@ -1,6 +1,7 @@
 package com.si.rh.exception;
 
 import com.si.rh.dto.ApiResponse;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,6 +62,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> partieManquante(MissingServletRequestPartException e) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.failure("Partie de requête manquante : " + e.getRequestPartName()));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ApiResponse<Void>> erreurBase(DataAccessException e) {
+        String message = MessageBase.regleMetier(e);
+        if (message != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(message));
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure("Une erreur interne est survenue."));
     }
 
     @ExceptionHandler(Exception.class)

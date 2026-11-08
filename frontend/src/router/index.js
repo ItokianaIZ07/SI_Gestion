@@ -157,6 +157,36 @@ const router = createRouter({
           beforeEnter: exigerRole('DIRECTION'),
         },
         {
+          path: 'rh/notifications',
+          name: 'RhNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('RH'),
+        },
+        {
+          path: 'rh/employes',
+          name: 'RhEmployes',
+          component: () => import("@/views/modules/gestion/rh/EmployesView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/employes/:id',
+          name: 'RhFicheEmploye',
+          component: () => import("@/views/modules/gestion/rh/FicheEmployeView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/documents',
+          name: 'RhDocumentsARenouveler',
+          component: () => import("@/views/modules/gestion/rh/DocumentsARenouvelerView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'direction/audit',
+          name: 'DirectionAudit',
+          component: () => import("@/views/modules/gestion/direction/AuditView.vue"),
+          beforeEnter: exigerRole('DIRECTION'),
+        },
+        {
           path: 'manager/demandes',
           name: 'ManagerDemandes',
           component: ManagerDemandesView,

@@ -13,7 +13,8 @@ public record NotificationResponse(
         String titre,
         String message,
         OffsetDateTime dateCreation,
-        OffsetDateTime dateLecture
+        OffsetDateTime dateLecture,
+        Integer idDocumentEmploye
 ) {
     public static NotificationResponse from(Notification notification) {
         return new NotificationResponse(
@@ -25,7 +26,8 @@ public record NotificationResponse(
                 notification.getTitre(),
                 notification.getMessage(),
                 notification.getDateCreation(),
-                notification.getDateLecture()
+                notification.getDateLecture(),
+                notification.getDocumentEmploye() == null ? null : notification.getDocumentEmploye().getId()
         );
     }
 }

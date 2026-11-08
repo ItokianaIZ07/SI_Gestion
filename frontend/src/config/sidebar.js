@@ -1,5 +1,7 @@
 const sidebarByRole = {
     rh: [
+        { label: "Employés", to: "/si/app/rh/employes" },
+        { label: "Documents à renouveler", to: "/si/app/rh/documents" },
         { label: "Entretiens", to: "/si/app/rh/entretiens" },
         {
             label: "Contrats",
@@ -19,7 +21,8 @@ const sidebarByRole = {
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
-        { label: "CV des candidats", to: "/si/app/rh/cv" }
+        { label: "CV des candidats", to: "/si/app/rh/cv" },
+        { label: "Notifications", to: "/si/app/rh/notifications" }
     ],
 
     manager: [
@@ -40,6 +43,8 @@ const sidebarByRole = {
 
     direction: [
         // Tous les liens du système
+        { label: "Employés", to: "/si/app/rh/employes" },
+        { label: "Documents à renouveler", to: "/si/app/rh/documents" },
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Onboarding", to: "/si/app/rh/onboarding" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
@@ -57,6 +62,7 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes Finance", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Journal d'audit", to: "/si/app/direction/audit" },
         { label: "Notifications", to: "/si/app/direction/notifications" }
     ]
 };

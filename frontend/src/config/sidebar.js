@@ -27,8 +27,10 @@ const sidebarByRole = {
         { label: "Tableau de bord", to: "/si/app/rh/conges" },
         { label: "Demandes de congé", to: "/si/app/rh/conges/demandes" },
         { label: "Nouvelle demande", to: "/si/app/rh/conges/nouvelle" },
-    ],
-},
+        ],
+        },
+
+        { label: "Congés à valider", to: "/si/app/conges/validations" },
     ],
 
     manager: [
@@ -36,7 +38,8 @@ const sidebarByRole = {
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
-        { label: "Notifications", to: "/si/app/manager/notifications" }
+        { label: "Notifications", to: "/si/app/manager/notifications" },
+        { label: "Congés à valider", to: "/si/app/conges/validations" },
     ],
 
     finance: [

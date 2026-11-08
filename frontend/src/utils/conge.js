@@ -1,12 +1,12 @@
 // Utilitaires du module Congés (affichage et calculs côté interface).
 
-// Statuts prévus par le backend ; la réponse actuelle de /demandes n'en contient pas encore.
+// Statuts renvoyés par le backend (statutGlobal d'une demande).
 const STATUTS = {
   EN_ATTENTE_MANAGER: ['En attente manager', 'fin-wait'],
   EN_ATTENTE_RH: ['En attente RH', 'fin-wait'],
-  ACCEPTE: ['Acceptée', 'fin-ok'],
-  REFUSE: ['Refusée', 'fin-ko'],
-  ANNULE: ['Annulée', 'fin-none']
+  VALIDEE: ['Validée', 'fin-ok'],
+  REFUSEE: ['Refusée', 'fin-ko'],
+  ANNULEE: ['Annulée', 'fin-none']
 }
 export const STATUTS_LISTE = Object.entries(STATUTS).map(([code, [libelle]]) => ({ code, libelle }))
 export const statutDe = (code) => {
@@ -14,10 +14,32 @@ export const statutDe = (code) => {
   return { libelle, classe }
 }
 
+// Décision d'une étape de validation ou d'une proposition de remplacement.
+const DECISIONS = {
+  ACCEPTE: ['Accepté', 'fin-ok'],
+  REFUSE: ['Refusé', 'fin-ko'],
+  EN_ATTENTE: ['En attente', 'fin-wait']
+}
+export const decisionDe = (code) => {
+  const [libelle, classe] = DECISIONS[code] ?? [code ?? '—', 'fin-none']
+  return { libelle, classe }
+}
+
+// Étape du circuit : MANAGER puis RH.
+export const ETAPES = { MANAGER: 'Manager', RH: 'RH' }
+export const etapeDe = (code) => ETAPES[code] ?? code ?? '—'
+// Étape que doit traiter une demande selon son statut global.
+export const etapeCourante = (statutGlobal) =>
+  statutGlobal === 'EN_ATTENTE_MANAGER' ? 'Manager' : statutGlobal === 'EN_ATTENTE_RH' ? 'RH' : '—'
+
 export const nomComplet = (x) => `${x.prenomEmploye} ${x.nomEmploye}`
 
 const nf = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 export const jours = (n) => (n == null ? '—' : `${nf.format(n)} j`)
+
+// « 06/11/2026 10:15 » à partir d'un LocalDateTime du backend.
+export const dateHeure = (iso) =>
+  iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '—'
 
 /**
  * Jours du lundi au vendredi entre deux dates 'AAAA-MM-JJ' (bornes incluses).

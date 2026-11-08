@@ -36,17 +36,17 @@ const disponible = computed(() => soldesFiltres.value.reduce((t, s) => t + (s.so
 const aDesStatuts = computed(() => demandesFiltrees.value.some(d => d.statut))
 const compter = (test) => (aDesStatuts.value ? demandesFiltrees.value.filter(d => test(d.statut)).length : null)
 const enAttente = computed(() => compter(s => s?.startsWith('EN_ATTENTE')))
-const acceptees = computed(() => compter(s => s === 'ACCEPTE'))
+const validees = computed(() => compter(s => s === 'VALIDEE'))
 const consommes = computed(() => aDesStatuts.value
-  ? demandesFiltrees.value.filter(d => d.statut === 'ACCEPTE').reduce((t, d) => t + (d.nombreJourConge ?? 0), 0)
+  ? demandesFiltrees.value.filter(d => d.statut === 'VALIDEE').reduce((t, d) => t + (d.nombreJourConge ?? 0), 0)
   : null)
 
 const kpis = computed(() => [
   { titre: 'Solde disponible', valeur: jours(disponible.value), aide: typeConge.value || 'Tous types confondus' },
   { titre: 'Jours acquis', valeur: '—', aide: 'Fourni par une prochaine API' },
-  { titre: 'Jours consommés', valeur: consommes.value == null ? '—' : jours(consommes.value), aide: 'Demandes acceptées' },
+  { titre: 'Jours consommés', valeur: consommes.value == null ? '—' : jours(consommes.value), aide: 'Demandes validées' },
   { titre: 'Demandes en attente', valeur: enAttente.value ?? '—', aide: 'Manager ou RH' },
-  { titre: 'Demandes acceptées', valeur: acceptees.value ?? '—', aide: 'Toutes périodes' }
+  { titre: 'Demandes validées', valeur: validees.value ?? '—', aide: 'Toutes périodes' }
 ])
 
 onMounted(async () => {

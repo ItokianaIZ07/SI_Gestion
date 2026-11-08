@@ -399,7 +399,7 @@ CREATE INDEX idx_remplacement_employe
 # TABLE : mouvement_conge
 #
 # Rôle :
-# Conserve tous les mouvements qui modifient le solde.
+# Conserve les mouvements de solde et les traces d'annulation.
 #
 # IMPORTANT :
 # Le nombre de jours est signé.
@@ -407,6 +407,7 @@ CREATE INDEX idx_remplacement_employe
 # +2.5 : acquisition
 # -5   : consommation
 # +5   : restitution
+#  0   : annulation (trace sans effet sur le solde)
 # +3   : ajustement positif
 # -2   : ajustement négatif
 #
@@ -448,12 +449,16 @@ CREATE TABLE mouvement_conge (
                 'CONSOMMATION',
                 'AJUSTEMENT',
                 'RESTITUTION',
-                'EXPIRATION'
+                'EXPIRATION',
+                'ANNULATION'
             )
         ),
 
     CONSTRAINT ck_mouvement_nombre
-        CHECK (nombre_jours <> 0),
+        CHECK (
+            (type_mouvement = 'ANNULATION' AND nombre_jours = 0)
+            OR (type_mouvement <> 'ANNULATION' AND nombre_jours <> 0)
+        ),
 
     CONSTRAINT ck_mouvement_signe
         CHECK (
@@ -464,6 +469,8 @@ CREATE TABLE mouvement_conge (
             (type_mouvement = 'RESTITUTION' AND nombre_jours > 0)
             OR
             (type_mouvement = 'AJUSTEMENT')
+            OR
+            (type_mouvement = 'ANNULATION' AND nombre_jours = 0)
             OR
             (type_mouvement = 'EXPIRATION' AND nombre_jours < 0)
         )
@@ -864,20 +871,18 @@ $$;
 # Exemple :
 # CALL sp_acquerir_conges_mensuels('2026-11-01');
 #
-# Pour chaque employé :
-# 1. Récupère les règles actives du congé annuel.
+# Pour chaque employé actif et chaque type de congé ayant une règle
+# d'acquisition applicable :
+# 1. Récupère la règle active la plus récente pour le mois concerné.
 # 2. Calcule le solde actuel.
-# 3. Vérifie le plafond.
+# 3. Applique le plafond éventuel.
 # 4. Ajoute le mouvement d'acquisition.
 #
 # La procédure est idempotente pour une même période :
 # elle ne crée pas deux acquisitions identiques.
 #
-# IMPORTANT :
-# Cette procédure ne détermine pas à elle seule les employés
-# ayant droit à l'acquisition. Il faut compléter la condition
-# d'éligibilité selon les dates de contrat, suspensions et
-# règles de présence de ton entreprise.
+# Seuls les employés actifs dont la date d'embauche est antérieure
+# ou égale au premier jour du mois sont pris en compte.
 # ------------------------------------------------------------
 
 CREATE OR REPLACE PROCEDURE sp_acquerir_conges_mensuels(
@@ -888,44 +893,47 @@ AS $$
 DECLARE
     v_employe RECORD;
     v_regle RECORD;
-
+    v_periode DATE;
     v_solde NUMERIC(6,2);
     v_acquisition NUMERIC(6,2);
 BEGIN
-
     IF p_periode IS NULL THEN
         RAISE EXCEPTION 'La période est obligatoire';
     END IF;
 
+    v_periode := DATE_TRUNC('month', p_periode)::DATE;
+
     FOR v_employe IN
         SELECT id
         FROM employe
+        WHERE statut = 'ACTIF'
+          AND date_embauche <= v_periode
+        ORDER BY id
+        FOR UPDATE
     LOOP
-
-        # Verrouille la ligne employé pendant le traitement.
-        PERFORM 1
-        FROM employe
-        WHERE id = v_employe.id
-        FOR UPDATE;
-
         FOR v_regle IN
-            SELECT
+            SELECT DISTINCT ON (rc.id_type_conge)
+                rc.id AS id_regle,
                 rc.id_type_conge,
                 rc.jours_acquis_mois,
                 rc.plafond_jours
             FROM regle_conge rc
             JOIN type_conge tc
                 ON tc.id = rc.id_type_conge
-            WHERE tc.code = 'ANNUEL'
+            WHERE tc.actif = TRUE
               AND rc.actif = TRUE
               AND rc.acquisition_autorisee = TRUE
-              AND rc.date_debut_validite <= p_periode
+              AND rc.jours_acquis_mois > 0
+              AND rc.date_debut_validite <= v_periode
               AND (
                   rc.date_fin_validite IS NULL
-                  OR rc.date_fin_validite >= p_periode
+                  OR rc.date_fin_validite >= v_periode
               )
+            ORDER BY
+                rc.id_type_conge,
+                rc.date_debut_validite DESC,
+                rc.id DESC
         LOOP
-
             v_solde := fn_solde_conge(
                 v_employe.id,
                 v_regle.id_type_conge
@@ -944,7 +952,6 @@ BEGIN
             END IF;
 
             IF v_acquisition > 0 THEN
-
                 INSERT INTO mouvement_conge (
                     id_employe,
                     id_type_conge,
@@ -958,8 +965,9 @@ BEGIN
                     v_regle.id_type_conge,
                     'ACQUISITION',
                     v_acquisition,
-                    DATE_TRUNC('month', p_periode)::DATE,
-                    'Acquisition mensuelle automatique'
+                    v_periode,
+                    'Acquisition mensuelle automatique - règle '
+                        || v_regle.id_regle
                 )
                 ON CONFLICT (
                     id_employe,
@@ -968,13 +976,9 @@ BEGIN
                 )
                 WHERE type_mouvement = 'ACQUISITION'
                 DO NOTHING;
-
             END IF;
-
         END LOOP;
-
     END LOOP;
-
 END;
 $$;
 

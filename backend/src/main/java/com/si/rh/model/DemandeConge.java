@@ -7,6 +7,11 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 @Entity
 @Table(name = "demande_conge")
 public class DemandeConge {

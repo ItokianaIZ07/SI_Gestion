@@ -2,6 +2,11 @@ package com.si.rh.dto.conge;
 
 import java.time.LocalDate;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 public record DemandeCongeDTO(
         Integer idDemande,
         Integer idEmploye,
@@ -13,6 +18,7 @@ public record DemandeCongeDTO(
         LocalDate dateFinConge,
         String typeConge,
         double nombreJourConge,
-        String motif
+        String motif,
+        Integer idEmployeRemplacant
 ) {
 }

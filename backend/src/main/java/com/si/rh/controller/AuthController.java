@@ -3,8 +3,12 @@ package com.si.rh.controller;
 // BY : Doneli
 
 import com.si.rh.dto.AuthResponse;
+import com.si.rh.dto.EmployeeAuthResponse;
+import com.si.rh.dto.EmployeeLoginRequest;
 import com.si.rh.dto.LoginRequest;
+import com.si.rh.security.EmployeePrincipal;
 import com.si.rh.service.AuthService;
+import com.si.rh.service.EmployeeAuthService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -30,14 +34,17 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmployeeAuthService employeeAuthService;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository contextRepository;
 
     public AuthController(
             AuthService authService,
+            EmployeeAuthService employeeAuthService,
             AuthenticationManager authenticationManager,
             SecurityContextRepository contextRepository) {
         this.authService = authService;
+        this.employeeAuthService = employeeAuthService;
         this.authenticationManager = authenticationManager;
         this.contextRepository = contextRepository;
     }
@@ -113,6 +120,48 @@ public class AuthController {
         } catch (Exception e) {
             throw new RuntimeException("Erreur d'authentification",e);
         }
+    }
+
+    @PostMapping("/employe/login")
+    public ResponseEntity<EmployeeAuthResponse> loginEmploye(
+            @Valid @RequestBody EmployeeLoginRequest request,
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
+        try {
+            EmployeePrincipal principal =
+                    employeeAuthService.authentifier(request);
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            principal, null, principal.getAuthorities());
+
+            SecurityContext context =
+                    SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+
+            if (httpRequest.getSession(false) != null) {
+                httpRequest.changeSessionId();
+            }
+            contextRepository.saveContext(context, httpRequest, httpResponse);
+
+            return ResponseEntity.ok(
+                    employeeAuthService.creerReponse(principal));
+        } catch (AuthenticationException e) {
+            SecurityContextHolder.clearContext();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(employeeAuthService.reponseEchec());
+        }
+    }
+
+    @GetMapping("/employe/me")
+    public ResponseEntity<EmployeeAuthResponse> employeConnecte(
+            Authentication authentication) {
+        if (authentication == null
+                || !(authentication.getPrincipal() instanceof EmployeePrincipal principal)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(employeeAuthService.reponseEchec());
+        }
+        return ResponseEntity.ok(employeeAuthService.creerReponse(principal));
     }
 
     @PostMapping("/logout")

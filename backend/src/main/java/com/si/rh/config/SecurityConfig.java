@@ -84,10 +84,18 @@ public class SecurityConfig {
                                 new CsrfTokenRequestAttributeHandler()
                         )
                         .ignoringRequestMatchers("/api/auth/login")
+                        .ignoringRequestMatchers("/api/auth/employe/login")
                         .ignoringRequestMatchers("/api/auth/logout")
                         .ignoringRequestMatchers("/api/auth/csrf")
                         .ignoringRequestMatchers("/api/public/**")
-                        .ignoringRequestMatchers("/api/conge/**")
+                        .ignoringRequestMatchers(request -> {
+                            String path = request.getServletPath();
+                            return path.startsWith("/api/conge/")
+                                    && !path.matches(
+                                            "/api/conge/demandes/\\d+/(validation|annulation)/?")
+                                    && !path.matches(
+                                            "/api/conge/remplacements/\\d+/decision/?");
+                        })
                 )
 
                 // 401 au lieu de 403 quand l'utilisateur n'est pas connecté.
@@ -106,8 +114,21 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/conge/demandes/en-attente")
+                        .hasAnyRole("MANAGER", "RH")
+                        .requestMatchers(HttpMethod.POST, "/api/conge/demandes/*/validation")
+                        .hasAnyRole("MANAGER", "RH")
+                        .requestMatchers(HttpMethod.GET, "/api/conge/demandes/*/validations")
+                        .hasAnyRole("MANAGER", "RH")
+                        .requestMatchers(HttpMethod.POST, "/api/conge/demandes/*/annulation")
+                        .hasAnyRole("EMPLOYE", "RH")
+                        .requestMatchers(HttpMethod.GET, "/api/conge/remplacements/moi")
+                        .hasRole("EMPLOYE")
+                        .requestMatchers(HttpMethod.POST, "/api/conge/remplacements/*/decision")
+                        .hasRole("EMPLOYE")
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/employe/login",
                                 "/api/client/**",
                                 "/api/auth/csrf",
                                 "/api/conge/**"

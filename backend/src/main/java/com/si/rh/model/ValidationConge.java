@@ -4,6 +4,11 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/**
+ *
+ * @Author Itokiana
+ * */
+
 @Entity
 @Table(name = "validation_conge")
 public class ValidationConge {
@@ -16,7 +21,7 @@ public class ValidationConge {
     private DemandeConge demandeConge;
 
     @ManyToOne
-    @JoinColumn(name = "id_utilisateur", nullable = false)
+    @JoinColumn(name = "id_utilisateur")
     private Utilisateur utilisateur;
 
     @Column(name = "ordre")

@@ -92,7 +92,9 @@ public class SecurityConfig {
                             String path = request.getServletPath();
                             return path.startsWith("/api/conge/")
                                     && !path.matches(
-                                            "/api/conge/demandes/\\d+/(validation|annulation)/?");
+                                            "/api/conge/demandes/\\d+/(validation|annulation)/?")
+                                    && !path.matches(
+                                            "/api/conge/remplacements/\\d+/decision/?");
                         })
                 )
 
@@ -120,6 +122,10 @@ public class SecurityConfig {
                         .hasAnyRole("MANAGER", "RH")
                         .requestMatchers(HttpMethod.POST, "/api/conge/demandes/*/annulation")
                         .hasAnyRole("EMPLOYE", "RH")
+                        .requestMatchers(HttpMethod.GET, "/api/conge/remplacements/moi")
+                        .hasRole("EMPLOYE")
+                        .requestMatchers(HttpMethod.POST, "/api/conge/remplacements/*/decision")
+                        .hasRole("EMPLOYE")
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/employe/login",

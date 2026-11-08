@@ -18,6 +18,7 @@ public record DemandeCongeDTO(
         LocalDate dateFinConge,
         String typeConge,
         double nombreJourConge,
-        String motif
+        String motif,
+        Integer idEmployeRemplacant
 ) {
 }

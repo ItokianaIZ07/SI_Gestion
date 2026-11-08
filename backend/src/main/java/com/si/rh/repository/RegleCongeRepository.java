@@ -25,7 +25,7 @@ public interface RegleCongeRepository extends JpaRepository<RegleConge, Integer>
               AND r.actif = true
               AND r.dateDebutValidite <= :date
               AND (r.dateFinValidite IS NULL OR r.dateFinValidite >= :date)
-            ORDER BY r.dateDebutValidite DESC
+            ORDER BY r.dateDebutValidite DESC, r.id DESC
             """)
     List<RegleConge> findApplicableRules(
             @Param("typeCongeId") Integer typeCongeId,

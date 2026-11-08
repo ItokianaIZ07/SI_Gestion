@@ -7,6 +7,9 @@ import com.si.rh.dto.conge.AnnulationCongeResponse;
 import com.si.rh.dto.conge.DecisionCongeRequest;
 import com.si.rh.dto.conge.DecisionCongeResponse;
 import com.si.rh.dto.conge.DemandeCongeEnAttenteDTO;
+import com.si.rh.dto.conge.DecisionRemplacementRequest;
+import com.si.rh.dto.conge.DecisionRemplacementResponse;
+import com.si.rh.dto.conge.RemplacementCongeResponse;
 import com.si.rh.dto.conge.SoldeCongeEmployeDTO;
 import com.si.rh.dto.conge.TypeCongeResponse;
 import com.si.rh.dto.conge.ValidationCongeDTO;
@@ -37,6 +40,9 @@ public class CongeController {
 
     @Autowired
     private TypeCongeService typeCongeService;
+
+    @Autowired
+    private RemplacementCongeService remplacementCongeService;
 
     @GetMapping("/soldes")
     public List<SoldeCongeEmployeDTO> getSoldesConge(){
@@ -70,25 +76,20 @@ public class CongeController {
 
     @PostMapping("/demandes")
     public DemandeCongeDTO saveDemandeConge(@RequestBody DemandeCongeRequest demande){
-        try{
-            DemandeConge demandeConge = demandeCongeService.save(demande);
-            return new DemandeCongeDTO(
-                    demandeConge.getId(),
-                    demandeConge.getEmploye().getId(),
-                    demandeConge.getEmploye().getNom(),
-                    demandeConge.getEmploye().getPrenom(),
-                    demandeConge.getEmploye().getMatricule(),
-                    demandeConge.getEmploye().getEmail(),
-                    demandeConge.getDateDebut(),
-                    demandeConge.getDateFin(),
-                    demandeConge.getTypeConge().getLibelle(),
-                    demandeConge.getNombreJours(),
-                    demandeConge.getMotif()
-            );
-        } catch (RuntimeException e) {
-            System.out.println(e.getMessage());
-            throw new RuntimeException(e);
-        }
+        DemandeConge demandeConge = demandeCongeService.save(demande);
+        return new DemandeCongeDTO(
+                demandeConge.getId(),
+                demandeConge.getEmploye().getId(),
+                demandeConge.getEmploye().getNom(),
+                demandeConge.getEmploye().getPrenom(),
+                demandeConge.getEmploye().getMatricule(),
+                demandeConge.getEmploye().getEmail(),
+                demandeConge.getDateDebut(),
+                demandeConge.getDateFin(),
+                demandeConge.getTypeConge().getLibelle(),
+                demandeConge.getNombreJours(),
+                demandeConge.getMotif(),
+                demande.getIdEmployeRemplacant());
     }
 
     @GetMapping("/demandes/en-attente")
@@ -123,5 +124,19 @@ public class CongeController {
     @GetMapping("/type-conge")
     public List<TypeCongeResponse> getListTypeConge() {
         return typeCongeService.getAllType();
+    }
+
+    @GetMapping("/remplacements/moi")
+    public List<RemplacementCongeResponse> getMesRemplacements(
+            Authentication authentication) {
+        return remplacementCongeService.getMesRemplacements(authentication);
+    }
+
+    @PostMapping("/remplacements/{id}/decision")
+    public DecisionRemplacementResponse deciderRemplacement(
+            @PathVariable Long id,
+            @Valid @RequestBody DecisionRemplacementRequest request,
+            Authentication authentication) {
+        return remplacementCongeService.decider(id, request, authentication);
     }
 }

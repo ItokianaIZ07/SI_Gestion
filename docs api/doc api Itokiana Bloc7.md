@@ -134,7 +134,8 @@ colonnes de `regle_conge`.
     "dateFinConge": "2026-11-14",
     "typeConge": "Congé annuel",
     "nombreJourConge": 5.0,
-    "motif": "Repos annuel"
+    "motif": "Repos annuel",
+    "idEmployeRemplacant": 8
   }
 ]
 ```
@@ -174,18 +175,76 @@ GET /api/conge/demandes/1
     "dateFinConge": "2026-11-14",
     "typeConge": "Congé annuel",
     "nombreJourConge": 5.0,
-    "motif": "Repos annuel"
+    "motif": "Repos annuel",
+    "idEmployeRemplacant": 8
   }
 ]
 ```
 
 ---
 
-## 5. Enregistrer une demande de congé
+## 5. Employés disponibles par département
+
+Les deux routes suivantes sont sous `/api/manager/employes` et renvoient
+uniquement les employés au statut `ACTIF`, proposés comme remplaçants
+potentiels.
+
+### Lister les employés groupés par département
+
+**Endpoint :** `GET /api/manager/employes/par-departement`
+
+```json
+[
+  {
+    "idDepartement": 2,
+    "nomDepartement": "Informatique",
+    "employes": [
+      {
+        "id": 8,
+        "matricule": "EMP008",
+        "nom": "Rakoto",
+        "prenom": "Jean",
+        "email": "jean@example.com"
+      }
+    ]
+  }
+]
+```
+
+### Lister les employés actifs d'un département
+
+**Endpoint :** `GET /api/manager/employes/departement/{id}/employes`
+
+`id` est l'identifiant du département. Un identifiant inexistant renvoie
+`404 Not Found`.
+
+**Réponse — `200 OK`**
+
+```json
+[
+  {
+    "id": 8,
+    "matricule": "EMP008",
+    "nom": "Rakoto",
+    "prenom": "Jean",
+    "email": "jean@example.com"
+  }
+]
+```
+
+---
+
+## 6. Enregistrer une demande de congé
 
 **Endpoint :** `POST /api/conge/demandes`
 
 **Description :** Enregistre une nouvelle demande de congé pour un employé.
+
+Si la règle applicable au type de congé à la date de début impose un
+remplaçant (`remplacantObligatoire = true`), l'identifiant du remplaçant est
+obligatoire. Le remplaçant doit être un autre employé actif du même département.
+Sa proposition est enregistrée dans `remplacement_conge` avec la décision
+initiale `EN_ATTENTE`.
 
 **Header :**
 
@@ -200,6 +259,7 @@ Accept: application/json
 |---|---|---|---|
 | `idEmploye` | Integer | Oui | Identifiant de l'employé |
 | `idTypeConge` | Integer | Oui | Identifiant du type de congé |
+| `idEmployeRemplacant` | Integer | Selon la règle | Employé actif du même département, obligatoire si `remplacantObligatoire` vaut `true` |
 | `dateDebut` | LocalDate | Oui | Date de début du congé |
 | `dateFin` | LocalDate | Oui | Date de fin du congé |
 | `nombreJours` | Number | Oui | Nombre de jours demandés |
@@ -211,6 +271,7 @@ Accept: application/json
 {
   "idEmploye": 1,
   "idTypeConge": 1,
+  "idEmployeRemplacant": 8,
   "dateDebut": "2026-11-10",
   "dateFin": "2026-11-14",
   "nombreJours": 5,
@@ -232,7 +293,8 @@ Accept: application/json
   "dateFinConge": "2026-11-14",
   "typeConge": "Congé annuel",
   "nombreJourConge": 5.0,
-  "motif": "Repos annuel"
+  "motif": "Repos annuel",
+  "idEmployeRemplacant": 8
 }
 ```
 
@@ -242,6 +304,10 @@ Lors de l'enregistrement, le backend vérifie notamment :
 
 - L'existence de l'employé.
 - L'existence du type de congé.
+- L'existence d'une règle active couvrant la date de début de la demande.
+- La présence du remplaçant si la règle applicable l'exige.
+- Le statut actif du remplaçant, son appartenance au même département que le demandeur et le fait qu'il soit différent du demandeur.
+- L'identifiant de remplaçant transmis est valide même si la règle ne l'exige pas.
 - La validité des dates (date de fin supérieure ou égale à la date de début).
 - La positivité du nombre de jours.
 - La disponibilité du solde de congés.
@@ -250,7 +316,7 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 
 ---
 
-## 6. Récapitulatif des endpoints
+## 7. Récapitulatif des endpoints
 
 | Méthode | Endpoint | Fonction |
 |---|---|---|
@@ -259,14 +325,18 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 | GET | `/api/conge/demandes` | Récupérer toutes les demandes |
 | GET | `/api/conge/demandes/{id}` | Récupérer les demandes d'un employé |
 | POST | `/api/conge/demandes` | Créer une demande |
+| GET | `/api/manager/employes/par-departement` | Lister les employés actifs groupés par département |
+| GET | `/api/manager/employes/departement/{id}/employes` | Lister les employés actifs d'un département |
 | GET | `/api/conge/demandes/en-attente` | Lister les demandes à valider selon le rôle connecté |
 | POST | `/api/conge/demandes/{id}/validation` | Accepter ou refuser une demande à l'étape courante |
 | GET | `/api/conge/demandes/{id}/validations` | Consulter l'historique des décisions |
 | POST | `/api/conge/demandes/{id}/annulation` | Annuler une demande validée et journaliser l'annulation |
+| GET | `/api/conge/remplacements/moi` | Consulter les propositions adressées à l'employé connecté |
+| POST | `/api/conge/remplacements/{id}/decision` | Accepter ou refuser une proposition de remplacement |
 
 ---
 
-## 7. Formats des données
+## 8. Formats des données
 
 | Type | Format JSON | Exemple |
 |---|---|---|
@@ -278,7 +348,7 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 
 ---
 
-## 8. Connexion d'un employé (sans mot de passe)
+## 9. Connexion d'un employé (sans mot de passe)
 
 **Endpoint :** `POST /api/auth/employe/login`
 
@@ -332,7 +402,7 @@ session créée par celle-ci. Le script ajoutant le rôle se trouve dans
 
 ---
 
-## 9. Accepter ou refuser une demande de congé
+## 10. Accepter ou refuser une demande de congé
 
 Le circuit suit les étapes définies par `validation_conge` et les vues
 `v_conge_demandes_en_attente` et `v_conge_validations` :
@@ -416,7 +486,7 @@ limité aux demandes des employés de son département.
 
 ---
 
-## 10. Annuler une demande de congé validée
+## 11. Annuler une demande de congé validée
 
 **Endpoint :** `POST /api/conge/demandes/{id}/annulation`
 
@@ -489,3 +559,83 @@ mis à jour.
 - `404 Not Found` : demande inexistante.
 - `409 Conflict` : statut différent de `VALIDEE`, règle manquante, mouvement de
   consommation invalide ou restitution déjà enregistrée.
+
+---
+
+## 12. Consulter et décider les propositions de remplacement
+
+Ces opérations sont réservées à l'employé connecté portant le rôle `EMPLOYE`.
+L'employé ne peut consulter et traiter que les propositions dont il est le
+remplaçant. Les opérations d'écriture nécessitent le jeton CSRF
+`X-XSRF-TOKEN` obtenu avec `GET /api/auth/csrf`.
+
+### Consulter mes propositions
+
+**Endpoint :** `GET /api/conge/remplacements/moi`
+
+Renvoie toutes les propositions adressées à l'employé connecté, y compris les
+propositions déjà acceptées ou refusées.
+
+**Réponse — `200 OK`**
+
+```json
+[
+  {
+    "idRemplacement": 4,
+    "idDemande": 12,
+    "idEmployeDemandeur": 3,
+    "nomEmployeDemandeur": "Rakoto",
+    "prenomEmployeDemandeur": "Jean",
+    "matriculeEmployeDemandeur": "EMP003",
+    "typeConge": "Congé annuel",
+    "dateDebut": "2026-12-01",
+    "dateFin": "2026-12-05",
+    "nombreJours": 5.0,
+    "dateProposition": "2026-11-08T10:00:00",
+    "decision": "EN_ATTENTE",
+    "commentaire": null,
+    "dateDecision": null
+  }
+]
+```
+
+### Accepter ou refuser une proposition
+
+**Endpoint :** `POST /api/conge/remplacements/{id}/decision`
+
+`id` est l'identifiant de la ligne `remplacement_conge`.
+
+**Corps de la requête :**
+
+```json
+{
+  "decision": "ACCEPTE",
+  "commentaire": "Je peux assurer le remplacement."
+}
+```
+
+`decision` accepte `ACCEPTE` ou `REFUSE`; le commentaire est facultatif et
+limité à 2 000 caractères. La réponse contient la décision enregistrée, le
+commentaire et l'heure de traitement :
+
+```json
+{
+  "idRemplacement": 4,
+  "idDemande": 12,
+  "decision": "ACCEPTE",
+  "commentaire": "Je peux assurer le remplacement.",
+  "dateDecision": "2026-11-08T11:30:00"
+}
+```
+
+Le traitement verrouille la proposition en base et met à jour ses colonnes
+`decision`, `commentaire` et `date_decision`. Une proposition déjà traitée ne
+peut pas être modifiée une seconde fois.
+
+### Erreurs principales
+
+- `400 Bad Request` : décision absente/invalide ou commentaire trop long.
+- `401 Unauthorized` : aucune session valide.
+- `403 Forbidden` : l'utilisateur connecté n'est pas le remplaçant concerné.
+- `404 Not Found` : proposition inexistante.
+- `409 Conflict` : proposition déjà traitée.

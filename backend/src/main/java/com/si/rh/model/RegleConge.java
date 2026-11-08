@@ -2,7 +2,6 @@ package com.si.rh.model;
 
 import jakarta.persistence.*;
 
-import java.sql.Date;
 import java.time.LocalDate;
 
 /**
@@ -37,7 +36,7 @@ public class RegleConge {
     private double joursAcquisMois;
 
     @Column(name = "plafond_jours")
-    private double plafondJours;
+    private Double plafondJours;
 
     @Column(name = "date_debut_validite", nullable = false)
     private LocalDate dateDebutValidite;
@@ -50,7 +49,7 @@ public class RegleConge {
 
     public RegleConge(){}
 
-    public RegleConge(Integer id, TypeConge typeConge, boolean deductionSolde, boolean justificatifObligatoire, boolean remplacantObligatoire, boolean acquisitionAutorisee, double joursAcquisMois, double plafondJours, LocalDate dateDebutValidite, LocalDate dateFinValidite, boolean actif) {
+    public RegleConge(Integer id, TypeConge typeConge, boolean deductionSolde, boolean justificatifObligatoire, boolean remplacantObligatoire, boolean acquisitionAutorisee, double joursAcquisMois, Double plafondJours, LocalDate dateDebutValidite, LocalDate dateFinValidite, boolean actif) {
         this.id = id;
         this.typeConge = typeConge;
         this.deductionSolde = deductionSolde;
@@ -120,11 +119,11 @@ public class RegleConge {
         this.joursAcquisMois = joursAcquisMois;
     }
 
-    public double getPlafondJours() {
+    public Double getPlafondJours() {
         return plafondJours;
     }
 
-    public void setPlafondJours(double plafondJours) {
+    public void setPlafondJours(Double plafondJours) {
         this.plafondJours = plafondJours;
     }
 

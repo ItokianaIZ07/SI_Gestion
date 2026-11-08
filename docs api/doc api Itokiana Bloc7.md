@@ -70,7 +70,48 @@ CALL sp_acquerir_conges_mensuels(CURRENT_DATE);
 
 ---
 
-## 2. Récupérer toutes les demandes de congés
+## 2. Récupérer les types de congés et leurs règles
+
+**Endpoint :** `GET /api/conge/type-conge`
+
+**Description :** Récupère les types de congé actifs possédant une règle active
+dont la période de validité couvre la date du jour. Si plusieurs versions de
+règle sont valides, seule la plus récente est renvoyée. Les types sans règle
+applicable ne figurent pas dans la réponse.
+
+**Réponse — `200 OK`**
+
+```json
+[
+  {
+    "idType": 1,
+    "code": "ANNUEL",
+    "libelleTypeConge": "Congé annuel",
+    "actif": true,
+    "description": "Congé annuel acquis progressivement par le salarié.",
+    "regle": {
+      "idRegle": 1,
+      "deductionSolde": true,
+      "justificatifObligatoire": false,
+      "remplacantObligatoire": true,
+      "acquisitionAutorisee": true,
+      "joursAcquisMois": 2.5,
+      "plafondJours": 90.0,
+      "dateDebutValidite": "2026-01-01",
+      "dateFinValidite": null
+    }
+  }
+]
+```
+
+`plafondJours` et `dateFinValidite` sont `null` lorsque la règle n'en définit
+pas. Les propriétés `deductionSolde`, `justificatifObligatoire`,
+`remplacantObligatoire` et `acquisitionAutorisee` reflètent directement les
+colonnes de `regle_conge`.
+
+---
+
+## 3. Récupérer toutes les demandes de congés
 
 **Endpoint :** `GET /api/conge/demandes`
 
@@ -100,7 +141,7 @@ CALL sp_acquerir_conges_mensuels(CURRENT_DATE);
 
 ---
 
-## 3. Récupérer les demandes d'un employé
+## 4. Récupérer les demandes d'un employé
 
 **Endpoint :** `GET /api/conge/demandes/{id}`
 
@@ -140,7 +181,7 @@ GET /api/conge/demandes/1
 
 ---
 
-## 4. Enregistrer une demande de congé
+## 5. Enregistrer une demande de congé
 
 **Endpoint :** `POST /api/conge/demandes`
 
@@ -209,11 +250,12 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 
 ---
 
-## 5. Récapitulatif des endpoints
+## 6. Récapitulatif des endpoints
 
 | Méthode | Endpoint | Fonction |
 |---|---|---|
 | GET | `/api/conge/soldes` | Récupérer tous les soldes |
+| GET | `/api/conge/type-conge` | Récupérer les types actifs et leur règle applicable |
 | GET | `/api/conge/demandes` | Récupérer toutes les demandes |
 | GET | `/api/conge/demandes/{id}` | Récupérer les demandes d'un employé |
 | POST | `/api/conge/demandes` | Créer une demande |
@@ -224,7 +266,7 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 
 ---
 
-## 6. Formats des données
+## 7. Formats des données
 
 | Type | Format JSON | Exemple |
 |---|---|---|
@@ -236,7 +278,7 @@ La demande créée est initialement placée dans l'état `EN_ATTENTE_MANAGER`, a
 
 ---
 
-## 7. Connexion d'un employé (sans mot de passe)
+## 8. Connexion d'un employé (sans mot de passe)
 
 **Endpoint :** `POST /api/auth/employe/login`
 
@@ -290,7 +332,7 @@ session créée par celle-ci. Le script ajoutant le rôle se trouve dans
 
 ---
 
-## 8. Accepter ou refuser une demande de congé
+## 9. Accepter ou refuser une demande de congé
 
 Le circuit suit les étapes définies par `validation_conge` et les vues
 `v_conge_demandes_en_attente` et `v_conge_validations` :
@@ -374,7 +416,7 @@ limité aux demandes des employés de son département.
 
 ---
 
-## 9. Annuler une demande de congé validée
+## 10. Annuler une demande de congé validée
 
 **Endpoint :** `POST /api/conge/demandes/{id}/annulation`
 

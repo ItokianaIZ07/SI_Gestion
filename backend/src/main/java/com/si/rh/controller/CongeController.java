@@ -8,12 +8,10 @@ import com.si.rh.dto.conge.DecisionCongeRequest;
 import com.si.rh.dto.conge.DecisionCongeResponse;
 import com.si.rh.dto.conge.DemandeCongeEnAttenteDTO;
 import com.si.rh.dto.conge.SoldeCongeEmployeDTO;
+import com.si.rh.dto.conge.TypeCongeResponse;
 import com.si.rh.dto.conge.ValidationCongeDTO;
 import com.si.rh.model.DemandeConge;
-import com.si.rh.service.DemandeCongeService;
-import com.si.rh.service.AnnulationCongeService;
-import com.si.rh.service.SoldeCongeService;
-import com.si.rh.service.ValidationCongeService;
+import com.si.rh.service.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -36,6 +34,9 @@ public class CongeController {
 
     @Autowired
     private AnnulationCongeService annulationCongeService;
+
+    @Autowired
+    private TypeCongeService typeCongeService;
 
     @GetMapping("/soldes")
     public List<SoldeCongeEmployeDTO> getSoldesConge(){
@@ -117,5 +118,10 @@ public class CongeController {
             @Valid @RequestBody AnnulationCongeRequest request,
             Authentication authentication) {
         return annulationCongeService.annuler(id, request, authentication);
+    }
+
+    @GetMapping("/type-conge")
+    public List<TypeCongeResponse> getListTypeConge() {
+        return typeCongeService.getAllType();
     }
 }

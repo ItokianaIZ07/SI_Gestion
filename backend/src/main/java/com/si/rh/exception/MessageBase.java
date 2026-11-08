@@ -20,6 +20,9 @@ public final class MessageBase {
                 if (message.contains("chk_employe_dates")) {
                     return "La date de départ ne peut pas précéder la date d'embauche.";
                 }
+                if (message.contains("chk_tache_realisation")) {
+                    return "Une tâche terminée doit avoir une date de réalisation.";
+                }
             }
             if (t instanceof SQLException sql && ETAT_RAISE_EXCEPTION.equals(sql.getSQLState())) {
                 return nettoyer(sql.getMessage());

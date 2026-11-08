@@ -14,6 +14,34 @@ import java.util.Optional;
 @Repository
 public class OrganigrammeRepository {
 
+    private static final String EQUIPE_MANAGER_CTE = """
+            WITH RECURSIVE racines(id_employe, chemin) AS (
+                SELECT e.id, ARRAY[e.id]
+                FROM employe e
+                WHERE e.id_utilisateur = ? AND e.statut <> 'PARTI'
+                UNION
+                SELECT h.id_employe, ARRAY[h.id_employe]
+                FROM historique_affectation h
+                JOIN departement d ON d.id = h.id_departement
+                WHERE h.date_fin IS NULL AND d.id_utilisateur_manager = ?
+                UNION
+                SELECT h.id_employe, ARRAY[h.id_employe]
+                FROM historique_affectation h
+                JOIN employe s ON s.id = h.id_superieur
+                WHERE h.date_fin IS NULL AND s.id_utilisateur = ?
+            ),
+            equipe(id_employe, chemin) AS (
+                SELECT id_employe, chemin FROM racines
+                UNION ALL
+                SELECT h.id_employe, equipe.chemin || h.id_employe
+                FROM equipe
+                JOIN historique_affectation h
+                  ON h.id_superieur = equipe.id_employe
+                 AND h.date_fin IS NULL
+                WHERE NOT h.id_employe = ANY(equipe.chemin)
+            )
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public OrganigrammeRepository(JdbcTemplate jdbcTemplate) {
@@ -34,15 +62,14 @@ public class OrganigrammeRepository {
                 "SELECT id_employe FROM v_organigramme", Integer.class);
     }
 
-    public List<OrganigrammeLigne> findOrganigrammeManager(Integer idUtilisateur, Integer idEmployeManager) {
-        return jdbcTemplate.query("""
+    public List<OrganigrammeLigne> findOrganigrammeManager(Integer idUtilisateur) {
+        return jdbcTemplate.query(EQUIPE_MANAGER_CTE + """
                 SELECT o.id_employe, o.matricule, o.nom, o.prenom, o.departement, o.poste,
                        o.id_superieur, o.nom_superieur, o.prenom_superieur, o.nb_subordonnes_directs
                 FROM v_organigramme o
-                WHERE o.id_employe = ?
-                   OR utilisateur_est_manager_de(?, o.id_employe)
+                JOIN equipe e ON e.id_employe = o.id_employe
                 ORDER BY o.departement, o.nom, o.prenom
-                """, this::mapLigne, idEmployeManager, idUtilisateur);
+                """, this::mapLigne, idUtilisateur, idUtilisateur, idUtilisateur);
     }
 
     public List<DepartementOrganigramme> findDepartements() {
@@ -54,24 +81,17 @@ public class OrganigrammeRepository {
                 rs.getInt("id"), rs.getString("nom")));
     }
 
-    public List<DepartementOrganigramme> findDepartementsManager(Integer idUtilisateur, Integer idEmployeManager) {
-        return jdbcTemplate.query("""
+    public List<DepartementOrganigramme> findDepartementsManager(Integer idUtilisateur) {
+        return jdbcTemplate.query(EQUIPE_MANAGER_CTE + """
                 SELECT DISTINCT d.id, d.nom
                 FROM v_organigramme o
+                JOIN equipe e ON e.id_employe = o.id_employe
                 JOIN historique_affectation h
                   ON h.id_employe = o.id_employe AND h.date_fin IS NULL
                 JOIN departement d ON d.id = h.id_departement
-                WHERE o.id_employe = ?
-                   OR utilisateur_est_manager_de(?, o.id_employe)
                 ORDER BY d.nom
                 """, (rs, row) -> new DepartementOrganigramme(
-                rs.getInt("id"), rs.getString("nom")), idEmployeManager, idUtilisateur);
-    }
-
-    public Optional<Integer> findIdEmployeByIdUtilisateur(Integer idUtilisateur) {
-        return jdbcTemplate.query("""
-                SELECT id FROM employe WHERE id_utilisateur = ?
-                """, rs -> rs.next() ? Optional.of(rs.getInt("id")) : Optional.empty(), idUtilisateur);
+                rs.getInt("id"), rs.getString("nom")), idUtilisateur, idUtilisateur, idUtilisateur);
     }
 
     public Optional<OrganigrammeLigne> findEmploye(Integer idEmploye) {
@@ -84,12 +104,15 @@ public class OrganigrammeRepository {
         return lignes.stream().findFirst();
     }
 
-    public boolean estDansEquipeManager(Integer idUtilisateur, Integer idEmployeManager, Integer idEmploye) {
-        Boolean estDansEquipe = jdbcTemplate.queryForObject("""
-                SELECT (CAST(? AS INTEGER) = CAST(? AS INTEGER)
-                        OR utilisateur_est_manager_de(CAST(? AS INTEGER), CAST(? AS INTEGER)))
-                """, Boolean.class, idEmployeManager, idEmploye, idUtilisateur, idEmploye);
-        return Boolean.TRUE.equals(estDansEquipe);
+    public boolean estDansEquipeManager(Integer idUtilisateur, Integer idEmploye) {
+        Integer membre = jdbcTemplate.query(EQUIPE_MANAGER_CTE + """
+                SELECT id_employe
+                FROM equipe
+                WHERE id_employe = ?
+                LIMIT 1
+                """, rs -> rs.next() ? rs.getInt("id_employe") : null,
+                idUtilisateur, idUtilisateur, idUtilisateur, idEmploye);
+        return membre != null;
     }
 
     public List<OrganigrammePersonne> findChaineSuperieurs(Integer idEmploye) {

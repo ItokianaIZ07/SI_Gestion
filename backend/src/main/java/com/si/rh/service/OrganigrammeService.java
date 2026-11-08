@@ -37,7 +37,7 @@ public class OrganigrammeService {
     public List<OrganigrammeNoeud> getOrganigramme(String email, String role) {
         AccesOrganigramme acces = obtenirAcces(email, role);
         List<OrganigrammeLigne> lignes = acces.manager()
-                ? organigrammeRepository.findOrganigrammeManager(acces.idUtilisateur(), acces.idEmployeManager())
+                ? organigrammeRepository.findOrganigrammeManager(acces.idUtilisateur())
                 : organigrammeRepository.findOrganigramme();
         Set<Integer> idsActifs = acces.manager()
                 ? Set.copyOf(organigrammeRepository.findIdsOrganigramme())
@@ -48,7 +48,7 @@ public class OrganigrammeService {
     public List<DepartementOrganigramme> getDepartements(String email, String role) {
         AccesOrganigramme acces = obtenirAcces(email, role);
         return acces.manager()
-                ? organigrammeRepository.findDepartementsManager(acces.idUtilisateur(), acces.idEmployeManager())
+                ? organigrammeRepository.findDepartementsManager(acces.idUtilisateur())
                 : organigrammeRepository.findDepartements();
     }
 
@@ -56,7 +56,7 @@ public class OrganigrammeService {
         AccesOrganigramme acces = obtenirAcces(email, role);
         if (acces.manager()
                 && !organigrammeRepository.estDansEquipeManager(
-                        acces.idUtilisateur(), acces.idEmployeManager(), idEmploye)) {
+                        acces.idUtilisateur(), idEmploye)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cet employé ne fait pas partie de votre équipe.");
         }
 
@@ -117,7 +117,7 @@ public class OrganigrammeService {
 
     private boolean personneDansEquipe(AccesOrganigramme acces, Integer idEmploye) {
         return organigrammeRepository.estDansEquipeManager(
-                acces.idUtilisateur(), acces.idEmployeManager(), idEmploye);
+                acces.idUtilisateur(), idEmploye);
     }
 
     private AccesOrganigramme obtenirAcces(String email, String role) {
@@ -127,13 +127,9 @@ public class OrganigrammeService {
         var utilisateur = utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur connecté introuvable."));
         if (!"MANAGER".equals(role)) {
-            return new AccesOrganigramme(utilisateur.getId(), null, false);
+            return new AccesOrganigramme(utilisateur.getId(), false);
         }
-        Integer idEmployeManager = organigrammeRepository
-                .findIdEmployeByIdUtilisateur(utilisateur.getId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.FORBIDDEN, "Aucun salarié n'est associé à ce compte manager."));
-        return new AccesOrganigramme(utilisateur.getId(), idEmployeManager, true);
+        return new AccesOrganigramme(utilisateur.getId(), true);
     }
 
     private List<OrganigrammeNoeud> construireArbre(List<OrganigrammeLigne> lignes, Set<Integer> idsActifs) {
@@ -205,7 +201,7 @@ public class OrganigrammeService {
                 niveau);
     }
 
-    private record AccesOrganigramme(Integer idUtilisateur, Integer idEmployeManager, boolean manager) {
+    private record AccesOrganigramme(Integer idUtilisateur, boolean manager) {
     }
 
     private static class NoeudMutable {

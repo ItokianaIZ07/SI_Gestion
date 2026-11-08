@@ -19,6 +19,7 @@ const sidebarByRole = {
         },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
@@ -30,6 +31,7 @@ const sidebarByRole = {
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Notifications", to: "/si/app/manager/notifications" }
     ],
 
@@ -49,6 +51,7 @@ const sidebarByRole = {
         { label: "Onboarding", to: "/si/app/rh/onboarding" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },

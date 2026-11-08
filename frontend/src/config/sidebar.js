@@ -31,6 +31,7 @@ const sidebarByRole = {
         },
 
         { label: "Congés à valider", to: "/si/app/conges/validations" },
+        { label: "Tableau de bord congés", to: "/si/app/rh/conges" },
     ],
 
     manager: [
@@ -69,7 +70,8 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes Finance", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
-        { label: "Notifications", to: "/si/app/direction/notifications" }
+        { label: "Notifications", to: "/si/app/direction/notifications" },
+        { label: "Tableau de bord congés", to: "/si/app/rh/conges" },
     ]
 };
 

@@ -121,6 +121,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/rh/contrats/*").hasAnyRole("RH", "DIRECTION")
                         .requestMatchers("/api/rh/contrats/**").hasRole("RH")
                         .requestMatchers("/api/rh/entretiens/**").hasRole("RH")
+                        .requestMatchers(HttpMethod.POST, "/api/rh/employes/*/depart").hasRole("RH")
 
                         .requestMatchers("/api/rh/besoins/**")
                         .hasAnyRole("RH", "FINANCE", "DIRECTION", "MANAGER")

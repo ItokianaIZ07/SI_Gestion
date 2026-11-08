@@ -8,9 +8,11 @@ import ChangementAffectationForm from "@/components/rh/ChangementAffectationForm
 import DocumentsAdminPanel from "@/components/rh/DocumentsAdminPanel.vue";
 import FriseCarriere from "@/components/rh/FriseCarriere.vue";
 import { employeApi } from "@/services/employeService";
-import { formatDate, formatMontant } from "@/config/libelles";
+import { aujourdhui, formatDate, formatMontant } from "@/config/libelles";
+import { useAuthStore } from "@/stores/authStore";
 
 const route = useRoute();
+const authStore = useAuthStore();
 const employeId = computed(() => Number(route.params.id));
 
 const fiche = ref(null);
@@ -18,6 +20,17 @@ const chargement = ref(true);
 const erreur = ref("");
 const succes = ref("");
 const mutationOuverte = ref(false);
+const dialogueDepart = ref(false);
+const dateDepart = ref(aujourdhui());
+const controlesDepart = ref(null);
+const departEnCours = ref(false);
+const estRh = computed(() => authStore.user?.role?.toUpperCase() === "RH");
+const peutConfirmerDepart = computed(() =>
+  Boolean(dateDepart.value)
+  && !departEnCours.value
+  && (!fiche.value?.dateEmbauche || dateDepart.value >= fiche.value.dateEmbauche)
+  && dateDepart.value <= aujourdhui(),
+);
 
 async function charger() {
   chargement.value = true;
@@ -46,9 +59,38 @@ async function apresMutation() {
   await recharger();
 }
 
+async function ouvrirDialogueDepart() {
+  erreur.value = "";
+  succes.value = "";
+  dateDepart.value = aujourdhui();
+  try {
+    controlesDepart.value = await employeApi.controlesDepart(employeId.value);
+    dialogueDepart.value = true;
+  } catch (e) {
+    erreur.value = e.message || "Impossible de charger les contrôles avant départ.";
+  }
+}
+
+async function confirmerDepart() {
+  if (!peutConfirmerDepart.value) return;
+  erreur.value = "";
+  departEnCours.value = true;
+  try {
+    fiche.value = await employeApi.marquerParti(employeId.value, dateDepart.value);
+    dialogueDepart.value = false;
+    mutationOuverte.value = false;
+    succes.value = "Le salarié a été marqué comme parti.";
+  } catch (e) {
+    erreur.value = e.message || "Impossible d'enregistrer le départ du salarié.";
+  } finally {
+    departEnCours.value = false;
+  }
+}
+
 onMounted(charger);
 watch(employeId, () => {
   mutationOuverte.value = false;
+  dialogueDepart.value = false;
   succes.value = "";
   charger();
 });
@@ -113,6 +155,16 @@ const actuelle = computed(() => fiche.value?.affectationActuelle ?? null);
             </dd>
           </div>
         </dl>
+      </section>
+
+      <section v-if="estRh && !parti" class="g-carte depart-actions">
+        <div>
+          <h2>Départ du salarié</h2>
+          <p>Enregistrez son départ et clôturez ses affectations, droits de congé et planning.</p>
+        </div>
+        <button type="button" class="g-btn g-btn--danger" @click="ouvrirDialogueDepart">
+          Marquer comme parti
+        </button>
       </section>
 
       <!-- Affectation actuelle + mutation -->
@@ -222,7 +274,12 @@ const actuelle = computed(() => fiche.value?.affectationActuelle ?? null);
         <div class="bloc-entete">
           <h2 id="titre-documents">Documents administratifs</h2>
         </div>
-        <DocumentsAdminPanel :employe-id="fiche.id" :documents="fiche.documents" @modifie="recharger" />
+        <DocumentsAdminPanel
+          :employe-id="fiche.id"
+          :documents="fiche.documents"
+          :lecture-seule="parti"
+          @modifie="recharger"
+        />
       </section>
 
       <!-- Carrière -->
@@ -233,12 +290,182 @@ const actuelle = computed(() => fiche.value?.affectationActuelle ?? null);
         <FriseCarriere :carriere="fiche.carriere" />
       </section>
     </template>
+
+    <div v-if="dialogueDepart" class="dialogue-fond" @click.self="dialogueDepart = false">
+      <section
+        class="dialogue-depart"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titre-dialogue-depart"
+        aria-describedby="description-dialogue-depart"
+      >
+        <header class="dialogue-depart__entete">
+          <h2 id="titre-dialogue-depart">Confirmer le départ</h2>
+          <button type="button" class="g-btn g-btn--petit" :disabled="departEnCours" @click="dialogueDepart = false">
+            Fermer
+          </button>
+        </header>
+
+        <p id="description-dialogue-depart">
+          Le statut passera immédiatement à <strong>PARTI</strong>. Le départ ne peut pas être annulé depuis cette fiche.
+        </p>
+
+        <label class="g-champ dialogue-depart__date">
+          <span>Date de départ <b class="g-obligatoire">*</b></span>
+          <input
+            v-model="dateDepart"
+            class="g-input"
+            type="date"
+            required
+            :min="fiche.dateEmbauche"
+            :max="aujourdhui()"
+          />
+        </label>
+
+        <div class="dialogue-depart__effets">
+          <strong>Effets du départ</strong>
+          <ul>
+            <li>L’affectation en cours sera fermée à la date choisie.</li>
+            <li>Les droits de congé seront clôturés et désactivés.</li>
+            <li>Le planning de travail sera clôturé.</li>
+            <li>Le compte utilisateur, le contrat et les subordonnés ne seront pas modifiés.</li>
+          </ul>
+        </div>
+
+        <div v-if="controlesDepart" class="dialogue-depart__controles">
+          <strong>Points à vérifier</strong>
+          <ul>
+            <li v-if="controlesDepart.nbSubordonnesDirects">
+              Ce salarié a {{ controlesDepart.nbSubordonnesDirects }} subordonné(s) direct(s). Ils resteront rattachés à lui.
+            </li>
+            <li v-if="controlesDepart.contratActif">Il a un contrat actif, qui ne sera pas clôturé.</li>
+            <li v-if="controlesDepart.demandesCongeEnAttente">
+              {{ controlesDepart.demandesCongeEnAttente }} demande(s) de congé en attente ne seront pas modifiées.
+            </li>
+            <li v-if="controlesDepart.missionsEnCours">
+              {{ controlesDepart.missionsEnCours }} mission(s) en cours ne seront pas modifiées.
+            </li>
+            <li v-if="!controlesDepart.nbSubordonnesDirects && !controlesDepart.contratActif
+              && !controlesDepart.demandesCongeEnAttente && !controlesDepart.missionsEnCours">
+              Aucun point particulier détecté.
+            </li>
+          </ul>
+        </div>
+
+        <p v-if="dateDepart && fiche.dateEmbauche && dateDepart < fiche.dateEmbauche" class="dialogue-depart__erreur">
+          La date de départ ne peut pas précéder la date d'embauche.
+        </p>
+        <p v-else-if="dateDepart > aujourdhui()" class="dialogue-depart__erreur">
+          La date de départ ne peut pas être dans le futur.
+        </p>
+
+        <footer class="dialogue-depart__actions">
+          <button type="button" class="g-btn" :disabled="departEnCours" @click="dialogueDepart = false">
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="g-btn g-btn--danger"
+            :disabled="!peutConfirmerDepart"
+            @click="confirmerDepart"
+          >
+            {{ departEnCours ? "Enregistrement…" : "Confirmer le départ" }}
+          </button>
+        </footer>
+      </section>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .resume {
   padding: 22px 24px;
+}
+
+.depart-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 22px;
+}
+
+.depart-actions h2 {
+  margin: 0 0 5px;
+  font-size: 1.05rem;
+}
+
+.depart-actions p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.dialogue-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgb(18 28 18 / 48%);
+}
+
+.dialogue-depart {
+  width: min(620px, 100%);
+  max-height: min(90vh, 780px);
+  overflow: auto;
+  padding: 22px;
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgb(0 0 0 / 22%);
+}
+
+.dialogue-depart__entete,
+.dialogue-depart__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialogue-depart__entete h2 {
+  margin: 0;
+}
+
+.dialogue-depart__date {
+  display: grid;
+  gap: 7px;
+  margin: 18px 0;
+}
+
+.dialogue-depart__effets,
+.dialogue-depart__controles {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--color-subtle, #f5f8f5);
+  border-radius: 9px;
+}
+
+.dialogue-depart__effets ul,
+.dialogue-depart__controles ul {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.dialogue-depart__erreur {
+  color: #a32525;
+  font-size: 13px;
+}
+
+.dialogue-depart__actions {
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 
 .resume dl,
@@ -311,5 +538,12 @@ const actuelle = computed(() => fiche.value?.affectationActuelle ?? null);
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@media (max-width: 600px) {
+  .depart-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 </style>

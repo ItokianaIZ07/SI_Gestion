@@ -1,6 +1,6 @@
 <!-- BY : Brandon -->
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useAuthStore } from "@/stores/authStore";
 import api from "@/services/api";
 import Notification from "@/components/ui/Notification.vue";
@@ -16,6 +16,8 @@ const heureManuelle = ref("");
 const dateFiltre = ref(new Date().toISOString().slice(0, 10));
 const message = ref("");
 const typeMessage = ref("succes");
+const recapJour = ref(null);
+const enCours = ref(null);
 
 const employesFiltres = computed(() => {
   const q = recherche.value.trim().toLowerCase();
@@ -47,15 +49,59 @@ async function chargerPointages() {
   if (!employeSelectionneId.value) return;
   try {
     const { data } = await api.get(`/pointage/jour/${employeSelectionneId.value}?date=${dateFiltre.value}`);
-    pointagesDuJour.value = data;
+    pointagesDuJour.value = Array.isArray(data) ? data : [];
+    await chargerRecapJour();
   } catch (e) {
     afficherNotification(e.response?.data?.message || "Erreur de chargement.", "erreur");
   }
 }
 
+async function chargerRecapJour() {
+  if (!employeSelectionneId.value) return;
+  try {
+    const { data } = await api.post(`/pointage/calculer-jour/${employeSelectionneId.value}?date=${dateFiltre.value}`);
+    recapJour.value = data;
+  } catch (e) {
+    recapJour.value = null;
+  }
+}
+
+/** Détermine si un bouton est cliquable (mêmes règles que le backend). */
+function peutPointer(type) {
+  const dernier = pointagesDuJour.value.length
+    ? pointagesDuJour.value[pointagesDuJour.value.length - 1].typePointage
+    : null;
+
+  if (type === 'ENTREE') {
+    return dernier === null || dernier === 'SORTIE';
+  }
+  if (type === 'DEBUT_PAUSE') {
+    return dernier === 'ENTREE' || dernier === 'FIN_PAUSE';
+  }
+  if (type === 'FIN_PAUSE') {
+    return dernier === 'DEBUT_PAUSE';
+  }
+  if (type === 'SORTIE') {
+    return dernier === 'ENTREE' || dernier === 'FIN_PAUSE';
+  }
+  return false;
+}
+
+const prochainPointage = computed(() => {
+  if (!pointagesDuJour.value.length) return "Entrée";
+  const dernier = pointagesDuJour.value[pointagesDuJour.value.length - 1].typePointage;
+  if (dernier === 'ENTREE') return "Début pause ou Sortie";
+  if (dernier === 'DEBUT_PAUSE') return "Fin pause";
+  if (dernier === 'FIN_PAUSE') return "Début pause ou Sortie";
+  if (dernier === 'SORTIE') return "Entrée (nouvelle journée)";
+  return "—";
+});
+
 async function pointer(type) {
   if (!employeSelectionneId.value) return afficherNotification("Sélectionnez un employé.", "erreur");
+  if (enCours.value) return;
 
+  enCours.value = type;
   const payload = { idEmploye: employeSelectionneId.value, typePointage: type };
   if (heureManuelle.value) {
     payload.dateHeure = heureManuelle.value + ":00+03:00";
@@ -63,14 +109,16 @@ async function pointer(type) {
 
   try {
     const { data } = await api.post("/pointage", payload);
-    // ✅ Mise à jour locale immédiate
     pointagesDuJour.value = [...pointagesDuJour.value, data].sort(
       (a, b) => new Date(a.dateHeure) - new Date(b.dateHeure)
     );
     afficherNotification(`Pointage ${type} enregistré.`, "succes");
     heureManuelle.value = "";
+    await chargerRecapJour();
   } catch (e) {
     afficherNotification(e.response?.data?.message || "Erreur de pointage.", "erreur");
+  } finally {
+    enCours.value = null;
   }
 }
 
@@ -80,13 +128,11 @@ async function recalculerJour() {
     const { data } = await api.post(
       `/pointage/calculer-jour/${employeSelectionneId.value}?date=${dateFiltre.value}`
     );
+    recapJour.value = data;
     afficherNotification(
       `Calcul effectué — Temps réel : ${data.tempsReelMinutes} min · Retard : ${data.retardMinutes} min · Heures sup : ${data.heuresSupplementairesMinutes} min.`,
       "succes"
     );
-    // ✅ Attente + rechargement des pointages (pour cohérence)
-    await new Promise(r => setTimeout(r, 250));
-    await chargerPointages();
   } catch (e) {
     afficherNotification(e.response?.data?.message || "Erreur lors du calcul.", "erreur");
   }
@@ -95,6 +141,10 @@ async function recalculerJour() {
 function changerDateFiltre() {
   if (employeSelectionneId.value) chargerPointages();
 }
+
+watch(employeSelectionneId, () => {
+  if (employeSelectionneId.value) chargerPointages();
+});
 
 onMounted(chargerEmployes);
 </script>
@@ -130,7 +180,7 @@ onMounted(chargerEmployes);
             type="button"
             class="request-item"
             :class="{ active: employeSelectionneId === e.id }"
-            @click="employeSelectionneId = e.id; chargerPointages()"
+            @click="employeSelectionneId = e.id"
           >
             <h3>{{ e.prenom }} {{ e.nom }}</h3>
             <p class="department">{{ e.matricule }}</p>
@@ -149,12 +199,7 @@ onMounted(chargerEmployes);
             </div>
             <div class="date-filtre">
               <label for="dateFiltre">Date :</label>
-              <input
-                id="dateFiltre"
-                v-model="dateFiltre"
-                type="date"
-                @change="changerDateFiltre"
-              />
+              <input id="dateFiltre" v-model="dateFiltre" type="date" @change="changerDateFiltre" />
             </div>
           </header>
 
@@ -166,14 +211,26 @@ onMounted(chargerEmployes);
             </div>
 
             <h3 class="section-title">Actions de pointage</h3>
-            <div class="decision-actions" style="margin-bottom: 24px;">
-              <button class="approve-button" @click="pointer('ENTREE')">Entrée</button>
-              <button class="reject-button" @click="pointer('DEBUT_PAUSE')">Début pause</button>
-              <button class="reject-button" @click="pointer('FIN_PAUSE')">Fin pause</button>
-              <button class="reject-button" @click="pointer('SORTIE')">Sortie</button>
+            <div class="decision-actions" style="margin-bottom: 8px;">
+              <button class="approve-button" :disabled="!peutPointer('ENTREE') || !!enCours" @click="pointer('ENTREE')">
+                {{ enCours === 'ENTREE' ? '...' : 'Entrée' }}
+              </button>
+              <button class="reject-button" :disabled="!peutPointer('DEBUT_PAUSE') || !!enCours" @click="pointer('DEBUT_PAUSE')">
+                {{ enCours === 'DEBUT_PAUSE' ? '...' : 'Début pause' }}
+              </button>
+              <button class="reject-button" :disabled="!peutPointer('FIN_PAUSE') || !!enCours" @click="pointer('FIN_PAUSE')">
+                {{ enCours === 'FIN_PAUSE' ? '...' : 'Fin pause' }}
+              </button>
+              <button class="reject-button" :disabled="!peutPointer('SORTIE') || !!enCours" @click="pointer('SORTIE')">
+                {{ enCours === 'SORTIE' ? '...' : 'Sortie' }}
+              </button>
             </div>
 
-            <h3 class="section-title">Pointages du {{ dateFiltre }}</h3>
+            <p class="aide-pointer">
+              Prochain pointage attendu : <strong>{{ prochainPointage }}</strong>
+            </p>
+
+            <h3 class="section-title" style="margin-top: 20px;">Pointages du {{ dateFiltre }}</h3>
             <table class="g-table" style="margin-bottom: 24px;">
               <thead><tr><th>Heure</th><th>Type</th></tr></thead>
               <tbody>
@@ -186,6 +243,34 @@ onMounted(chargerEmployes);
                 </tr>
               </tbody>
             </table>
+
+            <h3 class="section-title">Récapitulatif du jour</h3>
+            <div v-if="recapJour" class="recap-grid">
+              <div class="recap-card">
+                <span class="recap-label">Temps prévu</span>
+                <strong class="recap-value">{{ recapJour.tempsPrevuMinutes }} min</strong>
+              </div>
+              <div class="recap-card">
+                <span class="recap-label">Temps réel</span>
+                <strong class="recap-value">{{ recapJour.tempsReelMinutes }} min</strong>
+              </div>
+              <div class="recap-card" :class="{ 'recap-card--danger': recapJour.retardMinutes > 0 }">
+                <span class="recap-label">Retard</span>
+                <strong class="recap-value">{{ recapJour.retardMinutes }} min</strong>
+              </div>
+              <div class="recap-card" :class="{ 'recap-card--warning': recapJour.heuresSupplementairesMinutes > 0 }">
+                <span class="recap-label">Heures sup</span>
+                <strong class="recap-value">{{ recapJour.heuresSupplementairesMinutes }} min</strong>
+                <span class="recap-status" v-if="recapJour.statutHeuresSup">
+                  {{ recapJour.statutHeuresSup === 'AUCUNE' ? 'Aucune' :
+                     recapJour.statutHeuresSup === 'A_VALIDER' ? 'À valider' :
+                     recapJour.statutHeuresSup === 'VALIDEE' ? 'Validée' : 'Refusée' }}
+                </span>
+              </div>
+            </div>
+            <div v-else class="recap-empty">
+              Aucun calcul pour cette date. Pointez une entrée puis cliquez sur « Calculer la journée ».
+            </div>
 
             <div class="read-only-notice">
               <button class="g-btn g-btn--primaire" @click="recalculerJour">
@@ -237,15 +322,29 @@ onMounted(chargerEmployes);
 .date-filtre input { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; color: var(--ink); background: var(--surface); }
 .decision-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .decision-actions button { flex: 1; min-width: 120px; padding: 12px 16px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
+.decision-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 .reject-button { border: 1px solid #f0d7d3; background: #fff7f6; color: #b74736; }
-.reject-button:hover { background: #ffebe8; }
+.reject-button:hover:not(:disabled) { background: #ffebe8; }
 .approve-button { border: 1px solid var(--color-primary); background: var(--color-primary); color: white; }
-.approve-button:hover { background: #014b07; }
+.approve-button:hover:not(:disabled) { background: #014b07; }
+.aide-pointer { margin: 0 0 24px; font-size: 12px; color: var(--muted); font-style: italic; }
+.aide-pointer strong { color: var(--color-primary); font-weight: 700; font-style: normal; }
 .read-only-notice { margin-top: 20px; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: #fafbf9; }
 .empty-list, .empty-detail { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 45px 22px; text-align: center; }
 .empty-list h3, .empty-detail h2 { margin: 12px 0 7px; font-size: 15px; }
 .empty-list p, .empty-detail p { color: var(--muted); font-size: 12px; }
 .empty-document { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 13px; background: #eef6ed; color: var(--color-primary); }
+.recap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.recap-card { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 9px; background: #fafbf9; }
+.recap-card--danger { border-color: #f0d7d3; background: #fff7f6; }
+.recap-card--danger .recap-value { color: #b74736; }
+.recap-card--warning { border-color: #fbe8c4; background: #fffbf3; }
+.recap-card--warning .recap-value { color: #98621b; }
+.recap-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.recap-value { font-size: 18px; font-weight: 700; color: var(--ink); }
+.recap-status { font-size: 11px; color: var(--muted); font-weight: 600; }
+.recap-empty { padding: 20px; margin-bottom: 24px; border: 1px dashed var(--line); border-radius: 9px; text-align: center; color: var(--muted); font-size: 13px; }
 @media (max-width: 1000px) { .workspace { grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.4fr); } }
+@media (max-width: 900px) { .recap-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .workspace { grid-template-columns: minmax(0, 1fr); } }
 </style>

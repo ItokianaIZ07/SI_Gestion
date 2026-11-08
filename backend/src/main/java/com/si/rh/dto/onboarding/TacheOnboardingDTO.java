@@ -7,5 +7,6 @@ import java.time.OffsetDateTime;
 
 public record TacheOnboardingDTO(Integer id, Integer onboardingId, String libelle, CategorieOnboarding categorie,
         LocalDate dateEcheance, StatutTache statut, OffsetDateTime dateRealisation, String remarque,
-        String responsableNom, boolean enRetard) {
+        Integer responsableId, String responsableNom, String responsableEmail,
+        String employeNom, String matricule, boolean enRetard) {
 }

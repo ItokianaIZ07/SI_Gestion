@@ -326,6 +326,11 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/OnboardingDetailView.vue"),
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "taches-onboarding",
+          name: "mesTachesOnboarding",
+          component: () => import("@/views/modules/gestion/rh/MesTachesOnboardingView.vue"),
+        },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.
       ],

@@ -116,8 +116,13 @@ async function sessionExpiree() {
       import("@/router"),
     ]);
 
-    useAuthStore().logout();
-    await router.replace({ name: "login" });
+     const store = useAuthStore();
+    // Un employé dont la session expire revient à sa propre page de connexion.
+    const etaitEmploye = store.user?.role?.toUpperCase() === "EMPLOYE";
+
+    store.logout();
+    await router.replace({ name: etaitEmploye ? "connexionEmploye" : "login" });
+
   } finally {
     redirectionEnCours = false;
   }

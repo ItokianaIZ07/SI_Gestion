@@ -14,12 +14,15 @@ export const useAuthStore = defineStore(
   () => {
     const clearSession = () => {
       user.value = null;
+      employe.value = null;
       estAuthentifie.value = false;
     };
 
     const chargee = ref(false);
     const estAuthentifie = ref(false);
     const user = ref(null);
+    // Identité de l'employé connecté (rôle EMPLOYE) : { id, matricule, nom, prenom, email }
+    const employe = ref(null);
 
     const addRole = (newRole, force = false) => {
       if (!force && chargee) {
@@ -38,6 +41,7 @@ export const useAuthStore = defineStore(
 
     const logout = async () => {
       user.value = null;
+      employe.value = null;
       chargee.value = false;
       estAuthentifie.value = false;
 
@@ -65,7 +69,14 @@ export const useAuthStore = defineStore(
     const restaurerSession = async () => {
       try {
         const { data } = await api.get("/auth/me");
-        authentifie(data.role, user.value?.email ?? "");
+        if (data.role?.toUpperCase() === "EMPLOYE") {
+          // L'identité de l'employé (son id) n'est pas dans /auth/me : on la relit.
+          const { data: moi } = await api.get("/auth/employe/me");
+          employe.value = moi.employe;
+          authentifie(data.role, moi.employe?.email ?? "");
+        } else {
+          authentifie(data.role, user.value?.email ?? "");
+        }
         return true;
       } catch (error) {
         if (error.response?.status === 401) {
@@ -97,12 +108,45 @@ export const useAuthStore = defineStore(
         throw error;
       }
     };
+
+    // Connexion de l'employé : e-mail + matricule + numéro de CIN (sans mot de passe).
+    const loginEmploye = async ({ email, matricule, numeroCin }) => {
+      try {
+        const { data } = await api.post("/auth/employe/login", {
+          email,
+          matricule,
+          numeroCin,
+        });
+        if (!data?.success || !data.employe) {
+          return { success: false, message: data?.message ?? "Identifiants incorrects." };
+        }
+        employe.value = data.employe;
+        authentifie(data.role ?? "EMPLOYE", data.employe.email ?? email);
+        return { success: true };
+      } catch (error) {
+        // `api` renvoie une ApiError (status, message) ; on accepte aussi une erreur axios brute.
+        const statut = error.status ?? error.response?.status;
+        if (statut) {
+          return {
+            success: false,
+            message:
+              statut === 401
+                ? "E-mail, matricule ou numéro de CIN incorrect."
+                : error.response?.data?.message ?? error.message ?? "Connexion impossible.",
+          };
+        }
+        throw error;
+      }
+    };
+
     return {
       login,
+      loginEmploye,
       logout,
       restaurerSession,
       clearSession,
       user,
+      employe,
       estAuthentifie,
     };
   },

@@ -36,6 +36,7 @@ const exigerRole = (...rolesAutorises) => () => {
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
 const rhEtDirection = exigerRole('RH', 'DIRECTION')
 const rhUniquement = exigerRole('RH')
+const employeUniquement = exigerRole('EMPLOYE')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,7 +46,12 @@ const router = createRouter({
       name: "login",
       component: LoginView,
     },
-
+    {
+      path: "/si/employe/connexion",
+      name: "connexionEmploye",
+      component: () => import('@/views/modules/conge/employe/EmployeConnexionView.vue'),
+    },
+    
     {
       path: "/si/client",
       component: ClientLayout,
@@ -99,13 +105,20 @@ const router = createRouter({
       component: AppLayout,
       beforeEnter: async () => {
         const authStore = useAuthStore()
+        const etaitEmploye = authStore.user?.role?.toUpperCase() === 'EMPLOYE'
 
         if (!await authStore.restaurerSession()) {
-          return { name: 'login' }
+          return etaitEmploye ? { name: 'connexionEmploye' } : { name: 'login' }
         }
       },
       children: [
-        { path: "", component: DashboardView },
+        {
+          path: "",
+          component: DashboardView,
+          beforeEnter: () => {
+            if (useAuthStore().user?.role?.toUpperCase() === 'EMPLOYE') return { path: '/si/app/employe/conges' }
+          },
+        },
         { path: "rh/cv", component: CVView },
 
         // ----- Module Finance -----
@@ -298,7 +311,11 @@ const router = createRouter({
         {path: "rh/conges",
           component: () => import('@/views/modules/conge/CongeDashboardView.vue'),
           beforeEnter: rhEtDirection,
-      },
+        },
+        { path: "employe/conges", component: () => import('@/views/modules/conge/employe/MesCongesView.vue'), beforeEnter: employeUniquement },
+        { path: "employe/conges/nouvelle", component: () => import('@/views/modules/conge/employe/MaDemandeCongeView.vue'), beforeEnter: employeUniquement },
+        { path: "employe/remplacements", component: () => import('@/views/modules/conge/employe/MesRemplacementsView.vue'), beforeEnter: employeUniquement },
+        
       ],
     },
   ],

@@ -184,6 +184,7 @@ async function handleLogin() {
           {{ loading ? "Connexion en cours..." : "Se connecter" }}
         </button>
       </form>
+      <p class="login-employe">Vous êtes employé ? <RouterLink to="/si/employe/connexion">Accéder à l’espace employé</RouterLink></p>
 
       <p class="login-footer">Système de gestion des ressources humaines</p>
     </div>

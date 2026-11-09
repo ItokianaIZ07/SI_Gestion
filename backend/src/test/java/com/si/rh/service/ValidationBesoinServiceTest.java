@@ -7,6 +7,7 @@ import com.si.rh.model.Departement;
 import com.si.rh.model.EtatValidation;
 import com.si.rh.model.Poste;
 import com.si.rh.model.Role;
+import com.si.rh.repository.GrilleSalaireRepository;
 import com.si.rh.model.TypeBesoin;
 import com.si.rh.model.Utilisateur;
 import com.si.rh.model.ValidationBesoin;
@@ -48,8 +49,8 @@ class ValidationBesoinServiceTest {
     private ValidationBesoinRepository validationBesoinRepository;
     @Mock
     private BesoinRepository besoinRepository;
-    @Mock
-    private EmployeRepository employeRepository;
+    // @Mock
+    // private EmployeRepository employeRepository;
     @Mock
     private RecrutementRepository recrutementRepository;
     @Mock
@@ -62,8 +63,10 @@ class ValidationBesoinServiceTest {
     private EmployeRepository employeRepository;
     @Mock
     private GrilleSalaireRepository grilleSalaireRepository;
+    // @Mock
+    // private RecrutementRepository recrutementRepository;
+
     @Mock
-    private RecrutementRepository recrutementRepository;
     private NotificationService notificationService;
 
     private ValidationBesoinService service;
@@ -78,7 +81,8 @@ class ValidationBesoinServiceTest {
                 utilisateurDetailsService,
                 employeRepository,
                 grilleSalaireRepository,
-                recrutementRepository
+                recrutementRepository,
+                notificationService
         );
     }
 

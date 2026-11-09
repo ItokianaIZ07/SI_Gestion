@@ -18,13 +18,40 @@ const sidebarByRole = {
                 { label: "Mes tâches", to: "/si/app/taches-onboarding" },
             ],
         },
+        {
+            label: "Régimes de travail",
+            children: [
+                { label: "Liste des régimes", to: "/si/app/rh/regimes-travail" },
+                { label: "Nouveau régime", to: "/si/app/rh/regimes-travail/formulaire" },
+            ],
+        },
+        {
+            label: "Horaires de travail",
+            children: [
+                { label: "Liste des horaires", to: "/si/app/rh/horaires-travail" },
+                { label: "Nouvel horaire", to: "/si/app/rh/horaires-travail/formulaire" },
+            ],
+        },
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
+        {
+            label: "Planning",
+            children: [
+                { label: "Liste des plannings", to: "/si/app/rh/plannings" },
+                { label: "Nouvelle affectation", to: "/si/app/rh/plannings/nouvelle-affectation" },
+            ],
+        },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
         { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
-        { label: "Notifications", to: "/si/app/rh/notifications" }
+        { label: "Notifications", to: "/si/app/rh/notifications" },
+        { label: "Pointage", to: "/si/app/rh/pointage" },
+        { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
+        { label: "Anomalies", to: "/si/app/rh/anomalies" },
+        { label: "Récap Mensuel", to: "/si/app/rh/recap-mensuel" }
     ],
 
     manager: [
@@ -34,7 +61,13 @@ const sidebarByRole = {
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
         { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
         { label: "Organigramme", to: "/si/app/rh/organigramme" },
-        { label: "Notifications", to: "/si/app/manager/notifications" }
+        { label: "Notifications", to: "/si/app/manager/notifications" },
+        { label: "Notifications", to: "/si/app/manager/notifications" },
+        { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
+        { label: "Anomalies", to: "/si/app/rh/anomalies" },
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
+        { label: "Planning", to: "/si/app/rh/plannings" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
     ],
 
     finance: [
@@ -43,6 +76,7 @@ const sidebarByRole = {
         { label: "Demandes", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
         { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
         { label: "Notifications", to: "/si/app/finance/notifications" }
     ],
 
@@ -59,6 +93,11 @@ const sidebarByRole = {
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
+        { label: "Régimes de travail", to: "/si/app/rh/regimes-travail" },
+        { label: "Horaires de travail", to: "/si/app/rh/horaires-travail" },
+        { label: "Jours fériés", to: "/si/app/rh/jours-feries" },
+        { label: "Planning", to: "/si/app/rh/plannings" },
+        { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
 
         { label: "Liste des départements", to: "/si/app/manager/departements" },
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },

@@ -7,11 +7,16 @@ import com.si.rh.model.*;
 import com.si.rh.model.enums.*;
 import com.si.rh.repository.ContratOnboardingRepository;
 import com.si.rh.repository.DocumentEmployeRepository;
+import com.si.rh.repository.HistoriqueTacheOnboardingRepository;
 import com.si.rh.repository.OnboardingRepository;
 import com.si.rh.repository.TacheOnboardingRepository;
+import com.si.rh.repository.UtilisateurRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
@@ -34,13 +39,21 @@ public class OnboardingService {
     private final TacheOnboardingRepository tacheRepo;
     private final DocumentEmployeRepository documentRepo;
     private final ContratOnboardingRepository contratRepo;
+    private final HistoriqueTacheOnboardingRepository historiqueTacheRepo;
+    private final UtilisateurRepository utilisateurRepo;
+    private final AuditContexte auditContexte;
 
     public OnboardingService(OnboardingRepository onboardingRepo, TacheOnboardingRepository tacheRepo,
-            DocumentEmployeRepository documentRepo, ContratOnboardingRepository contratRepo) {
+            DocumentEmployeRepository documentRepo, ContratOnboardingRepository contratRepo,
+            HistoriqueTacheOnboardingRepository historiqueTacheRepo, UtilisateurRepository utilisateurRepo,
+            AuditContexte auditContexte) {
         this.onboardingRepo = onboardingRepo;
         this.tacheRepo = tacheRepo;
         this.documentRepo = documentRepo;
         this.contratRepo = contratRepo;
+        this.historiqueTacheRepo = historiqueTacheRepo;
+        this.utilisateurRepo = utilisateurRepo;
+        this.auditContexte = auditContexte;
     }
 
     // ====================== Lecture ======================
@@ -97,18 +110,78 @@ public class OnboardingService {
     // ====================== Tâches ======================
 
     public TacheOnboardingDTO changerStatutTache(Integer tacheId, TacheStatutRequest req) {
+        auditContexte.appliquer();
         TacheOnboarding t = tacheRepo.findByIdAvecOnboarding(tacheId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Tâche introuvable : " + tacheId));
-        if (t.getStatut() == req.statut())
-            throw new RegleMetierException(HttpStatus.CONFLICT, "La tâche est déjà dans ce statut.");
+        String remarque = req.remarque() == null ? t.getRemarque() : req.remarque();
+        return modifierTache(tacheId, new TacheModificationRequest(req.statut(), t.getDateEcheance(), remarque));
+    }
+
+    public TacheOnboardingDTO modifierTache(Integer tacheId, TacheModificationRequest req) {
+        auditContexte.appliquer();
+        TacheOnboarding t = tacheRepo.findByIdAvecOnboarding(tacheId)
+                .orElseThrow(() -> new RessourceIntrouvableException("Tâche introuvable : " + tacheId));
+        Utilisateur utilisateur = utilisateurConnecte();
+        boolean rh = "RH".equalsIgnoreCase(utilisateur.getRole().getCode());
+        boolean responsable = t.getResponsable() != null
+                && t.getResponsable().getId().equals(utilisateur.getId());
+        if (!rh && !responsable) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls les RH et le responsable de la tâche peuvent la modifier.");
+        }
+
+        StatutTache ancienStatut = t.getStatut();
         t.setStatut(req.statut());
-        // La base impose : date_realisation renseignée si et seulement si statut = FAIT.
-        t.setDateRealisation(req.statut() == StatutTache.FAIT ? OffsetDateTime.now() : null);
-        if (req.remarque() != null)
-            t.setRemarque(req.remarque().isBlank() ? null : req.remarque().trim());
+        if (req.statut() == StatutTache.FAIT && ancienStatut != StatutTache.FAIT) {
+            t.setDateRealisation(OffsetDateTime.now());
+        } else if (req.statut() != StatutTache.FAIT) {
+            t.setDateRealisation(null);
+        }
+        t.setDateEcheance(req.dateEcheance());
+        t.setRemarque(req.remarque() == null || req.remarque().isBlank() ? null : req.remarque().trim());
         tacheRepo.save(t);
-        recalculerStatut(t.getOnboarding());
+        if (ancienStatut != req.statut()) {
+            recalculerStatut(t.getOnboarding());
+        }
         return dto(t);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TacheOnboardingDTO> mesTaches() {
+        Utilisateur utilisateur = utilisateurConnecte();
+        return tacheRepo.findByResponsable_IdOrderByDateEcheanceAscIdAsc(utilisateur.getId())
+                .stream().map(this::dto).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistoriqueTacheOnboardingDTO> historiqueTache(Integer tacheId) {
+        TacheOnboarding t = tacheRepo.findByIdAvecOnboarding(tacheId)
+                .orElseThrow(() -> new RessourceIntrouvableException("Tâche introuvable : " + tacheId));
+        verifierAccesTache(t);
+        return historiqueTacheRepo.trouverParTache(tacheId);
+    }
+
+    private Utilisateur utilisateurConnecte() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Authentification requise.");
+        }
+        return utilisateurRepo.findByEmail(authentication.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "L'utilisateur connecté n'est pas associé à un compte utilisateur."));
+    }
+
+    private void verifierAccesTache(TacheOnboarding tache) {
+        Utilisateur utilisateur = utilisateurConnecte();
+        boolean rh = "RH".equalsIgnoreCase(utilisateur.getRole().getCode());
+        boolean direction = "DIRECTION".equalsIgnoreCase(utilisateur.getRole().getCode());
+        boolean responsable = tache.getResponsable() != null
+                && tache.getResponsable().getId().equals(utilisateur.getId());
+        if (!rh && !direction && !responsable) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Seuls les RH, la Direction et le responsable de la tâche peuvent consulter son historique.");
+        }
     }
 
     public TacheOnboardingDTO ajouterTache(Integer onboardingId, TacheCreationRequest req) {
@@ -233,7 +306,11 @@ public class OnboardingService {
                 && (t.getStatut() == StatutTache.A_FAIRE || t.getStatut() == StatutTache.EN_COURS);
         return new TacheOnboardingDTO(t.getId(), t.getOnboarding().getId(), t.getLibelle(), t.getCategorie(),
                 t.getDateEcheance(), t.getStatut(), t.getDateRealisation(), t.getRemarque(),
-                r == null ? null : r.getPrenom() + " " + r.getNom(), enRetard);
+                r == null ? null : r.getId(),
+                r == null ? null : r.getPrenom() + " " + r.getNom(),
+                r == null ? null : r.getEmail(),
+                t.getOnboarding().getEmploye().getPrenom() + " " + t.getOnboarding().getEmploye().getNom(),
+                t.getOnboarding().getEmploye().getMatricule(), enRetard);
     }
 
     private DocumentEmployeDTO dto(DocumentEmploye d) {

@@ -1,5 +1,7 @@
 const sidebarByRole = {
     rh: [
+        { label: "Employés", to: "/si/app/rh/employes" },
+        { label: "Documents à renouveler", to: "/si/app/rh/documents" },
         { label: "Entretiens", to: "/si/app/rh/entretiens" },
         {
             label: "Contrats",
@@ -13,6 +15,7 @@ const sidebarByRole = {
             children: [
                 { label: "Nouveaux employés", to: "/si/app/rh/onboarding" },
                 { label: "Modèles de tâches", to: "/si/app/rh/onboarding/modeles" },
+                { label: "Mes tâches", to: "/si/app/taches-onboarding" },
             ],
         },
         {
@@ -40,9 +43,11 @@ const sidebarByRole = {
         { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
         { label: "Liste des demandes", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
+        { label: "Notifications", to: "/si/app/rh/notifications" },
         { label: "Pointage", to: "/si/app/rh/pointage" },
         { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
         { label: "Anomalies", to: "/si/app/rh/anomalies" },
@@ -54,6 +59,9 @@ const sidebarByRole = {
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
+        { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
+        { label: "Notifications", to: "/si/app/manager/notifications" },
         { label: "Notifications", to: "/si/app/manager/notifications" },
         { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
         { label: "Anomalies", to: "/si/app/rh/anomalies" },
@@ -67,16 +75,21 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
         { label: "Variables de paie", to: "/si/app/rh/variables-paie" },
         { label: "Notifications", to: "/si/app/finance/notifications" }
     ],
 
     direction: [
         // Tous les liens du système
+        { label: "Employés", to: "/si/app/rh/employes" },
+        { label: "Documents à renouveler", to: "/si/app/rh/documents" },
         { label: "Contrats", to: "/si/app/rh/contrats" },
         { label: "Onboarding", to: "/si/app/rh/onboarding" },
+        { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
         { label: "Liste des demandes RH", to: "/si/app/rh/demandes" },
         { label: "Recrutements", to: "/si/app/rh/recrutements" },
+        { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
@@ -95,6 +108,7 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes Finance", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Journal d'audit", to: "/si/app/direction/audit" },
         { label: "Notifications", to: "/si/app/direction/notifications" }
     ]
 };

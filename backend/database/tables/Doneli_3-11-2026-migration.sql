@@ -2,6 +2,7 @@ BEGIN;
 
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
+ALTER TABLE employe DROP CONSTRAINT IF EXISTS chk_employe_statut_depart;
 ALTER TABLE employe ADD CONSTRAINT chk_employe_statut_depart CHECK (
     (statut = 'PARTI' AND date_depart IS NOT NULL)
     OR (statut IN ('ACTIF', 'SUSPENDU') AND date_depart IS NULL)) NOT VALID;
@@ -15,6 +16,10 @@ ALTER TABLE tache_onboarding ADD CONSTRAINT chk_tache_realisation CHECK (
 
 ALTER TABLE notification ADD CONSTRAINT chk_notification_lecture
     CHECK (date_lecture IS NULL OR date_lecture >= date_creation) NOT VALID;
+
+DROP TRIGGER IF EXISTS trg_verifier_validation_besoin ON validation_besoin;
+DROP TRIGGER IF EXISTS trg_verifier_publication_candidature ON candidature;
+DROP TRIGGER IF EXISTS trg_verifier_contrat_actif ON contrat;
 
 ALTER TABLE document_employe
     ADD COLUMN date_expiration DATE,
@@ -30,7 +35,7 @@ ALTER TABLE notification
 CREATE INDEX idx_notification_document ON notification(id_document_employe)
     WHERE id_document_employe IS NOT NULL;
 
-CREATE FUNCTION verifier_validation_besoin() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION verifier_validation_besoin() RETURNS trigger AS $$
 DECLARE code_decision VARCHAR(50);
 BEGIN
     SELECT code INTO code_decision FROM decision WHERE id = NEW.id_decision;
@@ -49,7 +54,7 @@ CREATE TRIGGER trg_verifier_validation_besoin
 BEFORE INSERT OR UPDATE ON validation_besoin
 FOR EACH ROW EXECUTE FUNCTION verifier_validation_besoin();
 
-CREATE FUNCTION verifier_publication_candidature() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION verifier_publication_candidature() RETURNS trigger AS $$
 BEGIN
     IF NEW.id_publication IS NOT NULL AND NOT EXISTS (
         SELECT 1 FROM publication_offre p JOIN offre_emploi o ON o.id = p.id_offre
@@ -65,7 +70,7 @@ CREATE TRIGGER trg_verifier_publication_candidature
 BEFORE INSERT OR UPDATE OF id_publication, id_recrutement ON candidature
 FOR EACH ROW EXECUTE FUNCTION verifier_publication_candidature();
 
-CREATE FUNCTION verifier_contrat_actif() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION verifier_contrat_actif() RETURNS trigger AS $$
 DECLARE code_statut VARCHAR(50);
 BEGIN
     SELECT code INTO code_statut FROM statut_contract WHERE id = NEW.id_statut_contrat;

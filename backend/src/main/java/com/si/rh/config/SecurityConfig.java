@@ -121,6 +121,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/rh/contrats/*").hasAnyRole("RH", "DIRECTION")
                         .requestMatchers("/api/rh/contrats/**").hasRole("RH")
                         .requestMatchers("/api/rh/entretiens/**").hasRole("RH")
+                        .requestMatchers(HttpMethod.POST, "/api/rh/employes/*/depart").hasRole("RH")
+                        .requestMatchers("/api/rh/onboardings/taches/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/rh/regimes-travail/**")
                         .hasAnyRole("RH", "DIRECTION")
                         .requestMatchers(HttpMethod.POST, "/api/rh/regimes-travail/**").hasRole("RH")
@@ -154,6 +156,10 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/rh/besoins/**")
                         .hasAnyRole("RH", "FINANCE", "DIRECTION", "MANAGER")
+
+                        .requestMatchers(HttpMethod.GET, "/api/rh/organigramme", "/api/rh/organigramme/**")
+                        .hasAnyRole("RH", "DIRECTION", "MANAGER")
+                        .requestMatchers("/api/rh/organigramme", "/api/rh/organigramme/**").denyAll()
 
                         .requestMatchers("/api/rh/**")
                         .hasAnyRole("RH", "DIRECTION")

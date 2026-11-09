@@ -1,6 +1,7 @@
 package com.si.rh.exception;
 
 import com.si.rh.dto.ApiResponse;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,12 +11,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(RessourceIntrouvableException.class)
     public ResponseEntity<ApiResponse<Void>> introuvable(RessourceIntrouvableException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure(e.getMessage()));
@@ -42,8 +48,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> integrite(DataIntegrityViolationException e) {
+        String message = MessageBase.regleMetier(e);
+        if (message != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(message));
+        }
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.failure("Opération impossible : une contrainte de la base de données est violée."));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> statut(ResponseStatusException e) {
+        String message = e.getReason() == null ? "La requête ne peut pas être traitée." : e.getReason();
+        return ResponseEntity.status(e.getStatusCode()).body(ApiResponse.failure(message));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -63,8 +79,19 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure("Partie de requête manquante : " + e.getRequestPartName()));
     }
 
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ApiResponse<Void>> erreurBase(DataAccessException e) {
+        String message = MessageBase.regleMetier(e);
+        if (message != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.failure(message));
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure("Une erreur interne est survenue."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> inattendue(Exception e) {
+        LOGGER.error("Erreur interne lors du traitement de la requête.", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure("Une erreur interne est survenue."));
     }

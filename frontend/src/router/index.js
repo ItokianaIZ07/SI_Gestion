@@ -160,6 +160,36 @@ const router = createRouter({
           beforeEnter: exigerRole('DIRECTION'),
         },
         {
+          path: 'rh/notifications',
+          name: 'RhNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('RH'),
+        },
+        {
+          path: 'rh/employes',
+          name: 'RhEmployes',
+          component: () => import("@/views/modules/gestion/rh/EmployesView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/employes/:id',
+          name: 'RhFicheEmploye',
+          component: () => import("@/views/modules/gestion/rh/FicheEmployeView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/documents',
+          name: 'RhDocumentsARenouveler',
+          component: () => import("@/views/modules/gestion/rh/DocumentsARenouvelerView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'direction/audit',
+          name: 'DirectionAudit',
+          component: () => import("@/views/modules/gestion/direction/AuditView.vue"),
+          beforeEnter: exigerRole('DIRECTION'),
+        },
+        {
           path: 'manager/demandes',
           name: 'ManagerDemandes',
           component: ManagerDemandesView,
@@ -268,6 +298,16 @@ const router = createRouter({
           beforeEnter: rhEtDirection,
         },
         {
+          path: "rh/organigramme",
+          name: "rhOrganigramme",
+          component: () => import("@/views/modules/gestion/rh/OrganigrammeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
+        },
+        {
+          path: "rh/organigramme/employes/:idEmploye",
+          name: "rhOrganigrammeEmploye",
+          component: () => import("@/views/modules/gestion/rh/HierarchieEmployeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
           path: "rh/regimes-travail",
           name: "rhRegimesTravail",
           component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailView.vue"),
@@ -353,9 +393,11 @@ const router = createRouter({
           component: () => import("@/views/modules/gestion/rh/OnboardingDetailView.vue"),
           beforeEnter: rhEtDirection,
         },
-
-
-        
+        {
+          path: "taches-onboarding",
+          name: "mesTachesOnboarding",
+          component: () => import("@/views/modules/gestion/rh/MesTachesOnboardingView.vue"),
+        },
         {
           path: "rh/pointage",
           component: () => import("@/views/modules/gestion/rh/PointageView.vue"),

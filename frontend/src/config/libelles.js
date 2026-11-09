@@ -37,6 +37,7 @@ export const LIBELLES = {
   FAIT: "Fait",
   // Statuts de contrat (codes de statut_contract)
   ACTIF: "Actif",
+  PARTI: "Parti",
   EN_ATTENTE_SIGNATURE: "En attente de signature",
   // StatutDocument
   FOURNI: "Fourni",
@@ -67,6 +68,7 @@ export const TONS = {
   A_FAIRE: "neutral", EN_COURS: "warning", FAIT: "success",
   FOURNI: "warning", VALIDE: "success",
   ACTIF: "success", EN_ATTENTE_SIGNATURE: "warning",
+  PARTI: "neutral",
 };
 
 export const libelle = (code) => LIBELLES[code] ?? code ?? "—";

@@ -147,6 +147,7 @@ public class AuthController {
             return ResponseEntity.ok(
                     employeeAuthService.creerReponse(principal));
         } catch (AuthenticationException e) {
+            e.printStackTrace();
             SecurityContextHolder.clearContext();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(employeeAuthService.reponseEchec());

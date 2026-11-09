@@ -23,6 +23,11 @@ public class JourFerie {
 
     public JourFerie(){}
 
+    public JourFerie(LocalDate dateJour, String libelle){
+        this.dateJour = dateJour;
+        this.libelle = libelle;
+    }
+
     public JourFerie(Integer id, LocalDate dateJour, String libelle, String description) {
         this.id = id;
         this.dateJour = dateJour;

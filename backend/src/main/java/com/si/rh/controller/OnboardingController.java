@@ -34,6 +34,11 @@ public class OnboardingController {
 
     // ----- Tâches -----
 
+    @GetMapping("/taches/mes-taches")
+    public ResponseEntity<ApiResponse<List<TacheOnboardingDTO>>> mesTaches() {
+        return ResponseEntity.ok(ApiResponse.success("Vos tâches d'onboarding récupérées", service.mesTaches()));
+    }
+
     @PostMapping("/{id}/taches")
     public ResponseEntity<ApiResponse<TacheOnboardingDTO>> ajouterTache(@PathVariable Integer id,
             @Valid @RequestBody TacheCreationRequest req) {
@@ -41,10 +46,23 @@ public class OnboardingController {
                 .body(ApiResponse.success("Tâche ajoutée", service.ajouterTache(id, req)));
     }
 
-    @PatchMapping("/taches/{tacheId}/statut")
+    @PatchMapping("/taches/{tacheId}")
     public ResponseEntity<ApiResponse<TacheOnboardingDTO>> changerStatutTache(@PathVariable Integer tacheId,
-            @Valid @RequestBody TacheStatutRequest req) {
+            @Valid @RequestBody TacheModificationRequest req) {
+        return ResponseEntity.ok(ApiResponse.success("Tâche mise à jour", service.modifierTache(tacheId, req)));
+    }
+
+    @PatchMapping("/taches/{tacheId}/statut")
+    public ResponseEntity<ApiResponse<TacheOnboardingDTO>> changerStatutTacheCompat(
+            @PathVariable Integer tacheId, @Valid @RequestBody TacheStatutRequest req) {
         return ResponseEntity.ok(ApiResponse.success("Tâche mise à jour", service.changerStatutTache(tacheId, req)));
+    }
+
+    @GetMapping("/taches/{tacheId}/historique")
+    public ResponseEntity<ApiResponse<List<HistoriqueTacheOnboardingDTO>>> historiqueTache(
+            @PathVariable Integer tacheId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Historique de la tâche récupéré", service.historiqueTache(tacheId)));
     }
 
     // ----- Documents -----

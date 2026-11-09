@@ -5,8 +5,13 @@ export const onboardingApi = {
   detail: (id) => api.get(`/rh/onboardings/${id}`),
 
   // ----- Tâches -----
-  changerStatutTache: (tacheId, statut, remarque) =>
-    api.patch(`/rh/onboardings/taches/${tacheId}/statut`, remarque ? { statut, remarque } : { statut }),
+  mesTaches: () => api.get("/rh/onboardings/taches/mes-taches"),
+  changerStatutTache: (tacheId, statut, dateEcheance, remarque) =>
+    api.patch(`/rh/onboardings/taches/${tacheId}`, { statut, dateEcheance, remarque }),
+  modifierTache: (tacheId, modification) =>
+    api.patch(`/rh/onboardings/taches/${tacheId}`, modification),
+  historiqueTache: (tacheId) =>
+    api.get(`/rh/onboardings/taches/${tacheId}/historique`),
   ajouterTache: (onboardingId, tache) => api.post(`/rh/onboardings/${onboardingId}/taches`, tache),
 
   // ----- Documents de l'employé -----

@@ -16,6 +16,17 @@ public interface TacheOnboardingRepository extends JpaRepository<TacheOnboarding
 
     List<TacheOnboarding> findByOnboarding_IdOrderByDateEcheanceAscIdAsc(Integer onboardingId);
 
+    @Query("""
+            SELECT t FROM TacheOnboarding t
+            JOIN FETCH t.onboarding o
+            JOIN FETCH o.employe e
+            LEFT JOIN FETCH t.responsable
+            WHERE t.responsable.id = :responsableId
+            ORDER BY t.dateEcheance ASC, t.id ASC
+            """)
+    List<TacheOnboarding> findByResponsable_IdOrderByDateEcheanceAscIdAsc(
+            @Param("responsableId") Integer responsableId);
+
     @Query("SELECT t FROM TacheOnboarding t JOIN FETCH t.onboarding WHERE t.id = :id")
     Optional<TacheOnboarding> findByIdAvecOnboarding(@Param("id") Integer id);
 

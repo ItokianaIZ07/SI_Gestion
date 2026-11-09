@@ -36,6 +36,9 @@ const exigerRole = (...rolesAutorises) => () => {
 const financeEtDirection = exigerRole('FINANCE', 'DIRECTION')
 const rhEtDirection = exigerRole('RH', 'DIRECTION')
 const rhUniquement = exigerRole('RH')
+const variablesPaieAutorisees = exigerRole('RH', 'DIRECTION', 'MANAGER', 'FINANCE')
+const joursFeriesAutorises = exigerRole('RH', 'MANAGER', 'DIRECTION')
+const planningsAutorises = exigerRole('RH', 'MANAGER', 'DIRECTION')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -157,6 +160,36 @@ const router = createRouter({
           beforeEnter: exigerRole('DIRECTION'),
         },
         {
+          path: 'rh/notifications',
+          name: 'RhNotifications',
+          component: NotificationsManagerView,
+          beforeEnter: exigerRole('RH'),
+        },
+        {
+          path: 'rh/employes',
+          name: 'RhEmployes',
+          component: () => import("@/views/modules/gestion/rh/EmployesView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/employes/:id',
+          name: 'RhFicheEmploye',
+          component: () => import("@/views/modules/gestion/rh/FicheEmployeView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'rh/documents',
+          name: 'RhDocumentsARenouveler',
+          component: () => import("@/views/modules/gestion/rh/DocumentsARenouvelerView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: 'direction/audit',
+          name: 'DirectionAudit',
+          component: () => import("@/views/modules/gestion/direction/AuditView.vue"),
+          beforeEnter: exigerRole('DIRECTION'),
+        },
+        {
           path: 'manager/demandes',
           name: 'ManagerDemandes',
           component: ManagerDemandesView,
@@ -264,6 +297,82 @@ const router = createRouter({
           component: ContratView,
           beforeEnter: rhEtDirection,
         },
+        {
+          path: "rh/organigramme",
+          name: "rhOrganigramme",
+          component: () => import("@/views/modules/gestion/rh/OrganigrammeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
+        },
+        {
+          path: "rh/organigramme/employes/:idEmploye",
+          name: "rhOrganigrammeEmploye",
+          component: () => import("@/views/modules/gestion/rh/HierarchieEmployeView.vue"),
+          beforeEnter: exigerRole("RH", "DIRECTION", "MANAGER"),
+          path: "rh/regimes-travail",
+          name: "rhRegimesTravail",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/regimes-travail/formulaire",
+          name: "rhRegimeTravailCreation",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/regimes-travail/:id/modifier",
+          name: "rhRegimeTravailModification",
+          component: () => import("@/views/modules/gestion/rh/RegimeTravail/RegimeTravailFormView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/horaires-travail",
+          name: "rhHorairesTravail",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HorairesTravailView.vue"),
+          beforeEnter: rhEtDirection,
+        },
+        {
+          path: "rh/horaires-travail/formulaire",
+          name: "rhHoraireTravailCreation",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/horaires-travail/:id/modifier",
+          name: "rhHoraireTravailModification",
+          component: () => import("@/views/modules/gestion/rh/HoraireTravail/HoraireTravailFormView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/jours-feries",
+          name: "rhJoursFeries",
+          component: () => import("@/views/modules/gestion/rh/JourFerie/JoursFeriesView.vue"),
+          beforeEnter: joursFeriesAutorises,
+        },
+        {
+          path: "rh/plannings",
+          name: "rhPlannings",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/PlanningsView.vue"),
+          beforeEnter: planningsAutorises,
+        },
+        {
+          path: "rh/plannings/nouvelle-affectation",
+          name: "rhNouvelleAffectationPlanning",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/NouvelleAffectationView.vue"),
+          beforeEnter: rhUniquement,
+        },
+        {
+          path: "rh/plannings/salarie/:id(\\d+)",
+          name: "rhHistoriquePlanningSalarie",
+          component: () => import("@/views/modules/gestion/rh/PlanningTravail/HistoriquePlanningSalarieView.vue"),
+          beforeEnter: planningsAutorises,
+        },
+        {
+          path: "rh/variables-paie",
+          name: "rhVariablesPaie",
+          component: () => import("@/views/modules/gestion/rh/VariablesPaie/VariablesPaieView.vue"),
+          beforeEnter: variablesPaieAutorisees,
+        },
 
         // ----- Onboarding des nouveaux employés -----
         {
@@ -283,6 +392,31 @@ const router = createRouter({
           name: "rhOnboardingDetail",
           component: () => import("@/views/modules/gestion/rh/OnboardingDetailView.vue"),
           beforeEnter: rhEtDirection,
+        },
+        {
+          path: "taches-onboarding",
+          name: "mesTachesOnboarding",
+          component: () => import("@/views/modules/gestion/rh/MesTachesOnboardingView.vue"),
+        },
+        {
+          path: "rh/pointage",
+          component: () => import("@/views/modules/gestion/rh/PointageView.vue"),
+          beforeEnter: exigerRole('RH')
+        },
+        {
+          path: "rh/heures-sup",
+          component: () => import("@/views/modules/gestion/rh/HeuresSupView.vue"),
+          beforeEnter: exigerRole('RH', 'MANAGER')
+        },
+        {
+          path: "rh/anomalies",
+          component: () => import("@/views/modules/gestion/rh/AnomaliesView.vue"),
+          beforeEnter: exigerRole('RH', 'MANAGER')
+        },
+        {
+          path: "rh/recap-mensuel",
+          component: () => import("@/views/modules/gestion/rh/RecapMensuelView.vue"),
+          beforeEnter: exigerRole('RH')
         },
         // Ajouter ici les routes RH, Finance,
         // Manager et Direction.

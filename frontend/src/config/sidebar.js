@@ -47,6 +47,18 @@ const sidebarByRole = {
         { label: "Offres d'emploi", to: "/si/app/rh/offres" },
         { label: "Publications", to: "/si/app/rh/publications" },
         { label: "CV des candidats", to: "/si/app/rh/cv" },
+
+        {
+        label: "Congés",
+        children: [
+            { label: "Tableau de bord", to: "/si/app/rh/conges" },
+            { label: "Demandes de congé", to: "/si/app/rh/conges/demandes" },
+            { label: "Nouvelle demande", to: "/si/app/rh/conges/nouvelle" },
+          ],
+        },
+
+        { label: "Congés à valider", to: "/si/app/conges/validations" },
+        { label: "Tableau de bord congés", to: "/si/app/rh/conges" },
         { label: "Notifications", to: "/si/app/rh/notifications" },
         { label: "Pointage", to: "/si/app/rh/pointage" },
         { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
@@ -59,6 +71,8 @@ const sidebarByRole = {
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
+        { label: "Notifications", to: "/si/app/manager/notifications" },
+        { label: "Congés à valider", to: "/si/app/conges/validations" },
         { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
         { label: "Organigramme", to: "/si/app/rh/organigramme" },
         { label: "Notifications", to: "/si/app/manager/notifications" },
@@ -108,6 +122,7 @@ const sidebarByRole = {
         { label: "Budget", to: "/si/app/finance/budget" },
         { label: "Demandes Finance", to: "/si/app/finance/demandes" },
         { label: "Grille salariale", to: "/si/app/finance/grille-salaire" },
+        { label: "Tableau de bord congés", to: "/si/app/rh/conges" },
         { label: "Journal d'audit", to: "/si/app/direction/audit" },
         { label: "Notifications", to: "/si/app/direction/notifications" }
     ]

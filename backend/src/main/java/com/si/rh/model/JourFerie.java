@@ -1,29 +1,41 @@
 package com.si.rh.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
+import java.sql.Date;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "jour_ferie")
 public class JourFerie {
-
     @Id
-    @Column(name = "date_jour", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(name = "date_jour", nullable = false, unique = true)
     private LocalDate dateJour;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "libelle", length = 150)
     private String libelle;
 
-    public JourFerie() {
-    }
+    @Column(name = "description")
+    private String description;
 
-    public JourFerie(LocalDate dateJour, String libelle) {
+    public JourFerie(){}
+
+    public JourFerie(Integer id, LocalDate dateJour, String libelle, String description) {
+        this.id = id;
         this.dateJour = dateJour;
         this.libelle = libelle;
+        this.description = description;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public LocalDate getDateJour() {
@@ -40,5 +52,13 @@ public class JourFerie {
 
     public void setLibelle(String libelle) {
         this.libelle = libelle;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

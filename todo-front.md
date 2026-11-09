@@ -1,0 +1,147 @@
+Phase 2 — Interface de gestion des congés
+- [ ] Tâche 2.1 — Tableau de bord des congés
+  - [ ] Afficher le solde disponible.
+  - [ ] Afficher les jours acquis.
+  - [ ] Afficher les jours consommés.
+  - [ ] Afficher les demandes en attente.
+  - [ ] Afficher les demandes acceptées.
+  - [ ] Ajouter les filtres nécessaires.
+- [ ] Tâche 2.2 — Consultation des demandes(de conge)
+  - [ ] Créer le tableau des demandes.
+  - [ ] Afficher le nom de l'employé.
+  - [ ] Afficher le type de congé.
+  - [ ] Afficher la période demandée.
+  - [ ] Afficher le nombre de jours.
+  - [ ] Afficher le statut.
+  - [ ] Ajouter la recherche.
+  - [ ] Ajouter le filtrage par statut.
+  - [ ] Ajouter le filtrage par période.
+  - [ ] Créer une fenêtre de détail d'une demande.
+- [ ] Tâche 2.3 — Formulaire de demande de congé
+  - [ ] Créer le formulaire.
+  - [ ] Ajouter la sélection du type de congé.
+  - [ ] Ajouter la date de début.
+  - [ ] Ajouter la date de fin.
+  - [ ] Ajouter le motif.
+  - [ ] Afficher le nombre de jours calculé.
+  - [ ] Afficher le solde disponible.
+  - [ ] Ajouter les validations frontend.
+  - [ ] Ajouter les messages d'erreur.
+  - [ ] Ajouter les messages de confirmation.
+- [ ] Tâche 2.4 — Gestion des validations
+  - [ ] Afficher les demandes en attente de validation.
+  - [ ] Créer l'interface de détail.
+  - [ ] Ajouter le bouton d'acceptation.
+  - [ ] Ajouter le bouton de refus.
+  - [ ] Ajouter un champ de commentaire.
+  - [ ] Ajouter une confirmation avant validation.
+  - [ ] Afficher l'historique des décisions.
+- [ ] Tâche 2.5 — Historique des congés
+  - [ ] Créer le tableau des mouvements.
+  - [ ] Afficher les acquisitions.
+  - [ ] Afficher les consommations.
+  - [ ] Afficher les restitutions.
+  - [ ] Afficher les ajustements.
+  - [ ] Afficher les expirations.
+  - [ ] Ajouter les filtres.
+Phase 3 — Interface de gestion des absences
+- [ ] Tâche 3.1 — Consultation des absences
+  - [ ] Créer la liste des absences.
+  - [ ] Afficher l'employé concerné.
+  - [ ] Afficher le type d'absence.
+  - [ ] Afficher les dates.
+  - [ ] Afficher le motif.
+  - [ ] Afficher le statut.
+  - [ ] Ajouter les filtres.
+- [ ] Tâche 3.2 — Déclaration d'une absence
+  - [ ] Créer le formulaire.
+  - [ ] Ajouter la sélection de l'employé.
+  - [ ] Ajouter la sélection du type d'absence.
+  - [ ] Ajouter la date de début.
+  - [ ] Ajouter la date de fin.
+  - [ ] Ajouter le motif.
+  - [ ] Ajouter les validations frontend.
+  - [ ] Ajouter les messages de confirmation.
+- [ ] Tâche 3.3 — Gestion des justificatifs
+  - [ ] Ajouter un champ de sélection de fichier.
+  - [ ] Afficher le nom du fichier sélectionné.
+  - [ ] Vérifier le format du fichier.
+  - [ ] Vérifier la taille du fichier.
+  - [ ] Ajouter la possibilité de consulter le justificatif.
+  - [ ] Ajouter la possibilité de télécharger le justificatif.
+Phase 4 — Interface de gestion des missions
+- [ ] Tâche 4.1 — Consultation des missions
+  - [ ] Créer la liste des missions.
+  - [ ] Afficher l'intitulé.
+  - [ ] Afficher le lieu.
+  - [ ] Afficher les dates.
+  - [ ] Afficher les employés affectés.
+  - [ ] Ajouter les filtres.
+- [ ] Tâche 4.2 — Création et modification
+  - [ ] Créer le formulaire de mission.
+  - [ ] Ajouter l'intitulé.
+  - [ ] Ajouter la description.
+  - [ ] Ajouter le lieu.
+  - [ ] Ajouter les dates.
+  - [ ] Ajouter la sélection des employés.
+  - [ ] Permettre l'affectation de plusieurs employés.
+  - [ ] Permettre la modification d'une mission.
+  - [ ] Ajouter les validations frontend.
+- [ ] Tâche 4.3 — Gestion des affectations
+  - [ ] Afficher les employés affectés.
+  - [ ] Ajouter un employé à une mission.
+  - [ ] Retirer un employé d'une mission.
+  - [ ] Afficher les détails de chaque affectation.
+Phase 5 — Interface des indemnités
+- [ ] Tâche 5.1 — Consultation
+  - [ ] Créer la liste des indemnités.
+  - [ ] Afficher l'employé concerné.
+  - [ ] Afficher le solde de jours.
+  - [ ] Afficher le montant journalier.
+  - [ ] Afficher le montant total.
+  - [ ] Afficher le statut de traitement.
+- [ ] Tâche 5.2 — Détail et suivi
+  - [ ] Créer la fenêtre de détail.
+  - [ ] Afficher la méthode de calcul.
+  - [ ] Afficher les informations financières.
+  - [ ] Afficher l'historique de traitement.
+  - [ ] Ajouter les filtres nécessaires.
+Phase 6 — Planning RH
+- [ ] Tâche 6.1 — Construction du planning
+  - [ ] Créer une vue calendrier.
+  - [ ] Afficher les congés validés.
+  - [ ] Afficher les absences.
+  - [ ] Afficher les missions.
+  - [ ] Différencier visuellement les événements.
+  - [ ] Ajouter la navigation entre les périodes.
+- [ ] Tâche 6.2 — Filtres et détails
+  - [ ] Ajouter le filtre par employé.
+  - [ ] Ajouter le filtre par département.
+  - [ ] Ajouter le filtre par type d'événement.
+  - [ ] Ajouter le filtre par période.
+  - [ ] Créer une fenêtre de détail d'un événement.
+Phase 7 — Intégration et finalisation frontend
+- [ ] Tâche 7.1 — Intégration des API
+  - [ ] Créer les fonctions Axios pour les congés.
+  - [ ] Créer les fonctions Axios pour les absences.
+  - [ ] Créer les fonctions Axios pour les missions.
+  - [ ] Créer les fonctions Axios pour les indemnités.
+  - [ ] Créer les fonctions Axios pour le planning.
+  - [ ] Gérer les erreurs HTTP.
+  - [ ] Gérer les chargements.
+  - [ ] Gérer les réponses vides.
+  - [ ] Gérer les messages de succès et d'échec.
+- [ ] Tâche 7.2 — Gestion des droits
+  - [ ] Adapter les menus aux rôles.
+  - [ ] Masquer les actions non autorisées.
+  - [ ] Adapter les formulaires selon le rôle.
+  - [ ] Empêcher l'accès aux pages non autorisées côté interface.
+- [ ] Tâche 7.3 — Tests frontend
+  - [ ] Tester la création d'une demande.
+  - [ ] Tester la consultation des demandes.
+  - [ ] Tester les validations.
+  - [ ] Tester les formulaires d'absence.
+  - [ ] Tester les justificatifs.
+  - [ ] Tester les missions.
+  - [ ] Tester le planning.
+  - [ ] Tester les affichages sur différentes tailles d'écran.

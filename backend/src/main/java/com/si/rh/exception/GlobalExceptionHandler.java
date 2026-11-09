@@ -3,6 +3,7 @@ package com.si.rh.exception;
 import com.si.rh.dto.ApiResponse;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,6 +21,11 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> accesRefuse(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure(e.getMessage()));
+    }
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(RessourceIntrouvableException.class)
@@ -93,7 +99,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> inattendue(Exception e) {
         LOGGER.error("Erreur interne lors du traitement de la requête.", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.failure("Une erreur interne est survenue."));
+                .body(ApiResponse.failure("Une erreur interne est survenue: "+e.getMessage()));
     }
     
 //  @ExceptionHandler(IllegalArgumentException.class)

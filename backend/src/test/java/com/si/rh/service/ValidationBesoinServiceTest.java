@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import com.si.rh.repository.GrilleSalaireRepository;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -43,8 +44,7 @@ import static org.mockito.Mockito.when;
 class ValidationBesoinServiceTest {
     private static final Integer ID_BESOIN = 42;
     private static final String EMAIL = "validateur@example.test";
-
-    @Mock
+@Mock
     private ValidationBesoinRepository validationBesoinRepository;
     @Mock
     private BesoinRepository besoinRepository;
@@ -59,13 +59,9 @@ class ValidationBesoinServiceTest {
     @Mock
     private UtilisateurDetailsService utilisateurDetailsService;
     @Mock
-    private EmployeRepository employeRepository;
-    @Mock
     private GrilleSalaireRepository grilleSalaireRepository;
-    @Mock
-    private RecrutementRepository recrutementRepository;
+    @Mock 
     private NotificationService notificationService;
-
     private ValidationBesoinService service;
 
     @BeforeEach
@@ -78,7 +74,8 @@ class ValidationBesoinServiceTest {
                 utilisateurDetailsService,
                 employeRepository,
                 grilleSalaireRepository,
-                recrutementRepository
+                recrutementRepository,
+                notificationService
         );
     }
 

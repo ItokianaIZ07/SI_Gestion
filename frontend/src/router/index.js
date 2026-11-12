@@ -201,11 +201,6 @@ const router = createRouter({
           component: ManifestationView
         },
         {
-          path: 'manager/departements',
-          name: 'ListeDepartements',
-          component: ListeDepartementsView
-        },
-        {
           path: 'manager/departements/:departementId',
           name: 'DetailVisionDepartement',
           component: VisionDepartementView

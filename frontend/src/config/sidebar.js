@@ -67,7 +67,6 @@ const sidebarByRole = {
     ],
 
     manager: [
-        { label: "Liste des départements", to: "/si/app/manager/departements" },
         { label: "Créer un département", to: "/si/app/manager/departements/creation" },
         { label: "Liste des demandes", to: "/si/app/manager/demandes" },
         { label: "Créer une demande", to: "/si/app/manager/demandes/creation" },
@@ -75,8 +74,6 @@ const sidebarByRole = {
         { label: "Congés à valider", to: "/si/app/conges/validations" },
         { label: "Mes tâches d'onboarding", to: "/si/app/taches-onboarding" },
         { label: "Organigramme", to: "/si/app/rh/organigramme" },
-        { label: "Notifications", to: "/si/app/manager/notifications" },
-        { label: "Notifications", to: "/si/app/manager/notifications" },
         { label: "Heures Sup", to: "/si/app/rh/heures-sup" },
         { label: "Anomalies", to: "/si/app/rh/anomalies" },
         { label: "Jours fériés", to: "/si/app/rh/jours-feries" },

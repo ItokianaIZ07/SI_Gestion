@@ -272,7 +272,7 @@ const confirmerAcceptation = (informationsSalaire) => {
         />
       </div>
 
-      <template v-if="demande.statut == 'ACCEPTE' && !demande.estAssigneRecrutement">
+      <template v-if="(demande.statut == 'ACCEPTE' && !demande.estAssigneRecrutement) && authStore.user.role === 'RH'">
         <button @click="ouvrirModalRecrutement(demande)" class="approve-button">
           Envoyer recrutement
         </button>

@@ -53,9 +53,11 @@ function preremplir() {
   if (!form.descriptionPoste) form.descriptionPoste = r.description ?? "";
   const b = besoinLie.value;
   if (b) {
+    console.log(b);
     if (!form.competencesRequises) form.competencesRequises = b.competencesRequises ?? "";
     if (!form.niveauEtude) form.niveauEtude = b.niveauEtude ?? "";
     if (!form.experienceMinAnnees) form.experienceMinAnnees = parseInt(b.experienceRequise, 10) || 0;
+    if (!form.salaireMax) form.salaireMax = b.salaireEstime;
   }
 }
 watch(() => form.recrutementId, preremplir);

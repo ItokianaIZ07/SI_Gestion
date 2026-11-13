@@ -24,7 +24,7 @@ import java.util.Optional;
 @Service
 @Transactional
 public class DepotCvService {
-    private static final int TAILLE_MAX = 5 * 1024 * 1024;
+    private static final long TAILLE_MAX = 10L * 1024 * 1024;
 
     private final CandidatRepository candidatRepo;
     private final CvRepository cvRepo;

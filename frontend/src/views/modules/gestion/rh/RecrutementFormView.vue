@@ -40,14 +40,14 @@ const besoinsDisponibles = computed(() => {
 });
 
 function libelleBesoin(b) {
-  return `#${b.id} — ${posteDe(b)} · ${departementDe(b)} (${b.effectif ?? 1} poste(s))`;
+  return `${b.poste} · ${b.departement} (${b.effectif ?? 1} poste(s))`;
 }
 
 function preremplir() {
   if (edition || !besoins.value) return;
   const b = besoins.value.find((x) => x.id === Number(form.besoinId));
   if (!b) return;
-  if (!form.titre) form.titre = `Recrutement — ${posteDe(b)}`;
+  if (!form.titre) form.titre = `Recrutement — ${b.poste}`;
   if (!form.reference) form.reference = `REC-${new Date().getFullYear()}-${String(b.id).padStart(3, "0")}`;
   if (!form.description) form.description = b.motif ?? "";
 }

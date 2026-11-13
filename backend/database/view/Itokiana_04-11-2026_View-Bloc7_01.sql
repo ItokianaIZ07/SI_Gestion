@@ -11,7 +11,7 @@
 # - expire : jours expirés
 # - disponible : solde réel
 #
-# Aucun solde n'est stocké directement dans cette vue.
+# Aucun solde nest stocké directement dans cette vue.
 # ------------------------------------------------------------
 
 CREATE OR REPLACE VIEW vue_solde_conge AS

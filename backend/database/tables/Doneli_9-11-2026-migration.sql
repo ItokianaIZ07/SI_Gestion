@@ -11,53 +11,78 @@
 BEGIN;
 
 -- ============================================================
--- REEXECUTION : suppression des objets crees par ce script
--- ATTENTION : les donnees des tables ci-dessous seront effacees.
+-- NETTOYAGE PREALABLE
+-- Chaque objet cree par ce script est supprime s'il existe deja :
+-- triggers, vues, fonctions/procedures, tables, index.
+-- ATTENTION : les donnees des tables creees par ce script seront effacees.
+-- Les tables RH preexistantes (employe, utilisateur, contrat, etc.) sont conservees.
 -- ============================================================
 
--- Suppression de TOUS les triggers d'audit (y compris sur les tables
--- preexistantes), sinon la re-execution echoue ("trigger already exists").
+-- 1. Triggers (crees par ce script, y compris trg_audit_* sur les tables preexistantes)
 DO $$
-DECLARE t TEXT;
+DECLARE r RECORD;
 BEGIN
-    FOREACH t IN ARRAY ARRAY['utilisateur', 'employe', 'contrat', 'document_employe',
-        'historique_affectation', 'tache_onboarding', 'besoin', 'validation_besoin',
-        'candidature', 'decision_recrutement', 'demande_conge', 'validation_conge', 'regle_conge',
-        'mouvement_conge', 'absence', 'justificatif_absence',
-        'mission', 'mission_employe', 'remplacement_conge',
-        'temps_travail_journalier', 'indemnite_conge']
+    FOR r IN
+        SELECT tg.tgname, n.nspname, c.relname
+        FROM pg_trigger tg
+        JOIN pg_class c ON c.oid = tg.tgrelid
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE NOT tg.tgisinternal
+          AND n.nspname = current_schema()
+          AND (tg.tgname = ANY (ARRAY[
+                  'trg_verifier_validation_besoin', 'trg_verifier_publication_candidature',
+                  'trg_verifier_contrat_actif', 'trg_verifier_hierarchie',
+                  'trg_journal_audit_lecture_seule', 'trg_employe_dossier_initial',
+                  'trg_employe_changements'])
+               OR tg.tgname LIKE 'trg\_audit\_%')
     LOOP
-        IF to_regclass(t) IS NOT NULL THEN
-            EXECUTE format('DROP TRIGGER IF EXISTS trg_audit_%1$s ON %1$I', t);
-        END IF;
+        EXECUTE format('DROP TRIGGER IF EXISTS %I ON %I.%I', r.tgname, r.nspname, r.relname);
+        RAISE NOTICE 'Trigger supprime : % sur %', r.tgname, r.relname;
     END LOOP;
-
-    IF to_regclass('validation_besoin') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_verifier_validation_besoin ON validation_besoin';
-    END IF;
-    IF to_regclass('candidature') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_verifier_publication_candidature ON candidature';
-    END IF;
-    IF to_regclass('contrat') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_verifier_contrat_actif ON contrat';
-    END IF;
-    IF to_regclass('historique_affectation') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_verifier_hierarchie ON historique_affectation';
-    END IF;
-    IF to_regclass('journal_audit') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_journal_audit_lecture_seule ON journal_audit';
-    END IF;
-    IF to_regclass('employe') IS NOT NULL THEN
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_employe_dossier_initial ON employe';
-        EXECUTE 'DROP TRIGGER IF EXISTS trg_employe_changements ON employe';
-    END IF;
 END
 $$;
 
-DROP VIEW IF EXISTS v_organigramme, v_variables_paie_mensuelles;
+-- 2. Vues
+DROP VIEW IF EXISTS v_organigramme CASCADE;
+DROP VIEW IF EXISTS v_variables_paie_mensuelles CASCADE;
 
+-- 3. Fonctions et procedures (toutes surcharges, quelle que soit la signature)
+DO $$
+DECLARE r RECORD;
+BEGIN
+    FOR r IN
+        SELECT p.oid::regprocedure AS signature, p.prokind
+        FROM pg_proc p
+        JOIN pg_namespace n ON n.oid = p.pronamespace
+        WHERE n.nspname = current_schema()
+          AND p.proname = ANY (ARRAY[
+              'verifier_validation_besoin', 'verifier_publication_candidature',
+              'verifier_contrat_actif', 'verifier_hierarchie',
+              'manager_employe_du_departement', 'ouvrir_affectation', 'changer_affectation',
+              'lister_subordonnes', 'lister_superieurs', 'generer_alertes_documents',
+              'auditer_modification', 'interdire_modification_journal',
+              'calculer_temps_journalier', 'calculer_temps_periode',
+              'valider_heures_supplementaires',
+              'fn_solde_conge', 'fn_calculer_jours_conge', 'sp_acquerir_conges_mensuels',
+              'initialiser_dossier_employe', 'trg_employe_apres_insert',
+              'trg_employe_suivre_changements'])
+    LOOP
+        EXECUTE format('DROP %s IF EXISTS %s CASCADE',
+                       CASE WHEN r.prokind = 'p' THEN 'PROCEDURE' ELSE 'FUNCTION' END,
+                       r.signature);
+        RAISE NOTICE 'Routine supprimee : %', r.signature;
+    END LOOP;
+END
+$$;
+
+-- 4. Tables creees par ce script
 DROP TABLE IF EXISTS indemnite_conge, mission_employe, mission, justificatif_absence, absence, type_absence, mouvement_conge, remplacement_conge, validation_conge, demande_conge, jour_ferie, regle_conge, type_conge, anomalie_pointage, temps_travail_journalier, pointage, planning_travail, horaire_travail, regime_travail, journal_audit, historique_affectation, historique_tache_onboarding CASCADE;
 
+-- 5. Index crees sur des tables preexistantes
+DROP INDEX IF EXISTS idx_document_expiration;
+DROP INDEX IF EXISTS idx_notification_document;
+
+-- 6. Contraintes ajoutees sur des tables preexistantes
 ALTER TABLE decision_recrutement DROP CONSTRAINT IF EXISTS chk_decision_decideur;
 ALTER TABLE tache_onboarding DROP CONSTRAINT IF EXISTS chk_tache_realisation;
 ALTER TABLE notification DROP CONSTRAINT IF EXISTS chk_notification_lecture;

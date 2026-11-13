@@ -227,11 +227,11 @@ onBeforeUnmount(() => urlsOuvertes.forEach((u) => URL.revokeObjectURL(u)));
         @change="choisirFichier" />
       <label class="champ-court">
         <span>Expire le</span>
-        <input v-model="nouveau.dateExpiration" class="g-input" type="date" :min="aujourdhui()" />
+        <input v-model="nouveau.dateExpiration" class="g-input" type="date" :min="aujourdhui()" style="max-height: 45px" />
       </label>
       <label class="champ-court">
         <span>Alerte (jours avant)</span>
-        <input v-model.number="nouveau.delaiAlerteJours" class="g-input" type="number" min="0" max="365" />
+        <input v-model.number="nouveau.delaiAlerteJours" class="g-input" type="number" min="0" max="365" style="max-height: 45px" />
       </label>
       <button class="g-btn g-btn--primaire" type="submit" :disabled="occupe">{{ remplace ? "Déposer et renouveler" :
         "Déposer le document" }}</button>
